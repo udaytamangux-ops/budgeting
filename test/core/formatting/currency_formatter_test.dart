@@ -16,4 +16,15 @@ void main() {
   test('formats negative values with a typographic minus', () {
     expect(formatter.format(const Money(minorUnits: -125000)), '−NPR 1,250');
   });
+
+  test('formats positive net changes with an explicit plus sign', () {
+    expect(
+      formatter.formatSigned(const Money(minorUnits: 3725000)),
+      '+NPR 37,250',
+    );
+    expect(
+      formatter.formatSigned(const Money(minorUnits: -125000)),
+      '−NPR 1,250',
+    );
+  });
 }

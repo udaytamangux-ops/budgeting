@@ -13,11 +13,13 @@ final class TransactionListItem extends ConsumerWidget {
   const TransactionListItem({
     required this.transaction,
     required this.onTap,
+    this.showDate = true,
     super.key,
   });
 
   final FinancialTransaction transaction;
   final VoidCallback onTap;
+  final bool showDate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,6 +34,12 @@ final class TransactionListItem extends ConsumerWidget {
     final String transactionKind = isIncome ? 'Income' : 'Expense';
     final String amountPrefix = isIncome ? '+' : '−';
     final String title = transaction.merchant ?? visual.label;
+    final Color iconForeground = isIncome
+        ? AppColors.incomeAccent
+        : visual.foreground;
+    final Color iconBackground = isIncome
+        ? AppColors.incomeSurface
+        : visual.background;
 
     return Semantics(
       button: true,
@@ -43,31 +51,41 @@ final class TransactionListItem extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.small),
+        overlayColor: const WidgetStatePropertyAll<Color>(
+          AppColors.primarySubtle,
+        ),
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final Widget icon = Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: visual.background,
-                borderRadius: BorderRadius.circular(AppRadius.small),
+              key: ValueKey<String>(
+                'transaction_category_icon_${transaction.id}',
               ),
-              child: Icon(visual.icon, color: visual.foreground, size: 22),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBackground,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(visual.icon, color: iconForeground, size: 20),
             );
             final Widget details = _TransactionDetails(
+              transactionId: transaction.id,
               title: title,
-              metadata:
-                  '${visual.label} · ${transaction.paymentMethod.label} · '
-                  '$formattedDate',
+              metadata: showDate
+                  ? '${visual.label} · ${transaction.paymentMethod.label} · '
+                        '$formattedDate'
+                  : '${visual.label} · ${transaction.paymentMethod.label}',
             );
             final Widget amount = _TransactionAmount(
-              amount: '$amountPrefix $formattedAmount',
-              transactionKind: transactionKind,
+              transactionId: transaction.id,
+              amount: '$amountPrefix$formattedAmount',
               isIncome: isIncome,
             );
-            final bool useCompactLayout =
-                constraints.maxWidth < 340 ||
+            final bool useStackedLayout =
                 MediaQuery.textScalerOf(context).scale(14) > 20;
+            final double amountMaxWidth = constraints.maxWidth < 360
+                ? 140
+                : 168;
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -77,20 +95,34 @@ final class TransactionListItem extends ConsumerWidget {
                   icon,
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: useCompactLayout
+                    child: useStackedLayout
                         ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
                               details,
                               const SizedBox(height: AppSpacing.xs),
-                              amount,
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: amountMaxWidth,
+                                  ),
+                                  child: amount,
+                                ),
+                              ),
                             ],
                           )
                         : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Expanded(child: details),
-                              const SizedBox(width: AppSpacing.sm),
-                              Flexible(child: amount),
+                              const SizedBox(width: AppSpacing.md),
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: amountMaxWidth,
+                                ),
+                                child: amount,
+                              ),
                             ],
                           ),
                   ),
@@ -105,8 +137,13 @@ final class TransactionListItem extends ConsumerWidget {
 }
 
 final class _TransactionDetails extends StatelessWidget {
-  const _TransactionDetails({required this.title, required this.metadata});
+  const _TransactionDetails({
+    required this.transactionId,
+    required this.title,
+    required this.metadata,
+  });
 
+  final String transactionId;
   final String title;
   final String metadata;
 
@@ -117,16 +154,22 @@ final class _TransactionDetails extends StatelessWidget {
       children: <Widget>[
         Text(
           title,
-          maxLines: 2,
+          key: ValueKey<String>('transaction_title_$transactionId'),
+          maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.labelLarge,
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(color: AppColors.textPrimary),
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(
           metadata,
+          key: ValueKey<String>('transaction_metadata_$transactionId'),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodySmall,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -135,32 +178,27 @@ final class _TransactionDetails extends StatelessWidget {
 
 final class _TransactionAmount extends StatelessWidget {
   const _TransactionAmount({
+    required this.transactionId,
     required this.amount,
-    required this.transactionKind,
     required this.isIncome,
   });
 
+  final String transactionId;
   final String amount;
-  final String transactionKind;
   final bool isIncome;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          amount,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: isIncome ? AppColors.balancePositive : AppColors.textPrimary,
-            fontFeatures: AppTypography.tabularFigures,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(transactionKind, style: Theme.of(context).textTheme.bodySmall),
-      ],
+    return Text(
+      amount,
+      key: ValueKey<String>('transaction_amount_$transactionId'),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.end,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: isIncome ? AppColors.incomeAccent : AppColors.expenseAccent,
+        fontFeatures: AppTypography.tabularFigures,
+      ),
     );
   }
 }

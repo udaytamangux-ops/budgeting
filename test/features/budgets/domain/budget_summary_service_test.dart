@@ -35,6 +35,17 @@ void main() {
     expect(summary.usedFraction, closeTo(0.56875, 0.000001));
     expect(food.spent.minorUnits, 550000);
     expect(food.remaining.minorUnits, 250000);
+    expect(summary.allocatedBudget.minorUnits, 3350000);
+    expect(summary.unallocatedBudget.minorUnits, 650000);
+    expect(food.isNearLimit, isFalse);
+    expect(
+      summary.progressFor(TransactionCategory.utilities)!.isNearLimit,
+      isTrue,
+    );
+    expect(
+      summary.progressFor(TransactionCategory.rentAndHousing)!.isExceeded,
+      isTrue,
+    );
   });
 
   test('recalculates specified post-expense values', () {

@@ -2,17 +2,26 @@ import 'package:intl/intl.dart';
 
 final class DateFormatter {
   DateFormatter({String locale = 'en_US'})
-    : _monthYear = DateFormat('MMMM y', locale),
+    : _monthName = DateFormat('MMMM', locale),
+      _monthYear = DateFormat('MMMM y', locale),
+      _shortMonthYear = DateFormat('MMM y', locale),
       _shortDate = DateFormat('d MMM y', locale),
       _longDate = DateFormat('d MMMM y', locale),
       _dateAndTime = DateFormat('d MMMM y, h:mm a', locale);
 
+  final DateFormat _monthName;
   final DateFormat _monthYear;
+  final DateFormat _shortMonthYear;
   final DateFormat _shortDate;
   final DateFormat _longDate;
   final DateFormat _dateAndTime;
 
+  String monthName(DateTime date) => _monthName.format(date.toLocal());
+
   String monthYear(DateTime date) => _monthYear.format(date.toLocal());
+
+  String shortMonthYear(DateTime date) =>
+      _shortMonthYear.format(date.toLocal());
 
   String shortDate(DateTime date) => _shortDate.format(date.toLocal());
 
@@ -40,5 +49,12 @@ final class DateFormatter {
       1 => 'Yesterday',
       _ => shortDate(localDate),
     };
+  }
+
+  String transactionGroupLabel(DateTime date, {DateTime? relativeTo}) {
+    final String relative = relativeDate(date, relativeTo: relativeTo);
+    return relative == 'Today' || relative == 'Yesterday'
+        ? relative
+        : longDate(date);
   }
 }

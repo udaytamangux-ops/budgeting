@@ -1,14 +1,20 @@
+import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
+import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/errors/app_exception.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/domain/repositories/transaction_repository.dart';
+import 'package:budgeting_app/features/transactions/domain/services/transaction_date_service.dart';
+import 'package:budgeting_app/features/transactions/presentation/controllers/session_payment_method_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum AddTransactionSubmissionPhase { editing, saving, success, failure }
+
+enum TransactionFormIntent { create, edit, repeat }
 
 final class AddTransactionState {
   const AddTransactionState({
@@ -25,14 +31,19 @@ final class AddTransactionState {
     this.submissionError,
     this.savedTransaction,
     this.isEditing = false,
+    this.isRepeatDraft = false,
   });
 
-  factory AddTransactionState.initial(DateTime currentDate) {
+  factory AddTransactionState.initial({
+    required DateTime currentDate,
+    required TransactionType type,
+    required PaymentMethod paymentMethod,
+  }) {
     return AddTransactionState(
-      type: TransactionType.expense,
+      type: type,
       amountInput: '',
-      paymentMethod: PaymentMethod.cash,
-      occurredDate: currentDate.toLocal(),
+      paymentMethod: paymentMethod,
+      occurredDate: const TransactionDateService().today(currentDate),
       merchant: '',
       note: '',
       submissionPhase: AddTransactionSubmissionPhase.editing,
@@ -40,18 +51,26 @@ final class AddTransactionState {
   }
 
   factory AddTransactionState.fromTransaction(
-    FinancialTransaction transaction,
-  ) {
+    FinancialTransaction transaction, {
+    required bool isEditing,
+    required bool isRepeatDraft,
+    DateTime? currentDate,
+  }) {
     return AddTransactionState(
       type: transaction.type,
       amountInput: _editableAmount(transaction.amount),
       paymentMethod: transaction.paymentMethod,
-      occurredDate: transaction.occurredAt.toLocal(),
+      occurredDate: isRepeatDraft
+          ? const TransactionDateService().today(currentDate!)
+          : const TransactionDateService().localCalendarDate(
+              transaction.occurredAt,
+            ),
       merchant: transaction.merchant ?? '',
       note: transaction.note ?? '',
       selectedCategory: transaction.category,
       submissionPhase: AddTransactionSubmissionPhase.editing,
-      isEditing: true,
+      isEditing: isEditing,
+      isRepeatDraft: isRepeatDraft,
     );
   }
 
@@ -68,6 +87,7 @@ final class AddTransactionState {
   final AddTransactionSubmissionPhase submissionPhase;
   final FinancialTransaction? savedTransaction;
   final bool isEditing;
+  final bool isRepeatDraft;
 
   bool get isSubmitting =>
       submissionPhase == AddTransactionSubmissionPhase.saving;
@@ -119,6 +139,7 @@ final class AddTransactionState {
       submissionPhase: submissionPhase ?? this.submissionPhase,
       savedTransaction: savedTransaction ?? this.savedTransaction,
       isEditing: isEditing,
+      isRepeatDraft: isRepeatDraft,
     );
   }
 
@@ -140,6 +161,12 @@ final Provider<TransactionType> initialTransactionTypeProvider =
       dependencies: const [],
     );
 
+final Provider<TransactionFormIntent> transactionFormIntentProvider =
+    Provider<TransactionFormIntent>(
+      (Ref ref) => TransactionFormIntent.create,
+      dependencies: const [],
+    );
+
 final AutoDisposeNotifierProvider<AddTransactionController, AddTransactionState>
 addTransactionControllerProvider =
     NotifierProvider.autoDispose<AddTransactionController, AddTransactionState>(
@@ -147,6 +174,7 @@ addTransactionControllerProvider =
       dependencies: <ProviderOrFamily>[
         initialTransactionProvider,
         initialTransactionTypeProvider,
+        transactionFormIntentProvider,
       ],
     );
 
@@ -157,16 +185,31 @@ final class AddTransactionController
     final FinancialTransaction? existing = ref.watch(
       initialTransactionProvider,
     );
-    if (existing != null) {
-      return AddTransactionState.fromTransaction(existing);
-    }
-    final AddTransactionState initial = AddTransactionState.initial(
-      ref.watch(currentDateProvider),
+    final TransactionFormIntent intent = ref.watch(
+      transactionFormIntentProvider,
     );
-    return initial.copyWith(type: ref.watch(initialTransactionTypeProvider));
+    if (existing != null) {
+      return AddTransactionState.fromTransaction(
+        existing,
+        isEditing: intent == TransactionFormIntent.edit,
+        isRepeatDraft: intent == TransactionFormIntent.repeat,
+        currentDate: ref.watch(currentDateProvider),
+      );
+    }
+    final TransactionType initialType = ref.watch(
+      initialTransactionTypeProvider,
+    );
+    return AddTransactionState.initial(
+      currentDate: ref.watch(currentDateProvider),
+      type: initialType,
+      paymentMethod: _initialPaymentMethod(initialType),
+    );
   }
 
   void updateType(TransactionType type) {
+    if (type == state.type) {
+      return;
+    }
     final TransactionCategory? currentCategory = state.selectedCategory;
     state = state.copyWith(
       type: type,
@@ -175,6 +218,9 @@ final class AddTransactionController
       categoryError: null,
       submissionError: null,
       submissionPhase: AddTransactionSubmissionPhase.editing,
+      paymentMethod: state.isEditing
+          ? state.paymentMethod
+          : _initialPaymentMethod(type),
     );
   }
 
@@ -207,12 +253,33 @@ final class AddTransactionController
     );
   }
 
+  void selectRecentCategory(TransactionCategory category) {
+    ref
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.recentCategorySelected);
+    selectCategory(category);
+  }
+
   void updatePaymentMethod(PaymentMethod paymentMethod) {
     state = state.copyWith(paymentMethod: paymentMethod);
+    ref
+        .read(sessionPaymentMethodProvider.notifier)
+        .remember(state.type, paymentMethod);
   }
 
   void updateOccurredDate(DateTime occurredDate) {
-    state = state.copyWith(occurredDate: occurredDate);
+    state = state.copyWith(
+      occurredDate: const TransactionDateService().localCalendarDate(
+        occurredDate,
+      ),
+    );
+  }
+
+  void selectQuickDate(DateTime occurredDate) {
+    ref
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.quickDateSelected);
+    updateOccurredDate(occurredDate);
   }
 
   void updateMerchant(String merchant) {
@@ -235,7 +302,9 @@ final class AddTransactionController
         ? null
         : 'Amount must be greater than NPR 0.';
     final String? categoryError = state.selectedCategory == null
-        ? 'Choose a category.'
+        ? state.type == TransactionType.expense
+              ? 'Choose a category.'
+              : 'Choose an income source.'
         : null;
 
     if (amountError != null || categoryError != null) {
@@ -254,7 +323,9 @@ final class AddTransactionController
       submissionPhase: AddTransactionSubmissionPhase.saving,
     );
 
-    final FinancialTransaction? existing = ref.read(initialTransactionProvider);
+    final FinancialTransaction? existing = state.isEditing
+        ? ref.read(initialTransactionProvider)
+        : null;
     final DateTime now = ref.read(appClockProvider)().toUtc();
     final DateTime localDate = state.occurredDate.toLocal();
     final DateTime occurredAt = DateTime(
@@ -302,6 +373,18 @@ final class AddTransactionController
         submissionPhase: AddTransactionSubmissionPhase.success,
         savedTransaction: transaction,
       );
+      ref
+          .read(sessionPaymentMethodProvider.notifier)
+          .remember(state.type, state.paymentMethod);
+      if (!state.isEditing) {
+        ref
+            .read(appAnalyticsProvider)
+            .recordEvent(
+              state.isRepeatDraft
+                  ? AnalyticsEventNames.transactionRepeated
+                  : AnalyticsEventNames.transactionCreated,
+            );
+      }
       return transaction;
     } on AppException catch (error) {
       state = state.copyWith(
@@ -345,5 +428,18 @@ final class AddTransactionController
   static String? _emptyToNull(String value) {
     final String trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  PaymentMethod _initialPaymentMethod(TransactionType type) {
+    final PaymentMethod? remembered = ref
+        .read(sessionPaymentMethodProvider)
+        .forType(type);
+    if (remembered != null) {
+      ref
+          .read(appAnalyticsProvider)
+          .recordEvent(AnalyticsEventNames.paymentMethodReused);
+      return remembered;
+    }
+    return PaymentMethod.cash;
   }
 }

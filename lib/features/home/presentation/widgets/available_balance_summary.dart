@@ -20,7 +20,7 @@ final class AvailableBalanceSummary extends ConsumerWidget {
     );
     return summary.maybeWhen(
       data: (MonthlyFinancialSummary value) {
-        final String available = ref
+        final String recordedBalance = ref
             .watch(currencyFormatterProvider)
             .format(value.availableBalance);
         final String income = ref
@@ -31,22 +31,23 @@ final class AvailableBalanceSummary extends ConsumerWidget {
             .format(value.expenses);
         return Semantics(
           label:
-              'Available balance, $available. Monthly income, $income. '
+              'Recorded balance, $recordedBalance. Monthly income, $income. '
               'Monthly expenses, $expenses.',
           excludeSemantics: true,
           child: Container(
+            key: const ValueKey<String>('recorded_balance_card'),
             width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.surfacePrimary,
-              border: Border.all(color: AppColors.borderSubtle),
+              color: AppColors.recordedBalanceSurface,
+              border: Border.all(color: AppColors.recordedBalanceBorder),
               borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Available balance',
+                  'Recorded balance',
                   style: Theme.of(context).textTheme.labelMedium,
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -56,18 +57,18 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                     AppMotion.standard,
                   ),
                   child: Text(
-                    available,
+                    recordedBalance,
                     key: ValueKey<int>(value.availableBalance.minorUnits),
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: <Widget>[
                     Expanded(
                       child: _SummaryMetric(
                         icon: Icons.arrow_downward,
-                        iconColor: AppColors.balancePositive,
+                        iconColor: AppColors.primaryAction,
                         label: 'Income',
                         amount: income,
                         amountKey: value.income,
@@ -81,7 +82,7 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                     Expanded(
                       child: _SummaryMetric(
                         icon: Icons.arrow_upward,
-                        iconColor: AppColors.destructiveAction,
+                        iconColor: AppColors.textSecondary,
                         label: 'Expenses',
                         amount: expenses,
                         amountKey: value.expenses,
@@ -117,7 +118,7 @@ final class _SummaryMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[

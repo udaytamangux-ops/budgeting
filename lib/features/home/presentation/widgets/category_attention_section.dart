@@ -27,34 +27,52 @@ final class CategoryAttentionSection extends ConsumerWidget {
         }
         final String remaining = ref
             .watch(currencyFormatterProvider)
-            .format(food.remaining);
+            .format(food.remaining.absolute);
         final String spent = ref
             .watch(currencyFormatterProvider)
             .format(food.spent);
+        final String limit = ref
+            .watch(currencyFormatterProvider)
+            .format(food.limit);
         final int percent = (food.usedFraction * 100).round();
-        final String status = food.isExceeded
-            ? 'Budget exceeded'
+        final _CategoryBudgetTone tone = food.isExceeded
+            ? _CategoryBudgetTone.exceeded
             : food.isNearLimit
-            ? 'Close to limit'
-            : 'Keep an eye on this';
+            ? _CategoryBudgetTone.nearLimit
+            : _CategoryBudgetTone.normal;
+        final String status = switch (tone) {
+          _CategoryBudgetTone.normal => 'Within budget',
+          _CategoryBudgetTone.nearLimit => '$remaining left before the limit',
+          _CategoryBudgetTone.exceeded => '$remaining over the limit',
+        };
+        final String description = food.isExceeded
+            ? '$spent spent against the $limit Food limit.'
+            : '$remaining remains from the $limit Food limit.';
+        final Color statusColor = switch (tone) {
+          _CategoryBudgetTone.normal => AppColors.balancePositive,
+          _CategoryBudgetTone.nearLimit => AppColors.budgetWarning,
+          _CategoryBudgetTone.exceeded => AppColors.destructiveAction,
+        };
+        final Color surfaceColor = switch (tone) {
+          _CategoryBudgetTone.normal => AppColors.surfacePrimary,
+          _CategoryBudgetTone.nearLimit => AppColors.warningSubtle,
+          _CategoryBudgetTone.exceeded => AppColors.dangerSubtle,
+        };
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              'Category to watch',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('Food budget', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: AppSpacing.md),
             Semantics(
               label:
-                  'Food category. $status. $spent spent. $remaining '
-                  'remaining. $percent percent used.',
+                  'Food budget. $status. $spent spent of $limit. '
+                  '$percent percent used.',
               excludeSemantics: true,
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.warningSubtle,
+                  color: surfaceColor,
                   borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(color: AppColors.borderSubtle),
                 ),
@@ -64,13 +82,15 @@ final class CategoryAttentionSection extends ConsumerWidget {
                     Container(
                       width: 44,
                       height: 44,
-                      decoration: const BoxDecoration(
-                        color: AppColors.surfacePrimary,
+                      decoration: BoxDecoration(
+                        color: tone == _CategoryBudgetTone.normal
+                            ? AppColors.primarySubtle
+                            : AppColors.surfacePrimary,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         TransactionCategory.food.visual.icon,
-                        color: AppColors.budgetWarning,
+                        color: statusColor,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -79,18 +99,13 @@ final class CategoryAttentionSection extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            'Food',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: AppSpacing.xxs),
-                          Text(
                             status,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: AppColors.budgetWarning),
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(color: statusColor),
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            '$remaining remains from the food limit.',
+                            description,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -98,7 +113,7 @@ final class CategoryAttentionSection extends ConsumerWidget {
                             value: food.usedFraction.clamp(0, 1),
                             minHeight: 6,
                             borderRadius: BorderRadius.circular(3),
-                            color: AppColors.budgetWarning,
+                            color: statusColor,
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
@@ -119,3 +134,5 @@ final class CategoryAttentionSection extends ConsumerWidget {
     );
   }
 }
+
+enum _CategoryBudgetTone { normal, nearLimit, exceeded }

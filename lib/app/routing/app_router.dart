@@ -4,10 +4,11 @@ import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/routing/authenticated_shell.dart';
 import 'package:budgeting_app/app/routing/transaction_form_route.dart';
 import 'package:budgeting_app/features/auth/presentation/screens/authentication_placeholder_screen.dart';
-import 'package:budgeting_app/features/budgets/presentation/screens/budgets_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:budgeting_app/features/summary/presentation/screens/summary_screen.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/screens/transaction_details_screen.dart';
 import 'package:budgeting_app/features/transactions/presentation/screens/transactions_screen.dart';
 import 'package:flutter/material.dart';
@@ -57,12 +58,22 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
               state.uri.queryParameters['type'] == 'income'
               ? TransactionType.income
               : TransactionType.expense;
+          final String? editTransactionId =
+              state.uri.queryParameters['transactionId'];
+          final String? repeatTransactionId =
+              state.uri.queryParameters['repeatTransactionId'];
+          final TransactionFormIntent intent = repeatTransactionId != null
+              ? TransactionFormIntent.repeat
+              : editTransactionId != null
+              ? TransactionFormIntent.edit
+              : TransactionFormIntent.create;
           return MaterialPage<void>(
             key: state.pageKey,
             fullscreenDialog: true,
             child: TransactionFormRoute(
               initialType: initialType,
-              transactionId: state.uri.queryParameters['transactionId'],
+              transactionId: repeatTransactionId ?? editTransactionId,
+              intent: intent,
             ),
           );
         },
@@ -111,7 +122,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
               GoRoute(
                 path: AppRoutes.budgets,
                 name: AppRouteNames.budgets,
-                builder: (_, _) => const BudgetsScreen(),
+                builder: (_, _) => const SummaryScreen(),
               ),
             ],
           ),

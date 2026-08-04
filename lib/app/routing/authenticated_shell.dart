@@ -1,9 +1,9 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
-import 'package:budgeting_app/features/transactions/presentation/controllers/last_saved_transaction_controller.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_created_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,27 +16,18 @@ final class AuthenticatedShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      body: navigationShell,
-      extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        key: const ValueKey<String>('central_add_button'),
-        tooltip: 'Add transaction',
-        onPressed: () => _openAddTransaction(context, ref),
-        backgroundColor: AppColors.primaryAction,
-        foregroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.large)),
-        ),
-        child: const Icon(Icons.add),
+      body: Column(
+        children: <Widget>[
+          Expanded(child: navigationShell),
+          const TransactionCreatedBanner(),
+        ],
       ),
+      extendBody: false,
       bottomNavigationBar: BottomAppBar(
         height: 76,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
         color: AppColors.surfacePrimary,
-        elevation: 2,
-        notchMargin: AppSpacing.xs,
-        shape: const CircularNotchedRectangle(),
+        elevation: 1,
         child: Row(
           children: <Widget>[
             Expanded(
@@ -57,12 +48,33 @@ final class AuthenticatedShell extends ConsumerWidget {
                 onTap: () => _selectBranch(1),
               ),
             ),
-            const SizedBox(width: 64),
+            SizedBox(
+              width: 64,
+              child: Center(
+                child: FloatingActionButton(
+                  key: const ValueKey<String>('central_add_button'),
+                  tooltip: 'Add transaction',
+                  onPressed: () => _openAddTransaction(context),
+                  backgroundColor: AppColors.primaryAction,
+                  foregroundColor: Colors.white,
+                  elevation: 1,
+                  focusElevation: 1,
+                  hoverElevation: 1,
+                  highlightElevation: 1,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(AppRadius.large),
+                    ),
+                  ),
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            ),
             Expanded(
               child: _NavigationDestination(
-                label: 'Budgets',
-                icon: Icons.track_changes_outlined,
-                selectedIcon: Icons.track_changes,
+                label: 'Summary',
+                icon: Icons.summarize_outlined,
+                selectedIcon: Icons.summarize,
                 isSelected: navigationShell.currentIndex == 2,
                 onTap: () => _selectBranch(2),
               ),
@@ -89,13 +101,11 @@ final class AuthenticatedShell extends ConsumerWidget {
     );
   }
 
-  Future<void> _openAddTransaction(BuildContext context, WidgetRef ref) async {
-    final FinancialTransaction? transaction = await context
-        .push<FinancialTransaction>(AppRoutes.addExpense);
-    if (transaction == null) {
+  Future<void> _openAddTransaction(BuildContext context) async {
+    final Object? result = await context.push<Object?>(AppRoutes.addExpense);
+    if (result == null) {
       return;
     }
-    ref.read(lastSavedTransactionProvider.notifier).show(transaction);
     navigationShell.goBranch(0);
   }
 }
@@ -129,7 +139,16 @@ final class _NavigationDestination extends StatelessWidget {
       child: InkResponse(
         onTap: onTap,
         radius: 32,
-        child: SizedBox.expand(
+        child: AnimatedContainer(
+          duration: AppMotion.accessibleDuration(context, AppMotion.fast),
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxs,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primarySubtle : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[

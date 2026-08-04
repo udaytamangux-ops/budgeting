@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
+import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
+import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
@@ -84,7 +88,7 @@ final class _TransactionDetailsContent extends ConsumerWidget {
               AppSpacing.md,
               AppSpacing.sm,
               AppSpacing.md,
-              AppSpacing.pageEnd,
+              AppSpacing.navigationClearance,
             ),
             children: <Widget>[
               Semantics(
@@ -149,9 +153,12 @@ final class _TransactionDetailsContent extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xxl),
               const Divider(),
               if (transaction.merchant != null)
-                _DetailRow(label: 'Merchant', value: transaction.merchant!),
+                _DetailRow(
+                  label: isIncome ? 'Payer or source' : 'Merchant',
+                  value: transaction.merchant!,
+                ),
               _DetailRow(
-                label: 'Payment method',
+                label: isIncome ? 'Received via' : 'Payment method',
                 value: transaction.paymentMethod.label,
               ),
               _DetailRow(label: 'Transaction date', value: transactionDate),
@@ -170,6 +177,17 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                 icon: const Icon(Icons.edit_outlined),
                 label: const Text('Edit transaction'),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                key: const ValueKey<String>('repeat_transaction_button'),
+                onPressed: actionState.isDeleting
+                    ? null
+                    : () => unawaited(_repeatTransaction(context, ref)),
+                icon: const Icon(Icons.replay_outlined),
+                label: const Text('Repeat transaction'),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const Divider(),
               const SizedBox(height: AppSpacing.sm),
               Semantics(
                 button: true,
@@ -247,8 +265,8 @@ final class _TransactionDetailsContent extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               const Text(
-                'Deleting it will update your available balance and monthly '
-                'budget.',
+                'Deleting it will update your recorded balance and financial '
+                'summary.',
               ),
             ],
           ),
@@ -281,6 +299,15 @@ final class _TransactionDetailsContent extends ConsumerWidget {
       ).showSnackBar(const SnackBar(content: Text('Transaction deleted.')));
       context.pop();
     }
+  }
+
+  Future<void> _repeatTransaction(BuildContext context, WidgetRef ref) async {
+    ref
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.transactionRepeatStarted);
+    await context.push<FinancialTransaction>(
+      AppRoutes.repeatTransaction(transaction.id),
+    );
   }
 }
 

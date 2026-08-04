@@ -11,6 +11,10 @@ final class Money implements Comparable<Money> {
   bool get isPositive => minorUnits > 0;
   bool get isZero => minorUnits == 0;
 
+  Money get absolute => isNegative
+      ? Money(minorUnits: -minorUnits, currencyCode: currencyCode)
+      : this;
+
   Money operator +(Money other) {
     _ensureSameCurrency(other);
     return Money(

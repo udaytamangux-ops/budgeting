@@ -8,4 +8,5 @@ abstract final class AppSpacing {
   static const double xxl = 32;
   static const double section = 40;
   static const double pageEnd = 48;
+  static const double navigationClearance = pageEnd + xl;
 }

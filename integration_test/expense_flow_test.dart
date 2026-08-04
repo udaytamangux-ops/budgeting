@@ -31,6 +31,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.drag(
+      find.byKey(const ValueKey<String>('home_content')),
+      const Offset(0, -160),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_expense_button')),
     );
@@ -51,6 +56,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Cash').last);
     await tester.pumpAndSettle();
+    await tester.drag(
+      find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
+      const Offset(0, -1000),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('optional_fields_toggle')),
+    );
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('merchant_input')),
       280,
@@ -69,7 +83,10 @@ void main() {
 
     expect(find.text('NPR 36,000'), findsOneWidget);
     expect(find.text('NPR 24,000'), findsOneWidget);
-    expect(find.text('NPR 16,000 left'), findsOneWidget);
+    expect(find.text('7 transactions recorded'), findsOneWidget);
+    expect(find.text('Spent across 4 categories'), findsOneWidget);
+    expect(find.text('Recorded balance'), findsOneWidget);
+    expect(find.text('Monthly budget'), findsNothing);
     await tester.scrollUntilVisible(
       find.text('Lunch at Thamel'),
       280,

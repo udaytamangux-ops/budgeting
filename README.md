@@ -1,16 +1,19 @@
 # Budgeting
 
-Budgeting is a mobile-first NPR budgeting application for young salaried professionals in Nepal. This repository currently establishes the Flutter foundation and the first connected product journey: reviewing the monthly position, adding an expense, seeing the updated budget immediately, and opening the saved transaction.
+Budgeting is a mobile-first NPR transaction tracker for young salaried professionals in Nepal. This repository establishes the Flutter foundation and a connected product journey: reviewing recorded income and expenses, adding a transaction, seeing the recorded balance update immediately, and opening the saved record.
 
 The application is ready for product and engineering review, but it is not production-complete. Authentication, persistent storage, synchronization, and backend services are intentionally deferred.
 
 ## Current scope
 
-- Home summary with monthly income, expenses, available balance, budget progress, category attention, and recent transactions
-- Full-screen expense and income form with validation, asynchronous save states, and failure recovery
+- Tracking-first Home with recorded balance, monthly income and expenses, compact add actions, a neutral monthly summary, and recent transactions
+- Full-screen expense and income form with recent categories, session-only payment-method memory, Today/Yesterday shortcuts, progressive optional fields, validation, asynchronous save states, and failure recovery
+- Searchable, filterable transaction history grouped by meaningful calendar dates
+- Neutral monthly Summary with month navigation, income, expenses, net change, transaction count, and an accessible category-spending donut with a ranked text breakdown
+- Mock profile and preference structure with debug-only development information
 - In-memory create, read, update, and delete transaction repository
-- Lightweight saved-transaction confirmation with a direct details link
-- Transaction details, reusable edit form foundation, and explicit delete confirmation
+- Lightweight saved-transaction confirmation with a time-limited, recoverable Undo action
+- Transaction details with reusable Edit and Repeat flows plus explicit delete confirmation
 - Four-destination authenticated application shell using a temporary development session
 - Loading, empty, populated, error, saving, success, not-found, deleting, and delete-failure states
 - Centralized Material 3 design tokens, Inter typography, NPR/date formatting, and reduced-motion behavior
@@ -75,19 +78,20 @@ lib/
 │   └── widgets/         # Small cross-feature UI primitives
 └── features/
     ├── auth/            # Development-session route placeholders
-    ├── budgets/         # Budget policy, summaries, and presentation
-    ├── home/            # Financial overview and focused summary sections
-    ├── profile/         # Profile placeholder state
+    ├── budgets/         # Isolated prototype budget logic outside the current UI
+    ├── home/            # Recorded position, quick actions, and recent activity
+    ├── profile/         # Mock profile, preferences, privacy, and debug state
+    ├── summary/         # Neutral monthly aggregation and presentation
     └── transactions/    # Domain, in-memory data, controllers, and screens
 ```
 
 ### State management
 
-`flutter_riverpod` provides repository dependency injection, the transaction stream, transaction lookup, calculated financial and budget summaries, asynchronous form submission, saved-transaction confirmation, and deletion state. Ephemeral field focus, text editing, expansion, and form selection remain local to the owning widgets.
+`flutter_riverpod` provides repository dependency injection, the transaction stream, transaction lookup, recent-category derivation, session payment-method memory, calculated financial and neutral monthly summaries, asynchronous form submission, race-safe Undo confirmation, and deletion state. Ephemeral field focus, text editing, expansion, and form selection remain local to the owning widgets.
 
 ### Navigation
 
-`go_router` defines public authentication-ready routes, a state-preserving authenticated shell, transaction details, and a root-navigator full-screen transaction form. The center Add control is an action rather than a fifth navigation destination.
+`go_router` defines public authentication-ready routes, a state-preserving authenticated shell, transaction details, and a root-navigator full-screen transaction form reused for create, edit, and repeat intents. The center Add control is an action rather than a fifth navigation destination.
 
 ### Financial values
 
@@ -96,6 +100,8 @@ Money is stored as integer minor units in the `Money` value object. No financial
 ### Data access
 
 Presentation code depends on the `TransactionRepository` interface. `InMemoryTransactionRepository` supplies realistic Nepal-focused seed data, broadcasts changes, supports CRUD operations, simulates save latency, and exposes controlled failures for tests. It can be replaced with local and cloud implementations without changing screens.
+
+The default mock source includes current- and previous-month records so month-scoped Summary behavior can be reviewed without persistence. Payment-method data remains available to transaction filters and details but is not shown in the default Summary view.
 
 ## Packages
 
@@ -123,18 +129,20 @@ Changing identifiers requires updating platform configuration and any future sig
 - Drift or another persistent local data store
 - Supabase or another cloud synchronization service
 - Secure environment configuration and production flavors
-- Notifications, goals, analytics, and AI-assisted insights
+- Notifications, goals, an analytics SDK, and AI-assisted insights. Stable privacy-safe event names exist internally, but no analytics data is transmitted.
 - Production application icons, signing, store metadata, privacy policy, and release automation
 
 ## Known limitations
 
 - Data resets whenever the process restarts because the repository is in memory.
+- Remembered payment methods last only for the current application session.
+- Undo is available for eight seconds after a create; it is not a permanent transaction-recovery system.
 - The temporary development session opens the authenticated shell directly.
-- Monthly and category budgets are fixed prototype policies rather than user-configurable records.
+- The current product does not set limits, score spending, or provide financial guidance; the retained prototype budget code is isolated from user-facing routes.
 - Edit reuses the transaction form and repository update path, but the broader editing product policy still needs review.
 - iOS compilation requires a macOS/Xcode environment and was not verified from this Windows workspace.
 - The project has not yet completed production security, privacy, localization, or device-matrix review.
 
 ## Immediate next task
 
-Review the first high-fidelity vertical slice for UX, accessibility, visual hierarchy, motion quality, code architecture, and performance before building additional screens or connecting a backend.
+Review the tracking-first vertical slice for UX, accessibility, visual hierarchy, motion quality, code architecture, and performance before adding persistence or expanding product scope.

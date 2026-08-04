@@ -21,7 +21,7 @@ final class CategoryBudgetProgress {
     return spent.minorUnits / limit.minorUnits;
   }
 
-  bool get isNearLimit => usedFraction >= 0.75;
+  bool get isNearLimit => usedFraction >= 0.8;
   bool get isExceeded => spent > limit;
 }
 
@@ -40,6 +40,16 @@ final class MonthlyBudgetSummary {
 
   bool get hasBudget => limit.isPositive;
   Money get remaining => limit - spent;
+
+  Money get allocatedBudget {
+    Money allocated = Money.zero(currencyCode: limit.currencyCode);
+    for (final CategoryBudgetProgress category in categories) {
+      allocated += category.limit;
+    }
+    return allocated;
+  }
+
+  Money get unallocatedBudget => limit - allocatedBudget;
 
   CategoryBudgetProgress? progressFor(TransactionCategory category) {
     for (final CategoryBudgetProgress progress in categories) {

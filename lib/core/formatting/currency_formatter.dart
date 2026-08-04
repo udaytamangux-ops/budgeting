@@ -18,4 +18,11 @@ final class CurrencyFormatter {
     final String sign = money.isNegative ? '−' : '';
     return '$sign${money.currencyCode} $groupedWholeUnits$decimalPart';
   }
+
+  String formatSigned(Money money) {
+    if (money.isPositive) {
+      return '+${format(money)}';
+    }
+    return format(money);
+  }
 }

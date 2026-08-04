@@ -2,15 +2,18 @@ import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
-import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/primary_button.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
+import 'package:budgeting_app/features/transactions/presentation/controllers/last_saved_transaction_controller.dart';
+import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/category_selector.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/payment_method_selector.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/quick_date_selector.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_amount_field.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,6 +33,7 @@ final class _AddTransactionScreenState
   final FocusNode _amountFocus = FocusNode();
   final FocusNode _merchantFocus = FocusNode();
   final FocusNode _noteFocus = FocusNode();
+  late bool _showOptionalFields;
 
   @override
   void initState() {
@@ -40,6 +44,8 @@ final class _AddTransactionScreenState
     _amountController = TextEditingController(text: initial.amountInput);
     _merchantController = TextEditingController(text: initial.merchant);
     _noteController = TextEditingController(text: initial.note);
+    _showOptionalFields =
+        initial.merchant.isNotEmpty || initial.note.isNotEmpty;
   }
 
   @override
@@ -61,18 +67,40 @@ final class _AddTransactionScreenState
     final AddTransactionController controller = ref.read(
       addTransactionControllerProvider.notifier,
     );
-    final String typeLabel = state.type == TransactionType.expense
-        ? 'Expense'
-        : 'Income';
+    final List<TransactionCategory> recentCategories = ref
+        .watch(recentTransactionCategoriesProvider(state.type))
+        .maybeWhen(
+          data: (List<TransactionCategory> categories) => categories,
+          orElse: () => const <TransactionCategory>[],
+        );
+    final bool isExpense = state.type == TransactionType.expense;
+    final String optionalActionLabel = isExpense
+        ? 'Add merchant or note'
+        : 'Add payer or note';
+    final String merchantLabel = isExpense
+        ? 'Merchant (optional)'
+        : 'Payer or source (optional)';
+    final String saveLabel = state.isEditing
+        ? 'Save changes'
+        : isExpense
+        ? 'Save expense'
+        : 'Save income';
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
           tooltip: 'Cancel',
           onPressed: state.isSubmitting ? null : context.pop,
           icon: const Icon(Icons.close),
         ),
-        title: Text(state.isEditing ? 'Edit transaction' : 'Add transaction'),
+        title: Text(
+          state.isEditing
+              ? 'Edit transaction'
+              : state.isRepeatDraft
+              ? 'Repeat transaction'
+              : 'Add transaction',
+        ),
       ),
       body: SafeArea(
         top: false,
@@ -81,113 +109,142 @@ final class _AddTransactionScreenState
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
             child: ListView(
+              key: const ValueKey<String>('add_transaction_form_scroll'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.sm,
                 AppSpacing.md,
-                120,
+                AppSpacing.navigationClearance,
               ),
               children: <Widget>[
-                Semantics(
-                  label: 'Transaction type, $typeLabel selected',
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<TransactionType>(
-                      segments: const <ButtonSegment<TransactionType>>[
-                        ButtonSegment<TransactionType>(
-                          value: TransactionType.expense,
-                          label: Text('Expense'),
-                          icon: Icon(Icons.remove_circle_outline),
-                        ),
-                        ButtonSegment<TransactionType>(
-                          value: TransactionType.income,
-                          label: Text('Income'),
-                          icon: Icon(Icons.add_circle_outline),
-                        ),
-                      ],
-                      selected: <TransactionType>{state.type},
-                      onSelectionChanged: state.isSubmitting
-                          ? null
-                          : (Set<TransactionType> selection) {
-                              controller.updateType(selection.first);
-                            },
+                if (state.isRepeatDraft) ...<Widget>[
+                  Semantics(
+                    label:
+                        'A new transaction will be created using details from '
+                        'the original.',
+                    excludeSemantics: true,
+                    child: Text(
+                      'A new transaction will be created using details from '
+                      'the original.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                TransactionTypeSelector(
+                  value: state.type,
+                  isEnabled: !state.isSubmitting,
+                  onChanged: controller.updateType,
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                TextField(
-                  key: const ValueKey<String>('amount_input'),
+                const SizedBox(height: AppSpacing.lg),
+                TransactionAmountField(
                   controller: _amountController,
                   focusNode: _amountFocus,
-                  enabled: !state.isSubmitting,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  textInputAction: TextInputAction.done,
-                  inputFormatters: <TextInputFormatter>[
-                    const TransactionAmountInputFormatter(),
-                  ],
+                  isEnabled: !state.isSubmitting,
+                  errorText: state.amountError,
                   onChanged: controller.updateAmount,
-                  style: Theme.of(context).textTheme.displaySmall,
-                  decoration: InputDecoration(
-                    labelText: 'Amount',
-                    helperText: 'Required · NPR',
-                    errorText: state.amountError,
-                    prefixText: 'NPR ',
-                    prefixStyle: Theme.of(context).textTheme.titleLarge
-                        ?.copyWith(color: AppColors.textSecondary),
-                  ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 CategorySelector(
                   type: state.type,
                   selectedCategory: state.selectedCategory,
+                  recentCategories: recentCategories,
+                  isEnabled: !state.isSubmitting,
                   errorText: state.categoryError,
                   onSelected: controller.selectCategory,
+                  onRecentSelected: controller.selectRecentCategory,
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 PaymentMethodSelector(
+                  type: state.type,
                   value: state.paymentMethod,
+                  isEnabled: !state.isSubmitting,
                   onChanged: controller.updatePaymentMethod,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _DateField(
+                QuickDateSelector(
                   date: state.occurredDate,
                   isEnabled: !state.isSubmitting,
-                  onChanged: controller.updateOccurredDate,
+                  onChanged: controller.selectQuickDate,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  key: const ValueKey<String>('merchant_input'),
-                  controller: _merchantController,
-                  focusNode: _merchantFocus,
-                  enabled: !state.isSubmitting,
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _noteFocus.requestFocus(),
-                  onChanged: controller.updateMerchant,
-                  maxLength: 80,
-                  decoration: const InputDecoration(
-                    labelText: 'Merchant',
-                    helperText: 'Optional',
-                    counterText: '',
+                const SizedBox(height: AppSpacing.xs),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const ValueKey<String>('optional_fields_toggle'),
+                    onPressed: state.isSubmitting
+                        ? null
+                        : () {
+                            setState(() {
+                              _showOptionalFields = !_showOptionalFields;
+                            });
+                          },
+                    icon: Icon(
+                      _showOptionalFields ? Icons.expand_less : Icons.add,
+                    ),
+                    label: Text(
+                      _showOptionalFields
+                          ? 'Hide optional details'
+                          : optionalActionLabel,
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  key: const ValueKey<String>('note_input'),
-                  controller: _noteController,
-                  focusNode: _noteFocus,
-                  enabled: !state.isSubmitting,
-                  textInputAction: TextInputAction.done,
-                  onChanged: controller.updateNote,
-                  maxLength: 200,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'Note',
-                    helperText: 'Optional',
-                    alignLabelWithHint: true,
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: AppMotion.accessibleDuration(
+                      context,
+                      AppMotion.standard,
+                    ),
+                    curve: AppMotion.emphasized,
+                    alignment: Alignment.topCenter,
+                    child: _showOptionalFields
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.xs),
+                            child: Column(
+                              children: <Widget>[
+                                TextField(
+                                  key: const ValueKey<String>('merchant_input'),
+                                  controller: _merchantController,
+                                  focusNode: _merchantFocus,
+                                  enabled: !state.isSubmitting,
+                                  textInputAction: TextInputAction.next,
+                                  onSubmitted: (_) => _noteFocus.requestFocus(),
+                                  onChanged: controller.updateMerchant,
+                                  maxLength: 80,
+                                  scrollPadding: const EdgeInsets.only(
+                                    bottom: AppSpacing.navigationClearance,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: merchantLabel,
+                                    counterText: '',
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                TextField(
+                                  key: const ValueKey<String>('note_input'),
+                                  controller: _noteController,
+                                  focusNode: _noteFocus,
+                                  enabled: !state.isSubmitting,
+                                  textInputAction: TextInputAction.done,
+                                  onChanged: controller.updateNote,
+                                  maxLength: 200,
+                                  minLines: 2,
+                                  maxLines: 4,
+                                  scrollPadding: const EdgeInsets.only(
+                                    bottom: AppSpacing.navigationClearance,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Note (optional)',
+                                    alignLabelWithHint: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
                   ),
                 ),
               ],
@@ -209,64 +266,71 @@ final class _AddTransactionScreenState
               AppSpacing.md,
               AppSpacing.md,
             ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 608),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  AnimatedSize(
-                    duration: AppMotion.accessibleDuration(
-                      context,
-                      AppMotion.fast,
-                    ),
-                    child: state.submissionError == null
-                        ? const SizedBox.shrink()
-                        : Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(
-                              bottom: AppSpacing.sm,
-                            ),
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            decoration: BoxDecoration(
-                              color: AppColors.dangerSubtle,
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.small,
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 608),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    AnimatedSize(
+                      duration: AppMotion.accessibleDuration(
+                        context,
+                        AppMotion.fast,
+                      ),
+                      child: state.submissionError == null
+                          ? const SizedBox.shrink()
+                          : Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(
+                                bottom: AppSpacing.sm,
                               ),
-                            ),
-                            child: Semantics(
-                              liveRegion: true,
-                              child: Row(
-                                children: <Widget>[
-                                  const Icon(
-                                    Icons.error_outline,
-                                    color: AppColors.destructiveAction,
-                                  ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Expanded(
-                                    child: Text(
-                                      state.submissionError!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: AppColors.destructiveAction,
-                                          ),
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: AppColors.dangerSubtle,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.small,
+                                ),
+                              ),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Row(
+                                  children: <Widget>[
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: AppColors.destructiveAction,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Expanded(
+                                      child: Text(
+                                        state.submissionError!,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color:
+                                                  AppColors.destructiveAction,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                  ),
-                  PrimaryButton(
-                    key: const ValueKey<String>('save_transaction_button'),
-                    label: state.isEditing ? 'Save changes' : 'Save $typeLabel',
-                    isLoading: state.isSubmitting,
-                    onPressed: state.canSubmit
-                        ? () => _submit(controller)
-                        : null,
-                  ),
-                ],
+                    ),
+                    PrimaryButton(
+                      key: const ValueKey<String>('save_transaction_button'),
+                      label: saveLabel,
+                      isLoading: state.isSubmitting,
+                      onPressed: state.canSubmit
+                          ? () => _submit(
+                              controller,
+                              shouldShowConfirmation: !state.isEditing,
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -275,74 +339,17 @@ final class _AddTransactionScreenState
     );
   }
 
-  Future<void> _submit(AddTransactionController controller) async {
+  Future<void> _submit(
+    AddTransactionController controller, {
+    required bool shouldShowConfirmation,
+  }) async {
     FocusScope.of(context).unfocus();
     final FinancialTransaction? saved = await controller.submit();
     if (saved != null && mounted) {
+      if (shouldShowConfirmation) {
+        ref.read(lastSavedTransactionProvider.notifier).show(saved);
+      }
       context.pop<FinancialTransaction>(saved);
     }
-  }
-}
-
-final class _DateField extends ConsumerWidget {
-  const _DateField({
-    required this.date,
-    required this.isEnabled,
-    required this.onChanged,
-  });
-
-  final DateTime date;
-  final bool isEnabled;
-  final ValueChanged<DateTime> onChanged;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final String formattedDate = ref
-        .watch(dateFormatterProvider)
-        .longDate(date);
-    return Semantics(
-      button: true,
-      label: 'Transaction date, $formattedDate, required',
-      child: InkWell(
-        onTap: isEnabled ? () => _selectDate(context) : null,
-        borderRadius: BorderRadius.circular(AppRadius.small),
-        child: InputDecorator(
-          decoration: const InputDecoration(
-            labelText: 'Date',
-            helperText: 'Required',
-            suffixIcon: Icon(Icons.calendar_today_outlined),
-          ),
-          child: Text(formattedDate),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime now = DateTime.now();
-    final DateTime? selected = await showDatePicker(
-      context: context,
-      initialDate: date,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 1),
-      helpText: 'Select transaction date',
-    );
-    if (selected != null) {
-      onChanged(selected);
-    }
-  }
-}
-
-final class TransactionAmountInputFormatter extends TextInputFormatter {
-  const TransactionAmountInputFormatter();
-
-  static final RegExp _validInput = RegExp(r'^\d{0,9}(?:\.\d{0,2})?$');
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    return _validInput.hasMatch(newValue.text) ? newValue : oldValue;
   }
 }
