@@ -70,12 +70,20 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
               data: (List<FinancialTransaction> values) {
                 if (values.isEmpty) {
-                  return const EmptyState(
-                    title: 'No transactions yet',
-                    message:
-                        'Add your first income or expense to start '
-                        'understanding where your money goes.',
+                  return EmptyState(
+                    title: 'No transactions recorded yet',
+                    message: 'Income and expenses you add will appear here.',
                     icon: Icons.receipt_long_outlined,
+                    action: FilledButton.icon(
+                      key: const ValueKey<String>(
+                        'empty_transactions_add_button',
+                      ),
+                      onPressed: () {
+                        unawaited(context.push<void>(AppRoutes.addExpense));
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add transaction'),
+                    ),
                   );
                 }
                 final List<TransactionDateGroup> groups = _filter.apply(
@@ -124,7 +132,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         child: EmptyState(
                           title: 'No matching transactions',
                           message:
-                              'Try another search or clear the current filters.',
+                              'Try another month, transaction type, or search.',
                           icon: Icons.search_off_outlined,
                           action: OutlinedButton.icon(
                             key: const ValueKey<String>(

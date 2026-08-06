@@ -10,6 +10,7 @@ abstract final class AppRoutes {
   static const String budgets = '/app/budgets';
   static const String summary = budgets;
   static const String profile = '/app/profile';
+  static const String privacyAndData = '/app/profile/privacy-and-data';
   static const String addExpense = '/app/add-transaction';
   static const String addIncome = '/app/add-transaction?type=income';
 

@@ -14,7 +14,7 @@ void main() {
       WidgetTester tester,
     ) async {
       _configureView(tester, width: width);
-      await pumpBudgetingApp(tester);
+      await pumpBudgetingApp(tester, useMockTransactions: true);
 
       expect(tester.takeException(), isNull);
       await tester.tap(
@@ -58,7 +58,7 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 2;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     expect(find.text('NPR 37,250'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
@@ -93,7 +93,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _configureView(tester, width: 320);
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
 
     final Finder homeContent = find.byKey(
       const ValueKey<String>('home_content'),

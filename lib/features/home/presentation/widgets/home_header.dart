@@ -3,8 +3,6 @@ import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
-import 'package:budgeting_app/features/profile/data/mock_profile_source.dart';
-import 'package:budgeting_app/features/profile/domain/entities/profile_identity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +12,6 @@ final class HomeHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const ProfileIdentity profile = MockProfileSource.profile;
     final String month = ref
         .watch(dateFormatterProvider)
         .monthName(ref.watch(currentDateProvider));
@@ -33,13 +30,10 @@ final class HomeHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  'Namaste, ${profile.firstName}',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Namaste', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  'Here’s your $month activity.',
+                  "Here's your $month activity.",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -50,7 +44,7 @@ final class HomeHeader extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           Semantics(
             button: true,
-            label: 'Open ${profile.fullName} profile',
+            label: 'Open local profile',
             excludeSemantics: true,
             child: InkResponse(
               key: const ValueKey<String>('home_profile_button'),
@@ -67,11 +61,10 @@ final class HomeHeader extends ConsumerWidget {
                       color: AppColors.primarySubtle,
                       shape: BoxShape.circle,
                     ),
-                    child: Text(
-                      profile.initials,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppColors.primaryAction,
-                      ),
+                    child: const Icon(
+                      Icons.person_outline,
+                      color: AppColors.primaryAction,
+                      size: 22,
                     ),
                   ),
                 ),

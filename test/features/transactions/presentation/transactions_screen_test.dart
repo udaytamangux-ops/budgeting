@@ -1,14 +1,16 @@
+import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/pump_app.dart';
+import '../../../support/test_data.dart';
 
 void main() {
   testWidgets('transactions are grouped and searchable with clear filters', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Transactions'));
     await tester.pumpAndSettle();
 
@@ -46,5 +48,54 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Kathmandu Lunch Club'), findsOneWidget);
     expect(find.text('No matching transactions'), findsNothing);
+  });
+
+  testWidgets('completely empty history offers the existing add journey', (
+    WidgetTester tester,
+  ) async {
+    final SemanticsHandle semantics = tester.ensureSemantics();
+    await pumpBudgetingApp(tester);
+    await tester.tap(find.text('Transactions'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No transactions recorded yet'), findsOneWidget);
+    expect(
+      find.text('Income and expenses you add will appear here.'),
+      findsOneWidget,
+    );
+    final Finder action = find.byKey(
+      const ValueKey<String>('empty_transactions_add_button'),
+    );
+    expect(action, findsOneWidget);
+    expect(find.bySemanticsLabel('Add transaction'), findsOneWidget);
+
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(find.text('Add transaction'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('a month without matches remains distinct from empty history', (
+    WidgetTester tester,
+  ) async {
+    await pumpBudgetingApp(
+      tester,
+      seedTransactions: <FinancialTransaction>[
+        buildTestTransaction(
+          id: 'previous-month-only',
+          occurredAt: DateTime.utc(2026, 7, 12, 6, 15),
+        ),
+      ],
+    );
+    await tester.tap(find.text('Transactions'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No matching transactions'), findsOneWidget);
+    expect(
+      find.text('Try another month, transaction type, or search.'),
+      findsOneWidget,
+    );
+    expect(find.text('No transactions recorded yet'), findsNothing);
+    expect(find.text('Clear filters'), findsOneWidget);
   });
 }

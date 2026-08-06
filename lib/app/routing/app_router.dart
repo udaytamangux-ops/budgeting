@@ -7,6 +7,7 @@ import 'package:budgeting_app/app/routing/transaction_form_route.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/features/auth/presentation/screens/authentication_placeholder_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
+import 'package:budgeting_app/features/profile/presentation/screens/privacy_and_data_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/category_details_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/summary_screen.dart';
@@ -175,6 +176,13 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                 path: AppRoutes.profile,
                 name: AppRouteNames.profile,
                 builder: (_, _) => const ProfileScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'privacy-and-data',
+                    name: AppRouteNames.privacyAndData,
+                    builder: (_, _) => const PrivacyAndDataScreen(),
+                  ),
+                ],
               ),
             ],
           ),

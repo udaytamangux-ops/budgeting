@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:budgeting_app/core/errors/app_exception.dart';
-import 'package:budgeting_app/features/transactions/data/sources/mock_transaction_source.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/services/financial_summary_service.dart';
@@ -14,8 +13,7 @@ final class InMemoryTransactionRepository implements TransactionRepository {
   }) : _saveDelay = operationDelay,
        _now = now ?? DateTime.now,
        _transactions = List<FinancialTransaction>.from(
-         seedTransactions ??
-             MockTransactionSource.buildSeedData((now ?? DateTime.now)()),
+         seedTransactions ?? const <FinancialTransaction>[],
        );
 
   final Duration _saveDelay;

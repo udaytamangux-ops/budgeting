@@ -1,4 +1,5 @@
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
@@ -6,20 +7,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/pump_app.dart';
+import '../../../support/test_data.dart';
 
 void main() {
-  testWidgets('Home renders a personalised neutral activity overview', (
+  testWidgets('Home renders a neutral recorded activity overview', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
 
-    expect(find.text('Namaste, Aarav'), findsOneWidget);
-    expect(find.text('Here’s your August activity.'), findsOneWidget);
-    expect(find.text('AS'), findsOneWidget);
-    expect(
-      find.bySemanticsLabel('Open Aarav Shrestha profile'),
-      findsOneWidget,
-    );
+    expect(find.text('Namaste'), findsOneWidget);
+    expect(find.text("Here's your August activity."), findsOneWidget);
+    expect(find.text('Aarav Shrestha'), findsNothing);
+    expect(find.text('aarav.shrestha@example.com'), findsNothing);
+    expect(find.text('AS'), findsNothing);
+    expect(find.bySemanticsLabel('Open local profile'), findsOneWidget);
     expect(find.text('Recorded balance'), findsOneWidget);
     expect(find.text('Available balance'), findsNothing);
     expect(find.text('NPR 37,250'), findsOneWidget);
@@ -153,7 +154,7 @@ void main() {
   testWidgets('View details opens the Summary destination', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
 
     await tester.tap(find.byKey(const ValueKey<String>('view_summary_button')));
     await tester.pumpAndSettle();
@@ -162,7 +163,7 @@ void main() {
     expect(find.text('Where your money went'), findsOneWidget);
   });
 
-  testWidgets('profile initials control opens Profile', (
+  testWidgets('generic profile control opens the local Profile state', (
     WidgetTester tester,
   ) async {
     await pumpBudgetingApp(tester);
@@ -171,23 +172,116 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Profile'), findsWidgets);
-    expect(find.text('Aarav Shrestha'), findsOneWidget);
+    expect(find.text('Local profile'), findsOneWidget);
+    expect(find.text('No account connected'), findsOneWidget);
   });
 
   testWidgets('Home renders a useful empty state', (WidgetTester tester) async {
-    await pumpBudgetingApp(
-      tester,
-      seedTransactions: const <FinancialTransaction>[],
-    );
+    await pumpBudgetingApp(tester);
 
-    expect(find.text('No transactions yet'), findsOneWidget);
+    expect(find.text('Recorded balance'), findsOneWidget);
+    expect(find.text('NPR 0'), findsNWidgets(3));
+    expect(
+      find.byKey(const ValueKey<String>('home_add_expense_button')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('home_add_income_button')),
+      findsOneWidget,
+    );
+    expect(find.text('Start recording your money activity'), findsOneWidget);
     expect(
       find.text(
-        'Add your first income or expense to start understanding where your money goes.',
+        'Add your first income or expense to begin building your personal ledger.',
       ),
       findsOneWidget,
     );
+    await tester.scrollUntilVisible(
+      find.byKey(
+        const ValueKey<String>('home_recent_transactions_empty_state'),
+      ),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('No recent transactions yet'), findsOneWidget);
+    expect(
+      find.text('Income and expenses you add will appear here.'),
+      findsOneWidget,
+    );
     expect(find.text('Add expense'), findsOneWidget);
+    expect(find.text('Add income'), findsOneWidget);
+    expect(find.text('Aarav Shrestha'), findsNothing);
+    expect(find.textContaining('example.com'), findsNothing);
+  });
+
+  testWidgets('the first transaction replaces Home first-use content', (
+    WidgetTester tester,
+  ) async {
+    final InMemoryTransactionRepository repository = await pumpBudgetingApp(
+      tester,
+    );
+    expect(find.text('Start recording your money activity'), findsOneWidget);
+
+    await tester.runAsync(
+      () => repository.createTransaction(
+        buildTestTransaction(id: 'first-recorded-transaction'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Start recording your money activity'), findsNothing);
+    expect(find.text('1 transaction recorded'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Lunch at Thamel'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Lunch at Thamel'), findsOneWidget);
+  });
+
+  testWidgets('Recorded Balance explanation is truthful and closable', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 900);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final SemanticsHandle semantics = tester.ensureSemantics();
+    await pumpBudgetingApp(tester);
+
+    final Finder informationButton = find.byKey(
+      const ValueKey<String>('recorded_balance_information_button'),
+    );
+    expect(find.byTooltip('About recorded balance'), findsOneWidget);
+    await tester.tap(informationButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('About recorded balance'), findsOneWidget);
+    expect(
+      find.textContaining(
+        'Recorded balance is the difference between the income and expenses '
+        'recorded in this app for the current month.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('does not connect to your bank account'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('kept for the current app session'),
+      findsOneWidget,
+    );
+    expect(find.text('Session-only storage'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('close_recorded_balance_information')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('About recorded balance'), findsNothing);
+    semantics.dispose();
   });
 
   testWidgets('Home renders loading and repository error states', (

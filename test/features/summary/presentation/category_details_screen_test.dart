@@ -17,7 +17,7 @@ void main() {
   testWidgets('Category Details presents factual expense category activity', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await _openCategoryDetails(
       tester,
       CategoryDetailsRouteData(
@@ -45,7 +45,7 @@ void main() {
   testWidgets('Category Details supports income sources', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await _openCategoryDetails(
       tester,
       CategoryDetailsRouteData(
@@ -67,7 +67,7 @@ void main() {
   testWidgets('empty category states remain neutral and type-specific', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await _openCategoryDetails(
       tester,
       CategoryDetailsRouteData(
@@ -104,7 +104,7 @@ void main() {
   testWidgets('Summary month and category context survive the nested journey', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     await tester.tap(
@@ -156,7 +156,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _configureView(tester, width: 320, textScale: 2);
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await _openCategoryDetails(
       tester,
       CategoryDetailsRouteData(
@@ -175,7 +175,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _configureView(tester, width: 768);
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await _openCategoryDetails(
       tester,
       CategoryDetailsRouteData(
@@ -223,7 +223,7 @@ void main() {
   ) async {
     _configureView(tester, width: 390);
     final SemanticsHandle semantics = tester.ensureSemantics();
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await _openCategoryDetails(
       tester,
       CategoryDetailsRouteData(

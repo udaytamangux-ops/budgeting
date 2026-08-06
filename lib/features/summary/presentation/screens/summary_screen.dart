@@ -12,7 +12,6 @@ import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
-import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
@@ -101,32 +100,34 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                           : () => _changeMonth(1),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    if (value.transactionCount == 0)
-                      const EmptyState(
-                        title: 'No transactions this month',
-                        message:
-                            'Income and expenses recorded for this month will '
-                            'appear here.',
-                        icon: Icons.summarize_outlined,
-                      )
-                    else ...<Widget>[
-                      _MonthlyRecords(
-                        summary: value,
-                        currencyFormatter: currencyFormatter,
-                      ),
-                      const SizedBox(height: AppSpacing.xxl),
-                      CategoryExplorationSection(
-                        activity: activity,
-                        selectedGroupKey: _selectedGroupKey,
-                        currencyFormatter: currencyFormatter,
-                        onTypeChanged: _changeActivityType,
-                        onGroupSelected: _selectGroup,
-                        onAllCategoriesSelected: _showAllCategories,
-                        onViewTransactions: (CategoryActivityGroup group) {
-                          unawaited(_openCategoryDetails(context, group));
-                        },
-                      ),
-                    ],
+                    _MonthlyRecords(
+                      summary: value,
+                      currencyFormatter: currencyFormatter,
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    CategoryExplorationSection(
+                      activity: activity,
+                      monthName: ref
+                          .watch(dateFormatterProvider)
+                          .monthName(_selectedMonth),
+                      selectedGroupKey: _selectedGroupKey,
+                      currencyFormatter: currencyFormatter,
+                      onTypeChanged: _changeActivityType,
+                      onGroupSelected: _selectGroup,
+                      onAllCategoriesSelected: _showAllCategories,
+                      onViewTransactions: (CategoryActivityGroup group) {
+                        unawaited(_openCategoryDetails(context, group));
+                      },
+                      onAddTransaction: (TransactionType type) {
+                        unawaited(
+                          context.push<void>(
+                            type == TransactionType.expense
+                                ? AppRoutes.addExpense
+                                : AppRoutes.addIncome,
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

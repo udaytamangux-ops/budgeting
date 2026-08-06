@@ -1,58 +1,151 @@
+import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/pump_app.dart';
 
 void main() {
-  testWidgets('Profile shows mock identity and preference structure', (
+  testWidgets('Profile shows a neutral local state and honest preferences', (
     WidgetTester tester,
   ) async {
     await pumpBudgetingApp(tester);
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Aarav Shrestha'), findsOneWidget);
-    expect(find.text('aarav.shrestha@example.com'), findsOneWidget);
+    expect(find.text('Local profile'), findsOneWidget);
+    expect(find.text('No account connected'), findsOneWidget);
+    expect(find.text('Aarav Shrestha'), findsNothing);
+    expect(find.textContaining('example.com'), findsNothing);
+    expect(find.text('AS'), findsNothing);
     expect(find.text('Currency'), findsOneWidget);
-    expect(find.text('NPR · Nepalese rupee'), findsOneWidget);
+    expect(find.textContaining('Nepalese rupee'), findsOneWidget);
     expect(find.text('Date format'), findsOneWidget);
     expect(find.text('Theme'), findsOneWidget);
     expect(find.text('Notifications'), findsOneWidget);
-    expect(find.text('Not configured'), findsOneWidget);
-    expect(find.text('Budget reminders are off'), findsNothing);
+    expect(find.text('Not available in this version'), findsOneWidget);
+    final SwitchListTile notifications = tester.widget<SwitchListTile>(
+      find.byKey(const ValueKey<String>('notifications_setting')),
+    );
+    expect(notifications.onChanged, isNull);
 
+    final Finder privacySetting = find.byKey(
+      const ValueKey<String>('privacy_and_data_setting'),
+    );
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey<String>('privacy_and_data_setting')),
+      privacySetting,
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _profileScrollable,
     );
+    await Scrollable.ensureVisible(
+      tester.element(privacySetting),
+      alignment: 0.5,
+      duration: Duration.zero,
+    );
+    await tester.pump();
     expect(
-      find.text('Review how your records are stored and managed'),
+      find.text('Review session-only storage and connections'),
       findsOneWidget,
-    );
-    expect(
-      find.text('Understand where prototype data is stored'),
-      findsNothing,
     );
     await tester.scrollUntilVisible(
       find.text('Developer information'),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _profileScrollable,
     );
     expect(find.text('Developer information'), findsOneWidget);
     expect(find.text('Debug information'), findsNothing);
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey<String>('privacy_and_data_setting')),
+      privacySetting,
       -280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _profileScrollable,
     );
-    await tester.tap(
-      find.byKey(const ValueKey<String>('privacy_and_data_setting')),
+    await Scrollable.ensureVisible(
+      tester.element(privacySetting),
+      alignment: 0.5,
+      duration: Duration.zero,
     );
+    await tester.pump();
+    await tester.tap(privacySetting);
     await tester.pumpAndSettle();
+
+    expect(find.text('Privacy and data'), findsWidgets);
+    expect(find.text('Session-only storage'), findsOneWidget);
+    expect(find.text('No bank connection'), findsOneWidget);
+    expect(find.text('No cloud sync'), findsOneWidget);
+    expect(find.text('No financial data transmission'), findsOneWidget);
     expect(
-      find.textContaining('Transactions and preferences in this prototype'),
+      find.textContaining('kept for the current app session'),
       findsOneWidget,
     );
+    expect(
+      find.textContaining('does not connect to your bank account'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('no account, cloud backup'), findsOneWidget);
+    expect(
+      find.textContaining('No analytics service currently sends'),
+      findsOneWidget,
+    );
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Local profile'),
+      -280,
+      scrollable: _profileScrollable,
+    );
+    expect(find.text('Local profile'), findsOneWidget);
   });
+
+  testWidgets('Developer information can be omitted outside debug mode', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: ProfileScreen(showDeveloperInformation: false)),
+    );
+
+    expect(find.text('Local profile'), findsOneWidget);
+    expect(find.text('Developer information'), findsNothing);
+    expect(find.text('In-memory repository'), findsNothing);
+  });
+
+  for (final double width in <double>[320, 768]) {
+    testWidgets('Privacy and Data fits ${width.toInt()} px at 2x text', (
+      WidgetTester tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = Size(width, 1000);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pumpBudgetingApp(tester);
+      await tester.tap(find.text('Profile'));
+      await tester.pumpAndSettle();
+      final Finder setting = find.byKey(
+        const ValueKey<String>('privacy_and_data_setting'),
+      );
+      await tester.scrollUntilVisible(
+        setting,
+        240,
+        scrollable: _profileScrollable,
+      );
+      await Scrollable.ensureVisible(
+        tester.element(setting),
+        alignment: 0.5,
+        duration: Duration.zero,
+      );
+      await tester.pump();
+      await tester.tap(setting);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Session-only storage'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
+
+Finder get _profileScrollable => find
+    .descendant(
+      of: find.byType(ProfileScreen),
+      matching: find.byType(Scrollable),
+    )
+    .first;

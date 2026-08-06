@@ -11,5 +11,6 @@ abstract final class AppRouteNames {
   static const String categoryTransactionDetails =
       'category-transaction-details';
   static const String profile = 'profile';
+  static const String privacyAndData = 'privacy-and-data';
   static const String addTransaction = 'add-transaction';
 }

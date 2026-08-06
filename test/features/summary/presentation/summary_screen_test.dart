@@ -16,7 +16,7 @@ void main() {
   testWidgets('Summary presents neutral monthly financial records', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
 
@@ -81,7 +81,7 @@ void main() {
   testWidgets('breakdown rows and chart share one explicit selection state', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
 
@@ -171,7 +171,7 @@ void main() {
   testWidgets('a donut segment selects its matching breakdown row', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     final Finder segment = find.byKey(
@@ -200,7 +200,7 @@ void main() {
   testWidgets('income-source exploration uses recorded monthly income', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     final Finder incomeSelector = find.byKey(
@@ -309,7 +309,7 @@ void main() {
     WidgetTester tester,
   ) async {
     final SemanticsHandle semanticsHandle = tester.ensureSemantics();
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     final Finder foodRow = find.byKey(
@@ -349,7 +349,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _configureView(tester, width: 320, textScale: 2);
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     final Finder foodRow = find.byKey(
@@ -372,7 +372,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _configureView(tester, width: 768);
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     await _revealSummary(
@@ -390,7 +390,7 @@ void main() {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     final Finder foodRow = find.byKey(
@@ -411,7 +411,7 @@ void main() {
   testWidgets('month selector updates every month-scoped summary section', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
 
@@ -466,10 +466,53 @@ void main() {
     );
   });
 
-  testWidgets('Summary contains no budgeting guidance language', (
+  testWidgets('empty months retain zero totals and type-specific guidance', (
     WidgetTester tester,
   ) async {
     await pumpBudgetingApp(tester);
+    await tester.tap(find.text('Summary'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('August 2026'), findsOneWidget);
+    expect(find.text('0 recorded'), findsOneWidget);
+    expect(find.text('No recorded expenses in August'), findsOneWidget);
+    expect(
+      find.text(
+        'Expenses recorded for this month will appear here by category.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(SpendingDonutChart), findsNothing);
+    expect(find.textContaining('NaN'), findsNothing);
+    expect(find.textContaining('Infinity'), findsNothing);
+
+    final Finder previousMonth = find.byKey(
+      const ValueKey<String>('previous_month_button'),
+    );
+    await tester.tap(previousMonth);
+    await tester.pumpAndSettle();
+    expect(find.text('No recorded expenses in July'), findsOneWidget);
+
+    final Finder incomeSelector = find.byKey(
+      const ValueKey<String>('transaction_type_income'),
+    );
+    await _revealSummary(tester, incomeSelector);
+    await tester.tap(incomeSelector);
+    await tester.pumpAndSettle();
+    expect(find.text('No recorded income in July'), findsOneWidget);
+    expect(
+      find.text('Income recorded for this month will appear here by source.'),
+      findsOneWidget,
+    );
+    expect(find.byType(SpendingDonutChart), findsNothing);
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Summary contains no budgeting guidance language', (
+    WidgetTester tester,
+  ) async {
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
 

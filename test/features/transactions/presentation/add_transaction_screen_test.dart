@@ -170,7 +170,7 @@ void main() {
   testWidgets('recent categories are derived, unselected, and reusable', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(tester, useMockTransactions: true);
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_expense_button')),
     );
@@ -354,6 +354,7 @@ void main() {
   ) async {
     final InMemoryTransactionRepository repository = await pumpBudgetingApp(
       tester,
+      useMockTransactions: true,
     );
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_expense_button')),
@@ -420,6 +421,7 @@ void main() {
   ) async {
     final InMemoryTransactionRepository repository = await pumpBudgetingApp(
       tester,
+      useMockTransactions: true,
     );
     final int originalCount =
         (await repository.watchTransactions().first).length;

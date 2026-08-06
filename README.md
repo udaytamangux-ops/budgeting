@@ -10,11 +10,11 @@ The application is ready for product and engineering review, but it is not produ
 - Full-screen expense and income form with recent categories, session-only payment-method memory, Today/Yesterday shortcuts, progressive optional fields, validation, asynchronous save states, and failure recovery
 - Searchable, filterable transaction history grouped by meaningful calendar dates
 - Neutral monthly Summary with month navigation, income, expenses, net change, transaction count, and an accessible category-spending donut with a ranked text breakdown
-- Mock profile and preference structure with debug-only development information
+- Neutral local profile, dedicated Privacy and Data information, and debug-only development information
 - In-memory create, read, update, and delete transaction repository
 - Lightweight saved-transaction confirmation with a time-limited, recoverable Undo action
 - Transaction details with reusable Edit and Repeat flows plus explicit delete confirmation
-- Four-destination authenticated application shell using a temporary development session
+- Four-destination application shell using a temporary development session
 - Loading, empty, populated, error, saving, success, not-found, deleting, and delete-failure states
 - Centralized Material 3 design tokens, Inter typography, NPR/date formatting, and reduced-motion behavior
 - Unit, widget, responsive-accessibility, and Android integration tests
@@ -69,7 +69,7 @@ The code uses a pragmatic feature-first structure. Domain rules and repository c
 lib/
 ├── app/
 │   ├── bootstrap/       # Provider container and temporary session setup
-│   ├── routing/         # go_router routes and authenticated shell
+│   ├── routing/         # go_router routes and state-preserving shell
 │   └── theme/           # Semantic color, spacing, radius, motion, and type tokens
 ├── core/
 │   ├── errors/          # Application-facing error types
@@ -80,7 +80,7 @@ lib/
     ├── auth/            # Development-session route placeholders
     ├── budgets/         # Isolated prototype budget logic outside the current UI
     ├── home/            # Recorded position, quick actions, and recent activity
-    ├── profile/         # Mock profile, preferences, privacy, and debug state
+    ├── profile/         # Local profile, privacy information, and debug state
     ├── summary/         # Neutral monthly aggregation and presentation
     └── transactions/    # Domain, in-memory data, controllers, and screens
 ```
@@ -91,7 +91,7 @@ lib/
 
 ### Navigation
 
-`go_router` defines public authentication-ready routes, a state-preserving authenticated shell, transaction details, and a root-navigator full-screen transaction form reused for create, edit, and repeat intents. The center Add control is an action rather than a fifth navigation destination.
+`go_router` defines public authentication-ready routes, a state-preserving shell, category and transaction details, Privacy and Data, and a root-navigator full-screen transaction form reused for create, edit, and repeat intents. The center Add control is an action rather than a fifth navigation destination.
 
 ### Financial values
 
@@ -99,9 +99,9 @@ Money is stored as integer minor units in the `Money` value object. No financial
 
 ### Data access
 
-Presentation code depends on the `TransactionRepository` interface. `InMemoryTransactionRepository` supplies realistic Nepal-focused seed data, broadcasts changes, supports CRUD operations, simulates save latency, and exposes controlled failures for tests. It can be replaced with local and cloud implementations without changing screens.
+Presentation code depends on the `TransactionRepository` interface. `InMemoryTransactionRepository` starts empty during normal bootstrap, broadcasts changes, supports CRUD operations, simulates save latency, and exposes controlled failures for tests. It can be replaced later without changing screens.
 
-The default mock source includes current- and previous-month records so month-scoped Summary behavior can be reviewed without persistence. Payment-method data remains available to transaction filters and details but is not shown in the default Summary view.
+Reusable Nepal-focused mock transactions remain available only as explicit test fixtures. Records are kept for the current app session and may reset when the process restarts. The app has no account, bank or wallet connection, local database, cloud sync, or analytics SDK transmitting financial records.
 
 ## Packages
 
@@ -137,7 +137,7 @@ Changing identifiers requires updating platform configuration and any future sig
 - Data resets whenever the process restarts because the repository is in memory.
 - Remembered payment methods last only for the current application session.
 - Undo is available for eight seconds after a create; it is not a permanent transaction-recovery system.
-- The temporary development session opens the authenticated shell directly.
+- The temporary development session opens the application shell directly; no account is connected.
 - The current product does not set limits, score spending, or provide financial guidance; the retained prototype budget code is isolated from user-facing routes.
 - Edit reuses the transaction form and repository update path, but the broader editing product policy still needs review.
 - iOS compilation requires a macOS/Xcode environment and was not verified from this Windows workspace.

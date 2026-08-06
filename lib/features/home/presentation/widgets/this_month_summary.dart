@@ -1,6 +1,7 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,9 @@ final class ThisMonthSummary extends ConsumerWidget {
     );
     return summary.maybeWhen(
       data: (MonthlyTransactionSummary value) {
+        if (value.transactionCount == 0) {
+          return const _FirstUseMonthlySummary();
+        }
         final String transactionFact = value.transactionCount == 1
             ? '1 transaction recorded'
             : '${value.transactionCount} transactions recorded';
@@ -82,6 +86,28 @@ final class ThisMonthSummary extends ConsumerWidget {
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+final class _FirstUseMonthlySummary extends StatelessWidget {
+  const _FirstUseMonthlySummary();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text('This month', style: Theme.of(context).textTheme.titleLarge),
+        const EmptyState(
+          key: ValueKey<String>('home_first_use_state'),
+          title: 'Start recording your money activity',
+          message:
+              'Add your first income or expense to begin building your '
+              'personal ledger.',
+          icon: Icons.edit_note_outlined,
+        ),
+      ],
     );
   }
 }

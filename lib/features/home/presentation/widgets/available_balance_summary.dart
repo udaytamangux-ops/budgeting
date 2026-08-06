@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
+import 'package:budgeting_app/core/data/app_data_status.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/monthly_financial_summary.dart';
@@ -29,73 +32,141 @@ final class AvailableBalanceSummary extends ConsumerWidget {
         final String expenses = ref
             .watch(currencyFormatterProvider)
             .format(value.expenses);
-        return Semantics(
-          label:
-              'Recorded balance, $recordedBalance. Monthly income, $income. '
-              'Monthly expenses, $expenses.',
-          excludeSemantics: true,
-          child: Container(
-            key: const ValueKey<String>('recorded_balance_card'),
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.recordedBalanceSurface,
-              border: Border.all(color: AppColors.recordedBalanceBorder),
-              borderRadius: BorderRadius.circular(AppRadius.large),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Recorded balance',
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                AnimatedSwitcher(
-                  duration: AppMotion.accessibleDuration(
-                    context,
-                    AppMotion.standard,
+        final AppDataStatus dataStatus = ref.watch(appDataStatusProvider);
+        return Container(
+          key: const ValueKey<String>('recorded_balance_card'),
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.recordedBalanceSurface,
+            border: Border.all(color: AppColors.recordedBalanceBorder),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      'Recorded balance',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
                   ),
-                  child: Text(
-                    recordedBalance,
-                    key: ValueKey<int>(value.availableBalance.minorUnits),
-                    style: Theme.of(context).textTheme.displaySmall,
+                  IconButton(
+                    key: const ValueKey<String>(
+                      'recorded_balance_information_button',
+                    ),
+                    tooltip: 'About recorded balance',
+                    onPressed: () {
+                      unawaited(
+                        _showRecordedBalanceInformation(context, dataStatus),
+                      );
+                    },
+                    icon: const Icon(Icons.info_outline, size: 20),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Row(
+                ],
+              ),
+              Semantics(
+                label:
+                    'Recorded balance, $recordedBalance. Monthly income, '
+                    '$income. Monthly expenses, $expenses.',
+                excludeSemantics: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Expanded(
-                      child: _SummaryMetric(
-                        icon: Icons.arrow_downward,
-                        iconColor: AppColors.primaryAction,
-                        label: 'Income',
-                        amount: income,
-                        amountKey: value.income,
+                    AnimatedSwitcher(
+                      duration: AppMotion.accessibleDuration(
+                        context,
+                        AppMotion.standard,
+                      ),
+                      child: Text(
+                        recordedBalance,
+                        key: ValueKey<int>(value.availableBalance.minorUnits),
+                        style: Theme.of(context).textTheme.displaySmall,
                       ),
                     ),
-                    Container(
-                      width: 1,
-                      height: 48,
-                      color: AppColors.borderSubtle,
-                    ),
-                    Expanded(
-                      child: _SummaryMetric(
-                        icon: Icons.arrow_upward,
-                        iconColor: AppColors.textSecondary,
-                        label: 'Expenses',
-                        amount: expenses,
-                        amountKey: value.expenses,
-                      ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: _SummaryMetric(
+                            icon: Icons.arrow_downward,
+                            iconColor: AppColors.primaryAction,
+                            label: 'Income',
+                            amount: income,
+                            amountKey: value.income,
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 48,
+                          color: AppColors.borderSubtle,
+                        ),
+                        Expanded(
+                          child: _SummaryMetric(
+                            icon: Icons.arrow_upward,
+                            iconColor: AppColors.textSecondary,
+                            label: 'Expenses',
+                            amount: expenses,
+                            amountKey: value.expenses,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+
+  Future<void> _showRecordedBalanceInformation(
+    BuildContext context,
+    AppDataStatus dataStatus,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          scrollable: true,
+          title: const Text('About recorded balance'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text(
+                'Recorded balance is the difference between the income and '
+                'expenses recorded in this app for the current month. It may '
+                'not match your bank account or wallet balance.',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const Text(AppDataStatus.bankAccessDescription),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                'Only income and expenses recorded in this app are included.',
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                dataStatus.storageTitle,
+                style: Theme.of(dialogContext).textTheme.labelLarge,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(dataStatus.storageDescription),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              key: const ValueKey<String>('close_recorded_balance_information'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

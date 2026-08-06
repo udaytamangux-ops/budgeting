@@ -1,6 +1,7 @@
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
+import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/spending_donut_chart.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/summary_record_row.dart';
@@ -11,22 +12,26 @@ import 'package:flutter/material.dart';
 final class CategoryExplorationSection extends StatelessWidget {
   const CategoryExplorationSection({
     required this.activity,
+    required this.monthName,
     required this.selectedGroupKey,
     required this.currencyFormatter,
     required this.onTypeChanged,
     required this.onGroupSelected,
     required this.onAllCategoriesSelected,
     required this.onViewTransactions,
+    required this.onAddTransaction,
     super.key,
   });
 
   final MonthlyCategoryActivity activity;
+  final String monthName;
   final String? selectedGroupKey;
   final CurrencyFormatter currencyFormatter;
   final ValueChanged<TransactionType> onTypeChanged;
   final ValueChanged<CategoryActivityGroup> onGroupSelected;
   final VoidCallback onAllCategoriesSelected;
   final ValueChanged<CategoryActivityGroup> onViewTransactions;
+  final ValueChanged<TransactionType> onAddTransaction;
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +56,30 @@ final class CategoryExplorationSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         if (activity.groups.isEmpty)
-          Text(
-            isExpense
-                ? 'No expenses were recorded for this month.'
-                : 'No income was recorded for this month.',
-            style: Theme.of(context).textTheme.bodyMedium,
+          EmptyState(
+            key: ValueKey<String>(
+              isExpense ? 'summary_empty_expenses' : 'summary_empty_income',
+            ),
+            title: isExpense
+                ? 'No recorded expenses in $monthName'
+                : 'No recorded income in $monthName',
+            message: isExpense
+                ? 'Expenses recorded for this month will appear here by '
+                      'category.'
+                : 'Income recorded for this month will appear here by source.',
+            icon: isExpense
+                ? Icons.receipt_long_outlined
+                : Icons.account_balance_wallet_outlined,
+            action: FilledButton.icon(
+              key: ValueKey<String>(
+                isExpense
+                    ? 'summary_empty_add_expense'
+                    : 'summary_empty_add_income',
+              ),
+              onPressed: () => onAddTransaction(activity.type),
+              icon: const Icon(Icons.add),
+              label: Text(isExpense ? 'Add expense' : 'Add income'),
+            ),
           )
         else ...<Widget>[
           Center(

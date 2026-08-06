@@ -1,22 +1,15 @@
-import 'dart:async';
-
+import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
-import 'package:budgeting_app/features/profile/data/mock_profile_source.dart';
-import 'package:budgeting_app/features/profile/domain/entities/profile_identity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-final class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+final class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({this.showDeveloperInformation = kDebugMode, super.key});
 
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-final class _ProfileScreenState extends State<ProfileScreen> {
-  bool _notificationsEnabled = false;
+  final bool showDeveloperInformation;
 
   @override
   Widget build(BuildContext context) {
@@ -40,42 +33,36 @@ final class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: AppSpacing.xxl),
                 const _SectionTitle(title: 'Preferences'),
                 const SizedBox(height: AppSpacing.sm),
-                _SettingsRegion(
+                const _SettingsRegion(
                   children: <Widget>[
-                    const _SettingsValueTile(
+                    _SettingsValueTile(
                       icon: Icons.payments_outlined,
                       title: 'Currency',
                       value: 'NPR · Nepalese rupee',
                     ),
-                    const Divider(),
-                    const _SettingsValueTile(
+                    Divider(),
+                    _SettingsValueTile(
                       icon: Icons.calendar_today_outlined,
                       title: 'Date format',
                       value: '4 August 2026',
                     ),
-                    const Divider(),
-                    const _SettingsValueTile(
+                    Divider(),
+                    _SettingsValueTile(
                       icon: Icons.light_mode_outlined,
                       title: 'Theme',
                       value: 'Light',
                     ),
-                    const Divider(),
+                    Divider(),
                     SwitchListTile(
-                      key: const ValueKey<String>('notifications_setting'),
-                      contentPadding: const EdgeInsets.symmetric(
+                      key: ValueKey<String>('notifications_setting'),
+                      contentPadding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
                       ),
-                      secondary: const Icon(Icons.notifications_outlined),
-                      title: const Text('Notifications'),
-                      subtitle: Text(
-                        _notificationsEnabled
-                            ? 'Budget reminders enabled for this session'
-                            : 'Not configured',
-                      ),
-                      value: _notificationsEnabled,
-                      onChanged: (bool value) {
-                        setState(() => _notificationsEnabled = value);
-                      },
+                      secondary: Icon(Icons.notifications_outlined),
+                      title: Text('Notifications'),
+                      subtitle: Text('Not available in this version'),
+                      value: false,
+                      onChanged: null,
                     ),
                   ],
                 ),
@@ -92,16 +79,14 @@ final class _ProfileScreenState extends State<ProfileScreen> {
                       leading: const Icon(Icons.shield_outlined),
                       title: const Text('Privacy and data'),
                       subtitle: const Text(
-                        'Review how your records are stored and managed',
+                        'Review session-only storage and connections',
                       ),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        unawaited(_showPrivacyDetails(context));
-                      },
+                      onTap: () => context.push(AppRoutes.privacyAndData),
                     ),
                   ],
                 ),
-                if (kDebugMode) ...<Widget>[
+                if (showDeveloperInformation) ...<Widget>[
                   const SizedBox(height: AppSpacing.xxl),
                   const _SectionTitle(title: 'Developer information'),
                   const SizedBox(height: AppSpacing.sm),
@@ -128,49 +113,6 @@ final class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-  Future<void> _showPrivacyDetails(BuildContext context) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (BuildContext sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              0,
-              AppSpacing.xl,
-              AppSpacing.xl,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Privacy and data',
-                  style: Theme.of(sheetContext).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Transactions and preferences in this prototype remain only '
-                  'in device memory. They are not uploaded and reset when the '
-                  'application process restarts.',
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: Navigator.of(sheetContext).pop,
-                    child: const Text('Done'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 final class _ProfileIdentity extends StatelessWidget {
@@ -178,9 +120,8 @@ final class _ProfileIdentity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ProfileIdentity profile = MockProfileSource.profile;
     return Semantics(
-      label: 'Profile for ${profile.fullName}, ${profile.email}',
+      label: 'Local profile, no account connected',
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -199,11 +140,10 @@ final class _ProfileIdentity extends StatelessWidget {
                 color: AppColors.primarySubtle,
                 shape: BoxShape.circle,
               ),
-              child: Text(
-                profile.initials,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.primaryAction,
-                ),
+              child: const Icon(
+                Icons.person_outline,
+                color: AppColors.primaryAction,
+                size: 24,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -212,12 +152,12 @@ final class _ProfileIdentity extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    profile.fullName,
+                    'Local profile',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    profile.email,
+                    'No account connected',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],

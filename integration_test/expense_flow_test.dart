@@ -81,10 +81,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('NPR 36,000'), findsOneWidget);
-    expect(find.text('NPR 24,000'), findsOneWidget);
-    expect(find.text('7 transactions recorded'), findsOneWidget);
-    expect(find.text('Spent across 4 categories'), findsOneWidget);
+    expect(find.text('NPR 0'), findsOneWidget);
+    expect(find.text('NPR 1,250'), findsOneWidget);
+    expect(find.text('1 transaction recorded'), findsOneWidget);
+    expect(find.text('Spent across 1 category'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        RegExp(
+          r'Recorded balance, .*NPR 1,250.*Monthly income, NPR 0.*'
+          r'Monthly expenses, NPR 1,250',
+        ),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Recorded balance'), findsOneWidget);
     expect(find.text('Monthly budget'), findsNothing);
     await tester.scrollUntilVisible(

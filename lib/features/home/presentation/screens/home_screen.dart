@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
-import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/available_balance_summary.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/home_header.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/home_loading_skeleton.dart';
@@ -16,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-enum _HomeLoadState { loading, loaded, empty, error }
+enum _HomeLoadState { loading, loaded, error }
 
 final class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -29,9 +28,7 @@ final class HomeScreen extends ConsumerWidget {
           loading: () => _HomeLoadState.loading,
           error: (Object error, StackTrace stackTrace) => _HomeLoadState.error,
           data: (List<FinancialTransaction> transactions) =>
-              transactions.isEmpty
-              ? _HomeLoadState.empty
-              : _HomeLoadState.loaded,
+              _HomeLoadState.loaded,
         ),
       ),
     );
@@ -52,23 +49,6 @@ final class HomeScreen extends ConsumerWidget {
                       message:
                           'Your financial summary is unavailable. Try again.',
                       onRetry: () => ref.invalidate(transactionListProvider),
-                    ),
-                    _HomeLoadState.empty => SingleChildScrollView(
-                      child: EmptyState(
-                        title: 'No transactions yet',
-                        message:
-                            'Add your first income or expense to start '
-                            'understanding where your money goes.',
-                        icon: Icons.receipt_long_outlined,
-                        action: FilledButton.icon(
-                          onPressed: () => _openTransactionForm(
-                            context,
-                            AppRoutes.addExpense,
-                          ),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add expense'),
-                        ),
-                      ),
                     ),
                     _HomeLoadState.loaded => ListView(
                       key: const ValueKey<String>('home_content'),
