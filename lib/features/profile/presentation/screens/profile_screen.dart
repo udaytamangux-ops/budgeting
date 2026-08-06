@@ -79,7 +79,7 @@ final class ProfileScreen extends StatelessWidget {
                       leading: const Icon(Icons.shield_outlined),
                       title: const Text('Privacy and data'),
                       subtitle: const Text(
-                        'Review session-only storage and connections',
+                        'Review local storage and connections',
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.push(AppRoutes.privacyAndData),

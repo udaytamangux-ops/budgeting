@@ -42,10 +42,7 @@ void main() {
       duration: Duration.zero,
     );
     await tester.pump();
-    expect(
-      find.text('Review session-only storage and connections'),
-      findsOneWidget,
-    );
+    expect(find.text('Review local storage and connections'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Developer information'),
       280,
@@ -68,19 +65,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Privacy and data'), findsWidgets);
-    expect(find.text('Session-only storage'), findsOneWidget);
+    expect(find.text('Stored on this device'), findsOneWidget);
     expect(find.text('No bank connection'), findsOneWidget);
     expect(find.text('No cloud sync'), findsOneWidget);
     expect(find.text('No financial data transmission'), findsOneWidget);
     expect(
-      find.textContaining('kept for the current app session'),
+      find.textContaining('stored locally on this device'),
       findsOneWidget,
     );
     expect(
       find.textContaining('does not connect to your bank account'),
       findsOneWidget,
     );
-    expect(find.textContaining('no account, cloud backup'), findsOneWidget);
+    expect(
+      find.textContaining('not backed up or synchronised'),
+      findsOneWidget,
+    );
     expect(
       find.textContaining('No analytics service currently sends'),
       findsOneWidget,
@@ -137,7 +137,7 @@ void main() {
       await tester.tap(setting);
       await tester.pumpAndSettle();
 
-      expect(find.text('Session-only storage'), findsOneWidget);
+      expect(find.text('Stored on this device'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

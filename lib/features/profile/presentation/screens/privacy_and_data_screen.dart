@@ -166,7 +166,8 @@ final class _FutureTransparencyNote extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
-            'If storage or synchronisation changes in a future version, this '
+            'If storage, backup, or synchronisation changes in a future '
+            'version, this '
             'information should be updated before the feature is enabled.',
             style: Theme.of(
               context,

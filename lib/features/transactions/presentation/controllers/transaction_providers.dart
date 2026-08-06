@@ -1,9 +1,12 @@
+import 'dart:async';
+
+import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/budget_configuration.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/monthly_budget_summary.dart';
 import 'package:budgeting_app/features/budgets/domain/services/budget_summary_service.dart';
 import 'package:budgeting_app/features/budgets/presentation/controllers/budget_configuration_controller.dart';
-import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
+import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/monthly_financial_summary.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -12,12 +15,17 @@ import 'package:budgeting_app/features/transactions/domain/services/financial_su
 import 'package:budgeting_app/features/transactions/domain/services/recent_transaction_categories_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+final Provider<AppDatabase> appDatabaseProvider = Provider<AppDatabase>((
+  Ref ref,
+) {
+  final AppDatabase database = AppDatabase.open();
+  ref.onDispose(() => unawaited(database.close()));
+  return database;
+});
+
 final Provider<TransactionRepository> transactionRepositoryProvider =
     Provider<TransactionRepository>((Ref ref) {
-      final InMemoryTransactionRepository repository =
-          InMemoryTransactionRepository(now: ref.watch(appClockProvider));
-      ref.onDispose(repository.dispose);
-      return repository;
+      return DriftTransactionRepository(ref.watch(appDatabaseProvider));
     });
 
 final StreamProvider<List<FinancialTransaction>> transactionListProvider =

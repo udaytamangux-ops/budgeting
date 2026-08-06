@@ -1,8 +1,11 @@
 import 'package:budgeting_app/app/bootstrap/app_bootstrap.dart';
+import 'package:budgeting_app/core/database/app_database.dart';
+import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/data/sources/mock_transaction_source.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -40,13 +43,26 @@ void main() {
     );
   });
 
-  test('normal app bootstrap creates a fresh empty session', () async {
-    final ProviderContainer first = await AppBootstrap.createContainer();
-    final ProviderContainer second = await AppBootstrap.createContainer();
-    addTearDown(first.dispose);
-    addTearDown(second.dispose);
+  test(
+    'normal bootstrap uses one empty Drift database without seeding',
+    () async {
+      final AppDatabase database = AppDatabase(NativeDatabase.memory());
+      final ProviderContainer container = await AppBootstrap.createContainer(
+        database: database,
+      );
+      addTearDown(container.dispose);
+      addTearDown(database.close);
 
-    expect(await first.read(transactionListProvider.future), isEmpty);
-    expect(await second.read(transactionListProvider.future), isEmpty);
-  });
+      expect(container.read(appDatabaseProvider), same(database));
+      expect(
+        container.read(transactionRepositoryProvider),
+        isA<DriftTransactionRepository>(),
+      );
+      expect(
+        container.read(transactionRepositoryProvider),
+        same(container.read(transactionRepositoryProvider)),
+      );
+      expect(await container.read(transactionListProvider.future), isEmpty);
+    },
+  );
 }

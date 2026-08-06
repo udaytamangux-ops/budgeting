@@ -2,7 +2,7 @@
 
 Budgeting is a mobile-first NPR transaction tracker for young salaried professionals in Nepal. This repository establishes the Flutter foundation and a connected product journey: reviewing recorded income and expenses, adding a transaction, seeing the recorded balance update immediately, and opening the saved record.
 
-The application is ready for product and engineering review, but it is not production-complete. Authentication, persistent storage, synchronization, and backend services are intentionally deferred.
+The application is ready for product and engineering review, but it is not production-complete. Authentication, cloud synchronization, and backend services are intentionally deferred.
 
 ## Current scope
 
@@ -11,7 +11,7 @@ The application is ready for product and engineering review, but it is not produ
 - Searchable, filterable transaction history grouped by meaningful calendar dates
 - Neutral monthly Summary with month navigation, income, expenses, net change, transaction count, and an accessible category-spending donut with a ranked text breakdown
 - Neutral local profile, dedicated Privacy and Data information, and debug-only development information
-- In-memory create, read, update, and delete transaction repository
+- Drift/SQLite local transaction persistence behind the transaction repository contract
 - Lightweight saved-transaction confirmation with a time-limited, recoverable Undo action
 - Transaction details with reusable Edit and Repeat flows plus explicit delete confirmation
 - Four-destination application shell using a temporary development session
@@ -87,7 +87,7 @@ lib/
 
 ### State management
 
-`flutter_riverpod` provides repository dependency injection, the transaction stream, transaction lookup, recent-category derivation, session payment-method memory, calculated financial and neutral monthly summaries, asynchronous form submission, race-safe Undo confirmation, and deletion state. Ephemeral field focus, text editing, expansion, and form selection remain local to the owning widgets.
+`flutter_riverpod` provides application-lifetime database and repository ownership, the transaction stream, transaction lookup, recent-category derivation, session payment-method memory, calculated financial and neutral monthly summaries, asynchronous form submission, race-safe Undo confirmation, and deletion state. Ephemeral field focus, text editing, expansion, and form selection remain local to the owning widgets.
 
 ### Navigation
 
@@ -99,9 +99,9 @@ Money is stored as integer minor units in the `Money` value object. No financial
 
 ### Data access
 
-Presentation code depends on the `TransactionRepository` interface. `InMemoryTransactionRepository` starts empty during normal bootstrap, broadcasts changes, supports CRUD operations, simulates save latency, and exposes controlled failures for tests. It can be replaced later without changing screens.
+Presentation code depends on the `TransactionRepository` interface. Normal bootstrap uses `DriftTransactionRepository` with one application-lifetime SQLite database. A fresh installation starts empty, and created, edited, repeated, and deleted records remain consistent across application restarts.
 
-Reusable Nepal-focused mock transactions remain available only as explicit test fixtures. Records are kept for the current app session and may reset when the process restarts. The app has no account, bank or wallet connection, local database, cloud sync, or analytics SDK transmitting financial records.
+`InMemoryTransactionRepository` and reusable Nepal-focused mock transactions remain available only for explicit test overrides. Records are stored locally on the device; there is no account, bank or wallet connection, cloud sync, cloud backup, or analytics SDK transmitting financial records.
 
 ## Packages
 
@@ -126,7 +126,6 @@ Changing identifiers requires updating platform configuration and any future sig
 ## Deferred integrations
 
 - Real authentication and route redirects
-- Drift or another persistent local data store
 - Supabase or another cloud synchronization service
 - Secure environment configuration and production flavors
 - Notifications, goals, an analytics SDK, and AI-assisted insights. Stable privacy-safe event names exist internally, but no analytics data is transmitted.
@@ -134,7 +133,7 @@ Changing identifiers requires updating platform configuration and any future sig
 
 ## Known limitations
 
-- Data resets whenever the process restarts because the repository is in memory.
+- Local records are not backed up or synchronised across devices.
 - Remembered payment methods last only for the current application session.
 - Undo is available for eight seconds after a create; it is not a permanent transaction-recovery system.
 - The temporary development session opens the application shell directly; no account is connected.

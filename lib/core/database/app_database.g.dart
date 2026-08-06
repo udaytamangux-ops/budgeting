@@ -1,0 +1,1057 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'app_database.dart';
+
+// ignore_for_file: type=lint
+class $StoredTransactionsTable extends StoredTransactions
+    with TableInfo<$StoredTransactionsTable, StoredTransaction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StoredTransactionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeKeyMeta = const VerificationMeta(
+    'typeKey',
+  );
+  @override
+  late final GeneratedColumn<String> typeKey = GeneratedColumn<String>(
+    'type_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorUnitsMeta = const VerificationMeta(
+    'amountMinorUnits',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinorUnits = GeneratedColumn<int>(
+    'amount_minor_units',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryKeyMeta = const VerificationMeta(
+    'categoryKey',
+  );
+  @override
+  late final GeneratedColumn<String> categoryKey = GeneratedColumn<String>(
+    'category_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentMethodKeyMeta = const VerificationMeta(
+    'paymentMethodKey',
+  );
+  @override
+  late final GeneratedColumn<String> paymentMethodKey = GeneratedColumn<String>(
+    'payment_method_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _occurredAtUtcMicrosMeta =
+      const VerificationMeta('occurredAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> occurredAtUtcMicros = GeneratedColumn<int>(
+    'occurred_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _merchantMeta = const VerificationMeta(
+    'merchant',
+  );
+  @override
+  late final GeneratedColumn<String> merchant = GeneratedColumn<String>(
+    'merchant',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtUtcMicrosMeta =
+      const VerificationMeta('createdAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> createdAtUtcMicros = GeneratedColumn<int>(
+    'created_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMicrosMeta =
+      const VerificationMeta('updatedAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMicros = GeneratedColumn<int>(
+    'updated_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    typeKey,
+    amountMinorUnits,
+    currencyCode,
+    categoryKey,
+    paymentMethodKey,
+    occurredAtUtcMicros,
+    merchant,
+    note,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stored_transactions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StoredTransaction> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type_key')) {
+      context.handle(
+        _typeKeyMeta,
+        typeKey.isAcceptableOrUnknown(data['type_key']!, _typeKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeKeyMeta);
+    }
+    if (data.containsKey('amount_minor_units')) {
+      context.handle(
+        _amountMinorUnitsMeta,
+        amountMinorUnits.isAcceptableOrUnknown(
+          data['amount_minor_units']!,
+          _amountMinorUnitsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorUnitsMeta);
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('category_key')) {
+      context.handle(
+        _categoryKeyMeta,
+        categoryKey.isAcceptableOrUnknown(
+          data['category_key']!,
+          _categoryKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryKeyMeta);
+    }
+    if (data.containsKey('payment_method_key')) {
+      context.handle(
+        _paymentMethodKeyMeta,
+        paymentMethodKey.isAcceptableOrUnknown(
+          data['payment_method_key']!,
+          _paymentMethodKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_paymentMethodKeyMeta);
+    }
+    if (data.containsKey('occurred_at_utc_micros')) {
+      context.handle(
+        _occurredAtUtcMicrosMeta,
+        occurredAtUtcMicros.isAcceptableOrUnknown(
+          data['occurred_at_utc_micros']!,
+          _occurredAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtUtcMicrosMeta);
+    }
+    if (data.containsKey('merchant')) {
+      context.handle(
+        _merchantMeta,
+        merchant.isAcceptableOrUnknown(data['merchant']!, _merchantMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at_utc_micros')) {
+      context.handle(
+        _createdAtUtcMicrosMeta,
+        createdAtUtcMicros.isAcceptableOrUnknown(
+          data['created_at_utc_micros']!,
+          _createdAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMicrosMeta);
+    }
+    if (data.containsKey('updated_at_utc_micros')) {
+      context.handle(
+        _updatedAtUtcMicrosMeta,
+        updatedAtUtcMicros.isAcceptableOrUnknown(
+          data['updated_at_utc_micros']!,
+          _updatedAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMicrosMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StoredTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StoredTransaction(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      typeKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type_key'],
+      )!,
+      amountMinorUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor_units'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      categoryKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_key'],
+      )!,
+      paymentMethodKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_method_key'],
+      )!,
+      occurredAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}occurred_at_utc_micros'],
+      )!,
+      merchant: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}merchant'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_micros'],
+      )!,
+      updatedAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_micros'],
+      )!,
+    );
+  }
+
+  @override
+  $StoredTransactionsTable createAlias(String alias) {
+    return $StoredTransactionsTable(attachedDatabase, alias);
+  }
+}
+
+class StoredTransaction extends DataClass
+    implements Insertable<StoredTransaction> {
+  final String id;
+  final String typeKey;
+  final int amountMinorUnits;
+  final String currencyCode;
+  final String categoryKey;
+  final String paymentMethodKey;
+  final int occurredAtUtcMicros;
+  final String? merchant;
+  final String? note;
+  final int createdAtUtcMicros;
+  final int updatedAtUtcMicros;
+  const StoredTransaction({
+    required this.id,
+    required this.typeKey,
+    required this.amountMinorUnits,
+    required this.currencyCode,
+    required this.categoryKey,
+    required this.paymentMethodKey,
+    required this.occurredAtUtcMicros,
+    this.merchant,
+    this.note,
+    required this.createdAtUtcMicros,
+    required this.updatedAtUtcMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type_key'] = Variable<String>(typeKey);
+    map['amount_minor_units'] = Variable<int>(amountMinorUnits);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['category_key'] = Variable<String>(categoryKey);
+    map['payment_method_key'] = Variable<String>(paymentMethodKey);
+    map['occurred_at_utc_micros'] = Variable<int>(occurredAtUtcMicros);
+    if (!nullToAbsent || merchant != null) {
+      map['merchant'] = Variable<String>(merchant);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros);
+    map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros);
+    return map;
+  }
+
+  StoredTransactionsCompanion toCompanion(bool nullToAbsent) {
+    return StoredTransactionsCompanion(
+      id: Value(id),
+      typeKey: Value(typeKey),
+      amountMinorUnits: Value(amountMinorUnits),
+      currencyCode: Value(currencyCode),
+      categoryKey: Value(categoryKey),
+      paymentMethodKey: Value(paymentMethodKey),
+      occurredAtUtcMicros: Value(occurredAtUtcMicros),
+      merchant: merchant == null && nullToAbsent
+          ? const Value.absent()
+          : Value(merchant),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAtUtcMicros: Value(createdAtUtcMicros),
+      updatedAtUtcMicros: Value(updatedAtUtcMicros),
+    );
+  }
+
+  factory StoredTransaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StoredTransaction(
+      id: serializer.fromJson<String>(json['id']),
+      typeKey: serializer.fromJson<String>(json['typeKey']),
+      amountMinorUnits: serializer.fromJson<int>(json['amountMinorUnits']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      categoryKey: serializer.fromJson<String>(json['categoryKey']),
+      paymentMethodKey: serializer.fromJson<String>(json['paymentMethodKey']),
+      occurredAtUtcMicros: serializer.fromJson<int>(
+        json['occurredAtUtcMicros'],
+      ),
+      merchant: serializer.fromJson<String?>(json['merchant']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAtUtcMicros: serializer.fromJson<int>(json['createdAtUtcMicros']),
+      updatedAtUtcMicros: serializer.fromJson<int>(json['updatedAtUtcMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'typeKey': serializer.toJson<String>(typeKey),
+      'amountMinorUnits': serializer.toJson<int>(amountMinorUnits),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'categoryKey': serializer.toJson<String>(categoryKey),
+      'paymentMethodKey': serializer.toJson<String>(paymentMethodKey),
+      'occurredAtUtcMicros': serializer.toJson<int>(occurredAtUtcMicros),
+      'merchant': serializer.toJson<String?>(merchant),
+      'note': serializer.toJson<String?>(note),
+      'createdAtUtcMicros': serializer.toJson<int>(createdAtUtcMicros),
+      'updatedAtUtcMicros': serializer.toJson<int>(updatedAtUtcMicros),
+    };
+  }
+
+  StoredTransaction copyWith({
+    String? id,
+    String? typeKey,
+    int? amountMinorUnits,
+    String? currencyCode,
+    String? categoryKey,
+    String? paymentMethodKey,
+    int? occurredAtUtcMicros,
+    Value<String?> merchant = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    int? createdAtUtcMicros,
+    int? updatedAtUtcMicros,
+  }) => StoredTransaction(
+    id: id ?? this.id,
+    typeKey: typeKey ?? this.typeKey,
+    amountMinorUnits: amountMinorUnits ?? this.amountMinorUnits,
+    currencyCode: currencyCode ?? this.currencyCode,
+    categoryKey: categoryKey ?? this.categoryKey,
+    paymentMethodKey: paymentMethodKey ?? this.paymentMethodKey,
+    occurredAtUtcMicros: occurredAtUtcMicros ?? this.occurredAtUtcMicros,
+    merchant: merchant.present ? merchant.value : this.merchant,
+    note: note.present ? note.value : this.note,
+    createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+    updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+  );
+  StoredTransaction copyWithCompanion(StoredTransactionsCompanion data) {
+    return StoredTransaction(
+      id: data.id.present ? data.id.value : this.id,
+      typeKey: data.typeKey.present ? data.typeKey.value : this.typeKey,
+      amountMinorUnits: data.amountMinorUnits.present
+          ? data.amountMinorUnits.value
+          : this.amountMinorUnits,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      categoryKey: data.categoryKey.present
+          ? data.categoryKey.value
+          : this.categoryKey,
+      paymentMethodKey: data.paymentMethodKey.present
+          ? data.paymentMethodKey.value
+          : this.paymentMethodKey,
+      occurredAtUtcMicros: data.occurredAtUtcMicros.present
+          ? data.occurredAtUtcMicros.value
+          : this.occurredAtUtcMicros,
+      merchant: data.merchant.present ? data.merchant.value : this.merchant,
+      note: data.note.present ? data.note.value : this.note,
+      createdAtUtcMicros: data.createdAtUtcMicros.present
+          ? data.createdAtUtcMicros.value
+          : this.createdAtUtcMicros,
+      updatedAtUtcMicros: data.updatedAtUtcMicros.present
+          ? data.updatedAtUtcMicros.value
+          : this.updatedAtUtcMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredTransaction(')
+          ..write('id: $id, ')
+          ..write('typeKey: $typeKey, ')
+          ..write('amountMinorUnits: $amountMinorUnits, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('categoryKey: $categoryKey, ')
+          ..write('paymentMethodKey: $paymentMethodKey, ')
+          ..write('occurredAtUtcMicros: $occurredAtUtcMicros, ')
+          ..write('merchant: $merchant, ')
+          ..write('note: $note, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    typeKey,
+    amountMinorUnits,
+    currencyCode,
+    categoryKey,
+    paymentMethodKey,
+    occurredAtUtcMicros,
+    merchant,
+    note,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StoredTransaction &&
+          other.id == this.id &&
+          other.typeKey == this.typeKey &&
+          other.amountMinorUnits == this.amountMinorUnits &&
+          other.currencyCode == this.currencyCode &&
+          other.categoryKey == this.categoryKey &&
+          other.paymentMethodKey == this.paymentMethodKey &&
+          other.occurredAtUtcMicros == this.occurredAtUtcMicros &&
+          other.merchant == this.merchant &&
+          other.note == this.note &&
+          other.createdAtUtcMicros == this.createdAtUtcMicros &&
+          other.updatedAtUtcMicros == this.updatedAtUtcMicros);
+}
+
+class StoredTransactionsCompanion extends UpdateCompanion<StoredTransaction> {
+  final Value<String> id;
+  final Value<String> typeKey;
+  final Value<int> amountMinorUnits;
+  final Value<String> currencyCode;
+  final Value<String> categoryKey;
+  final Value<String> paymentMethodKey;
+  final Value<int> occurredAtUtcMicros;
+  final Value<String?> merchant;
+  final Value<String?> note;
+  final Value<int> createdAtUtcMicros;
+  final Value<int> updatedAtUtcMicros;
+  final Value<int> rowid;
+  const StoredTransactionsCompanion({
+    this.id = const Value.absent(),
+    this.typeKey = const Value.absent(),
+    this.amountMinorUnits = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.categoryKey = const Value.absent(),
+    this.paymentMethodKey = const Value.absent(),
+    this.occurredAtUtcMicros = const Value.absent(),
+    this.merchant = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAtUtcMicros = const Value.absent(),
+    this.updatedAtUtcMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StoredTransactionsCompanion.insert({
+    required String id,
+    required String typeKey,
+    required int amountMinorUnits,
+    required String currencyCode,
+    required String categoryKey,
+    required String paymentMethodKey,
+    required int occurredAtUtcMicros,
+    this.merchant = const Value.absent(),
+    this.note = const Value.absent(),
+    required int createdAtUtcMicros,
+    required int updatedAtUtcMicros,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       typeKey = Value(typeKey),
+       amountMinorUnits = Value(amountMinorUnits),
+       currencyCode = Value(currencyCode),
+       categoryKey = Value(categoryKey),
+       paymentMethodKey = Value(paymentMethodKey),
+       occurredAtUtcMicros = Value(occurredAtUtcMicros),
+       createdAtUtcMicros = Value(createdAtUtcMicros),
+       updatedAtUtcMicros = Value(updatedAtUtcMicros);
+  static Insertable<StoredTransaction> custom({
+    Expression<String>? id,
+    Expression<String>? typeKey,
+    Expression<int>? amountMinorUnits,
+    Expression<String>? currencyCode,
+    Expression<String>? categoryKey,
+    Expression<String>? paymentMethodKey,
+    Expression<int>? occurredAtUtcMicros,
+    Expression<String>? merchant,
+    Expression<String>? note,
+    Expression<int>? createdAtUtcMicros,
+    Expression<int>? updatedAtUtcMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (typeKey != null) 'type_key': typeKey,
+      if (amountMinorUnits != null) 'amount_minor_units': amountMinorUnits,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (categoryKey != null) 'category_key': categoryKey,
+      if (paymentMethodKey != null) 'payment_method_key': paymentMethodKey,
+      if (occurredAtUtcMicros != null)
+        'occurred_at_utc_micros': occurredAtUtcMicros,
+      if (merchant != null) 'merchant': merchant,
+      if (note != null) 'note': note,
+      if (createdAtUtcMicros != null)
+        'created_at_utc_micros': createdAtUtcMicros,
+      if (updatedAtUtcMicros != null)
+        'updated_at_utc_micros': updatedAtUtcMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StoredTransactionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? typeKey,
+    Value<int>? amountMinorUnits,
+    Value<String>? currencyCode,
+    Value<String>? categoryKey,
+    Value<String>? paymentMethodKey,
+    Value<int>? occurredAtUtcMicros,
+    Value<String?>? merchant,
+    Value<String?>? note,
+    Value<int>? createdAtUtcMicros,
+    Value<int>? updatedAtUtcMicros,
+    Value<int>? rowid,
+  }) {
+    return StoredTransactionsCompanion(
+      id: id ?? this.id,
+      typeKey: typeKey ?? this.typeKey,
+      amountMinorUnits: amountMinorUnits ?? this.amountMinorUnits,
+      currencyCode: currencyCode ?? this.currencyCode,
+      categoryKey: categoryKey ?? this.categoryKey,
+      paymentMethodKey: paymentMethodKey ?? this.paymentMethodKey,
+      occurredAtUtcMicros: occurredAtUtcMicros ?? this.occurredAtUtcMicros,
+      merchant: merchant ?? this.merchant,
+      note: note ?? this.note,
+      createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+      updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (typeKey.present) {
+      map['type_key'] = Variable<String>(typeKey.value);
+    }
+    if (amountMinorUnits.present) {
+      map['amount_minor_units'] = Variable<int>(amountMinorUnits.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (categoryKey.present) {
+      map['category_key'] = Variable<String>(categoryKey.value);
+    }
+    if (paymentMethodKey.present) {
+      map['payment_method_key'] = Variable<String>(paymentMethodKey.value);
+    }
+    if (occurredAtUtcMicros.present) {
+      map['occurred_at_utc_micros'] = Variable<int>(occurredAtUtcMicros.value);
+    }
+    if (merchant.present) {
+      map['merchant'] = Variable<String>(merchant.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAtUtcMicros.present) {
+      map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros.value);
+    }
+    if (updatedAtUtcMicros.present) {
+      map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredTransactionsCompanion(')
+          ..write('id: $id, ')
+          ..write('typeKey: $typeKey, ')
+          ..write('amountMinorUnits: $amountMinorUnits, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('categoryKey: $categoryKey, ')
+          ..write('paymentMethodKey: $paymentMethodKey, ')
+          ..write('occurredAtUtcMicros: $occurredAtUtcMicros, ')
+          ..write('merchant: $merchant, ')
+          ..write('note: $note, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+abstract class _$AppDatabase extends GeneratedDatabase {
+  _$AppDatabase(QueryExecutor e) : super(e);
+  $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $StoredTransactionsTable storedTransactions =
+      $StoredTransactionsTable(this);
+  @override
+  Iterable<TableInfo<Table, Object?>> get allTables =>
+      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
+  @override
+  List<DatabaseSchemaEntity> get allSchemaEntities => [storedTransactions];
+}
+
+typedef $$StoredTransactionsTableCreateCompanionBuilder =
+    StoredTransactionsCompanion Function({
+      required String id,
+      required String typeKey,
+      required int amountMinorUnits,
+      required String currencyCode,
+      required String categoryKey,
+      required String paymentMethodKey,
+      required int occurredAtUtcMicros,
+      Value<String?> merchant,
+      Value<String?> note,
+      required int createdAtUtcMicros,
+      required int updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+typedef $$StoredTransactionsTableUpdateCompanionBuilder =
+    StoredTransactionsCompanion Function({
+      Value<String> id,
+      Value<String> typeKey,
+      Value<int> amountMinorUnits,
+      Value<String> currencyCode,
+      Value<String> categoryKey,
+      Value<String> paymentMethodKey,
+      Value<int> occurredAtUtcMicros,
+      Value<String?> merchant,
+      Value<String?> note,
+      Value<int> createdAtUtcMicros,
+      Value<int> updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+
+class $$StoredTransactionsTableFilterComposer
+    extends Composer<_$AppDatabase, $StoredTransactionsTable> {
+  $$StoredTransactionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get typeKey => $composableBuilder(
+    column: $table.typeKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinorUnits => $composableBuilder(
+    column: $table.amountMinorUnits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryKey => $composableBuilder(
+    column: $table.categoryKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentMethodKey => $composableBuilder(
+    column: $table.paymentMethodKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get occurredAtUtcMicros => $composableBuilder(
+    column: $table.occurredAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get merchant => $composableBuilder(
+    column: $table.merchant,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StoredTransactionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StoredTransactionsTable> {
+  $$StoredTransactionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get typeKey => $composableBuilder(
+    column: $table.typeKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinorUnits => $composableBuilder(
+    column: $table.amountMinorUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryKey => $composableBuilder(
+    column: $table.categoryKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentMethodKey => $composableBuilder(
+    column: $table.paymentMethodKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get occurredAtUtcMicros => $composableBuilder(
+    column: $table.occurredAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get merchant => $composableBuilder(
+    column: $table.merchant,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StoredTransactionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StoredTransactionsTable> {
+  $$StoredTransactionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get typeKey =>
+      $composableBuilder(column: $table.typeKey, builder: (column) => column);
+
+  GeneratedColumn<int> get amountMinorUnits => $composableBuilder(
+    column: $table.amountMinorUnits,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryKey => $composableBuilder(
+    column: $table.categoryKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentMethodKey => $composableBuilder(
+    column: $table.paymentMethodKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get occurredAtUtcMicros => $composableBuilder(
+    column: $table.occurredAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get merchant =>
+      $composableBuilder(column: $table.merchant, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => column,
+  );
+}
+
+class $$StoredTransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StoredTransactionsTable,
+          StoredTransaction,
+          $$StoredTransactionsTableFilterComposer,
+          $$StoredTransactionsTableOrderingComposer,
+          $$StoredTransactionsTableAnnotationComposer,
+          $$StoredTransactionsTableCreateCompanionBuilder,
+          $$StoredTransactionsTableUpdateCompanionBuilder,
+          (
+            StoredTransaction,
+            BaseReferences<
+              _$AppDatabase,
+              $StoredTransactionsTable,
+              StoredTransaction
+            >,
+          ),
+          StoredTransaction,
+          PrefetchHooks Function()
+        > {
+  $$StoredTransactionsTableTableManager(
+    _$AppDatabase db,
+    $StoredTransactionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StoredTransactionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StoredTransactionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StoredTransactionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> typeKey = const Value.absent(),
+                Value<int> amountMinorUnits = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<String> categoryKey = const Value.absent(),
+                Value<String> paymentMethodKey = const Value.absent(),
+                Value<int> occurredAtUtcMicros = const Value.absent(),
+                Value<String?> merchant = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> createdAtUtcMicros = const Value.absent(),
+                Value<int> updatedAtUtcMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StoredTransactionsCompanion(
+                id: id,
+                typeKey: typeKey,
+                amountMinorUnits: amountMinorUnits,
+                currencyCode: currencyCode,
+                categoryKey: categoryKey,
+                paymentMethodKey: paymentMethodKey,
+                occurredAtUtcMicros: occurredAtUtcMicros,
+                merchant: merchant,
+                note: note,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String typeKey,
+                required int amountMinorUnits,
+                required String currencyCode,
+                required String categoryKey,
+                required String paymentMethodKey,
+                required int occurredAtUtcMicros,
+                Value<String?> merchant = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                required int createdAtUtcMicros,
+                required int updatedAtUtcMicros,
+                Value<int> rowid = const Value.absent(),
+              }) => StoredTransactionsCompanion.insert(
+                id: id,
+                typeKey: typeKey,
+                amountMinorUnits: amountMinorUnits,
+                currencyCode: currencyCode,
+                categoryKey: categoryKey,
+                paymentMethodKey: paymentMethodKey,
+                occurredAtUtcMicros: occurredAtUtcMicros,
+                merchant: merchant,
+                note: note,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StoredTransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StoredTransactionsTable,
+      StoredTransaction,
+      $$StoredTransactionsTableFilterComposer,
+      $$StoredTransactionsTableOrderingComposer,
+      $$StoredTransactionsTableAnnotationComposer,
+      $$StoredTransactionsTableCreateCompanionBuilder,
+      $$StoredTransactionsTableUpdateCompanionBuilder,
+      (
+        StoredTransaction,
+        BaseReferences<
+          _$AppDatabase,
+          $StoredTransactionsTable,
+          StoredTransaction
+        >,
+      ),
+      StoredTransaction,
+      PrefetchHooks Function()
+    >;
+
+class $AppDatabaseManager {
+  final _$AppDatabase _db;
+  $AppDatabaseManager(this._db);
+  $$StoredTransactionsTableTableManager get storedTransactions =>
+      $$StoredTransactionsTableTableManager(_db, _db.storedTransactions);
+}

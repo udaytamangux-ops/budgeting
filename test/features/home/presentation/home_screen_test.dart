@@ -270,10 +270,16 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('kept for the current app session'),
+      find.textContaining('stored locally on this device'),
       findsOneWidget,
     );
-    expect(find.text('Session-only storage'), findsOneWidget);
+    expect(find.text('Stored on this device'), findsOneWidget);
+    expect(
+      find.text(
+        'Your records are not backed up or synchronised across devices.',
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
 
     await tester.tap(

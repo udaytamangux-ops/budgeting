@@ -156,6 +156,8 @@ final class AvailableBalanceSummary extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(dataStatus.storageDescription),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(AppDataStatus.cloudAccessDescription),
             ],
           ),
           actions: <Widget>[

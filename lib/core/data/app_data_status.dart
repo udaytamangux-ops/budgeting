@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum AppDataMode { sessionOnly, localDevice, cloudSynced }
+enum AppDataMode { localDevice, cloudSynced }
 
 final class AppDataStatus {
   const AppDataStatus({required this.mode});
@@ -8,17 +8,14 @@ final class AppDataStatus {
   final AppDataMode mode;
 
   String get storageTitle => switch (mode) {
-    AppDataMode.sessionOnly => 'Session-only storage',
-    AppDataMode.localDevice => 'Local device storage',
+    AppDataMode.localDevice => 'Stored on this device',
     AppDataMode.cloudSynced => 'Cloud-synchronised storage',
   };
 
   String get storageDescription => switch (mode) {
-    AppDataMode.sessionOnly =>
-      'Records in this version are kept for the current app session and may '
-          'reset when the app restarts.',
     AppDataMode.localDevice =>
-      'Records are stored on this device until they are removed.',
+      'Your records are stored locally on this device and remain available '
+          'after the app is closed.',
     AppDataMode.cloudSynced =>
       'Records are associated with an account and synchronised through the '
           'cloud.',
@@ -31,8 +28,7 @@ final class AppDataStatus {
 
   static const String cloudAccessTitle = 'No cloud sync';
   static const String cloudAccessDescription =
-      'There is currently no account, cloud backup, or cross-device '
-      'synchronisation.';
+      'Your records are not backed up or synchronised across devices.';
 
   static const String analyticsTitle = 'No financial data transmission';
   static const String analyticsDescription =
@@ -41,5 +37,5 @@ final class AppDataStatus {
 }
 
 final Provider<AppDataStatus> appDataStatusProvider = Provider<AppDataStatus>(
-  (Ref ref) => const AppDataStatus(mode: AppDataMode.sessionOnly),
+  (Ref ref) => const AppDataStatus(mode: AppDataMode.localDevice),
 );
