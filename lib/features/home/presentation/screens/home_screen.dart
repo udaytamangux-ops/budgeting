@@ -89,7 +89,12 @@ final class HomeScreen extends ConsumerWidget {
                             _openTransactionForm(context, AppRoutes.addIncome),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(
+                          key: ValueKey<String>(
+                            'home_quick_actions_to_month_spacing',
+                          ),
+                          height: AppSpacing.section,
+                        ),
                         const ThisMonthSummary(),
                         const SizedBox(height: AppSpacing.xxl),
                         const RecentTransactionsSection(),

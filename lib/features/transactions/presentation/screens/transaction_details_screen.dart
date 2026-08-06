@@ -76,6 +76,18 @@ final class _TransactionDetailsContent extends ConsumerWidget {
         .dateAndTime(transaction.createdAt);
     final TransactionCategoryVisual category = transaction.category.visual;
     final bool isIncome = transaction.type == TransactionType.income;
+    final Color amountColor = isIncome
+        ? AppColors.incomeAccent
+        : AppColors.expenseText;
+    final Color typeSurface = isIncome
+        ? AppColors.incomeSurface
+        : AppColors.expenseSurface;
+    final Color typeText = isIncome
+        ? AppColors.incomeAccent
+        : AppColors.expenseText;
+    final Color typeIcon = isIncome
+        ? AppColors.incomeAccent
+        : AppColors.expenseAccentStrong;
 
     return SafeArea(
       top: false,
@@ -100,14 +112,13 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Container(
+                        key: const ValueKey<String>('transaction_type_pill'),
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.sm,
                           vertical: AppSpacing.xs,
                         ),
                         decoration: BoxDecoration(
-                          color: isIncome
-                              ? AppColors.positiveSubtle
-                              : AppColors.surfaceSecondary,
+                          color: typeSurface,
                           borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Row(
@@ -118,22 +129,26 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                                   ? Icons.add_circle_outline
                                   : Icons.remove_circle_outline,
                               size: 18,
-                              color: isIncome
-                                  ? AppColors.balancePositive
-                                  : AppColors.textSecondary,
+                              color: typeIcon,
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             Text(
                               isIncome ? 'Income' : 'Expense',
-                              style: Theme.of(context).textTheme.labelMedium,
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(color: typeText),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
+                        key: const ValueKey<String>(
+                          'transaction_details_amount',
+                        ),
                         amount,
-                        style: Theme.of(context).textTheme.displaySmall,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.displaySmall?.copyWith(color: amountColor),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Row(

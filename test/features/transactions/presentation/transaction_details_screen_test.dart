@@ -1,3 +1,4 @@
+import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,119 @@ void main() {
     expect(find.text('Cash'), findsOneWidget);
     expect(find.text('Team lunch'), findsOneWidget);
     expect(find.text('4 August 2026'), findsOneWidget);
+
+    final Text expenseAmount = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('transaction_details_amount')),
+    );
+    expect(expenseAmount.style?.color, AppColors.expenseText);
+
+    final Finder typePill = find.byKey(
+      const ValueKey<String>('transaction_type_pill'),
+    );
+    final Container expensePill = tester.widget<Container>(typePill);
+    expect(
+      (expensePill.decoration! as BoxDecoration).color,
+      AppColors.expenseSurface,
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(of: typePill, matching: find.text('Expense')),
+          )
+          .style
+          ?.color,
+      AppColors.expenseText,
+    );
+    expect(
+      tester
+          .widget<Icon>(
+            find.descendant(
+              of: typePill,
+              matching: find.byIcon(Icons.remove_circle_outline),
+            ),
+          )
+          .color,
+      AppColors.expenseAccentStrong,
+    );
+    expect(
+      tester.widget<Text>(find.text('Lunch at Thamel')).style?.color,
+      AppColors.textPrimary,
+    );
+    expect(
+      tester.widget<Text>(find.text('Cash')).style?.color,
+      AppColors.textPrimary,
+    );
+    expect(
+      tester.widget<Text>(find.text('Merchant')).style?.color,
+      AppColors.textSecondary,
+    );
+  });
+
+  testWidgets('Income Details uses income semantics with neutral metadata', (
+    WidgetTester tester,
+  ) async {
+    final FinancialTransaction transaction = buildTestTransaction(
+      type: TransactionType.income,
+      minorUnits: 6000000,
+      category: TransactionCategory.salary,
+      paymentMethod: PaymentMethod.bankAccount,
+      merchant: 'Kantipur Tech',
+      note: 'August salary',
+    );
+    await pumpBudgetingApp(
+      tester,
+      seedTransactions: <FinancialTransaction>[transaction],
+    );
+    await tester.tap(find.text('Transactions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kantipur Tech'));
+    await tester.pumpAndSettle();
+
+    final Text incomeAmount = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('transaction_details_amount')),
+    );
+    expect(incomeAmount.style?.color, AppColors.incomeAccent);
+
+    final Finder typePill = find.byKey(
+      const ValueKey<String>('transaction_type_pill'),
+    );
+    final Container incomePill = tester.widget<Container>(typePill);
+    expect(
+      (incomePill.decoration! as BoxDecoration).color,
+      AppColors.incomeSurface,
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(of: typePill, matching: find.text('Income')),
+          )
+          .style
+          ?.color,
+      AppColors.incomeAccent,
+    );
+    expect(
+      tester
+          .widget<Icon>(
+            find.descendant(
+              of: typePill,
+              matching: find.byIcon(Icons.add_circle_outline),
+            ),
+          )
+          .color,
+      AppColors.incomeAccent,
+    );
+    expect(
+      tester.widget<Text>(find.text('Kantipur Tech')).style?.color,
+      AppColors.textPrimary,
+    );
+    expect(
+      tester.widget<Text>(find.text('Bank account')).style?.color,
+      AppColors.textPrimary,
+    );
+    expect(
+      tester.widget<Text>(find.text('Payer or source')).style?.color,
+      AppColors.textSecondary,
+    );
   });
 
   testWidgets('Delete confirmation explains the financial consequence', (
@@ -47,6 +161,17 @@ void main() {
       find.byKey(const ValueKey<String>('delete_transaction_button')),
       280,
       scrollable: find.byType(Scrollable).first,
+    );
+    final TextButton deleteButton = tester.widget<TextButton>(
+      find.byKey(const ValueKey<String>('delete_transaction_button')),
+    );
+    expect(
+      deleteButton.style?.foregroundColor?.resolve(const <WidgetState>{}),
+      AppColors.destructiveAction,
+    );
+    expect(
+      deleteButton.style?.foregroundColor?.resolve(const <WidgetState>{}),
+      isNot(AppColors.expenseText),
     );
     await tester.tap(
       find.byKey(const ValueKey<String>('delete_transaction_button')),

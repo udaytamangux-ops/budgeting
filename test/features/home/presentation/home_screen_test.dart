@@ -64,6 +64,16 @@ void main() {
     );
     expect(tester.getSize(expenseButton).height, 48);
     expect(tester.getSize(incomeButton).height, 48);
+    expect(
+      tester
+          .getSize(
+            find.byKey(
+              const ValueKey<String>('home_quick_actions_to_month_spacing'),
+            ),
+          )
+          .height,
+      inInclusiveRange(36, 40),
+    );
     expect(find.text('Quick add'), findsNothing);
     expect(find.bySemanticsLabel('Add expense transaction'), findsOneWidget);
     expect(find.bySemanticsLabel('Add income transaction'), findsOneWidget);

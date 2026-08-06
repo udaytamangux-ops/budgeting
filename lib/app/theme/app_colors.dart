@@ -7,7 +7,8 @@ abstract final class AppColors {
 
   static const Color expenseAccent = Color(0xFFA4473D);
   static const Color expenseText = expenseAccent;
-  static const Color expenseIconAccent = Color(0xFFFF0000);
+  static const Color expenseAccentStrong = Color(0xFFFF0000);
+  static const Color expenseIconAccent = expenseAccentStrong;
   static const Color expenseSurface = Color(0xFFFFF1EF);
   static const Color expenseSurfacePressed = Color(0xFFF8DFDB);
   static const Color expenseBorder = Color(0xFFF0C8C2);
