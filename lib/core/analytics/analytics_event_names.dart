@@ -6,4 +6,9 @@ abstract final class AnalyticsEventNames {
   static const String transactionRepeated = 'transaction_repeated';
   static const String transactionCreated = 'transaction_created';
   static const String transactionCreateUndone = 'transaction_create_undone';
+  static const String summaryCategorySelected = 'summary_category_selected';
+  static const String summaryAllCategoriesSelected =
+      'summary_all_categories_selected';
+  static const String categoryDetailsOpened = 'category_details_opened';
+  static const String categoryTransactionOpened = 'category_transaction_opened';
 }

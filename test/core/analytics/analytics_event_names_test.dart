@@ -12,6 +12,10 @@ void main() {
         AnalyticsEventNames.transactionRepeated,
         AnalyticsEventNames.transactionCreated,
         AnalyticsEventNames.transactionCreateUndone,
+        AnalyticsEventNames.summaryCategorySelected,
+        AnalyticsEventNames.summaryAllCategoriesSelected,
+        AnalyticsEventNames.categoryDetailsOpened,
+        AnalyticsEventNames.categoryTransactionOpened,
       },
       <String>{
         'recent_category_selected',
@@ -21,6 +25,10 @@ void main() {
         'transaction_repeated',
         'transaction_created',
         'transaction_create_undone',
+        'summary_category_selected',
+        'summary_all_categories_selected',
+        'category_details_opened',
+        'category_transaction_opened',
       },
     );
   });

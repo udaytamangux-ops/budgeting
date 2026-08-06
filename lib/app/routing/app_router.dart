@@ -2,10 +2,13 @@ import 'package:budgeting_app/app/bootstrap/development_session.dart';
 import 'package:budgeting_app/app/routing/app_route_names.dart';
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/routing/authenticated_shell.dart';
+import 'package:budgeting_app/app/routing/category_details_route_data.dart';
 import 'package:budgeting_app/app/routing/transaction_form_route.dart';
+import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/features/auth/presentation/screens/authentication_placeholder_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:budgeting_app/features/summary/presentation/screens/category_details_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/summary_screen.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
@@ -123,6 +126,46 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                 path: AppRoutes.budgets,
                 name: AppRouteNames.budgets,
                 builder: (_, _) => const SummaryScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'category/:transactionType/:categoryIds',
+                    name: AppRouteNames.categoryDetails,
+                    builder: (BuildContext context, GoRouterState state) {
+                      final CategoryDetailsRouteData? routeData =
+                          CategoryDetailsRouteData.tryParse(
+                            typeIdentifier:
+                                state.pathParameters['transactionType'],
+                            categoryIdentifiers:
+                                state.pathParameters['categoryIds'],
+                            year: state.uri.queryParameters['year'],
+                            month: state.uri.queryParameters['month'],
+                          );
+                      if (routeData == null) {
+                        return Scaffold(
+                          appBar: AppBar(title: const Text('Category details')),
+                          body: const AppErrorState(
+                            title: 'Category not found',
+                            message:
+                                'This category link is incomplete or invalid.',
+                          ),
+                        );
+                      }
+                      return CategoryDetailsScreen(routeData: routeData);
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'transactions/:transactionId',
+                        name: AppRouteNames.categoryTransactionDetails,
+                        builder: (BuildContext context, GoRouterState state) {
+                          return TransactionDetailsScreen(
+                            transactionId:
+                                state.pathParameters['transactionId']!,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

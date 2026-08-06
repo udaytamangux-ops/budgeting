@@ -1,19 +1,28 @@
+import 'dart:async';
+
+import 'package:budgeting_app/app/routing/app_routes.dart';
+import 'package:budgeting_app/app/routing/category_details_route_data.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
+import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
-import 'package:budgeting_app/features/summary/presentation/widgets/spending_donut_chart.dart';
+import 'package:budgeting_app/features/summary/presentation/widgets/category_exploration_section.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/summary_record_row.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 final class SummaryScreen extends ConsumerStatefulWidget {
   const SummaryScreen({super.key});
@@ -24,6 +33,8 @@ final class SummaryScreen extends ConsumerStatefulWidget {
 
 final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   late DateTime _selectedMonth;
+  TransactionType _activityType = TransactionType.expense;
+  String? _selectedGroupKey;
 
   @override
   void initState() {
@@ -36,6 +47,12 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   Widget build(BuildContext context) {
     final AsyncValue<MonthlyTransactionSummary> summary = ref.watch(
       monthlyTransactionSummaryForMonthProvider(_selectedMonth),
+    );
+    final AsyncValue<MonthlyCategoryActivity> categoryActivity = ref.watch(
+      monthlyCategoryActivityProvider((
+        month: _selectedMonth,
+        type: _activityType,
+      )),
     );
     final DateTime currentDate = ref.watch(currentDateProvider);
     final CurrencyFormatter currencyFormatter = ref.watch(
@@ -57,79 +74,61 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                 message: 'Your transaction summary is unavailable. Try again.',
                 onRetry: () => ref.invalidate(transactionListProvider),
               ),
-              data: (MonthlyTransactionSummary value) => ListView(
-                key: const ValueKey<String>('summary_content'),
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.md,
-                  AppSpacing.navigationClearance,
+              data: (MonthlyTransactionSummary value) => categoryActivity.when(
+                loading: () => const AppLoadingIndicator(
+                  label: 'Loading category activity',
                 ),
-                children: <Widget>[
-                  _MonthSelector(
-                    label: ref
-                        .watch(dateFormatterProvider)
-                        .monthYear(_selectedMonth),
-                    onPrevious: () => _changeMonth(-1),
-                    onNext: _isCurrentMonth(currentDate)
-                        ? null
-                        : () => _changeMonth(1),
+                error: (Object error, StackTrace stackTrace) => AppErrorState(
+                  message: 'Category activity is unavailable. Try again.',
+                  onRetry: () => ref.invalidate(transactionListProvider),
+                ),
+                data: (MonthlyCategoryActivity activity) => ListView(
+                  key: const ValueKey<String>('summary_content'),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.xs,
+                    AppSpacing.md,
+                    AppSpacing.navigationClearance,
                   ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  if (value.transactionCount == 0)
-                    const EmptyState(
-                      title: 'No transactions this month',
-                      message:
-                          'Income and expenses recorded for this month will '
-                          'appear here.',
-                      icon: Icons.summarize_outlined,
-                    )
-                  else ...<Widget>[
-                    _MonthlyRecords(
-                      summary: value,
-                      currencyFormatter: currencyFormatter,
+                  children: <Widget>[
+                    _MonthSelector(
+                      label: ref
+                          .watch(dateFormatterProvider)
+                          .monthYear(_selectedMonth),
+                      onPrevious: () => _changeMonth(-1),
+                      onNext: _isCurrentMonth(currentDate)
+                          ? null
+                          : () => _changeMonth(1),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    Text(
-                      'Where your money went',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    if (value.spendingGroups.isEmpty)
-                      Text(
-                        'No expenses were recorded for this month.',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    if (value.transactionCount == 0)
+                      const EmptyState(
+                        title: 'No transactions this month',
+                        message:
+                            'Income and expenses recorded for this month will '
+                            'appear here.',
+                        icon: Icons.summarize_outlined,
                       )
                     else ...<Widget>[
-                      Center(
-                        child: SpendingDonutChart(
-                          groups: value.spendingGroups,
-                          total: value.expenses,
-                          currencyFormatter: currencyFormatter,
-                        ),
+                      _MonthlyRecords(
+                        summary: value,
+                        currencyFormatter: currencyFormatter,
                       ),
                       const SizedBox(height: AppSpacing.xxl),
-                      Text(
-                        'Category breakdown',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      ...value.spendingGroups.indexed.expand(
-                        ((int, CategorySpendingGroup) entry) => <Widget>[
-                          SummaryRecordRow(
-                            label: entry.$2.displayLabel,
-                            value: currencyFormatter.format(entry.$2.amount),
-                            supportingText:
-                                '${entry.$2.sharePercentage}% of recorded '
-                                'expenses',
-                            leading: _CategoryIcon(group: entry.$2),
-                          ),
-                          const Divider(),
-                        ],
+                      CategoryExplorationSection(
+                        activity: activity,
+                        selectedGroupKey: _selectedGroupKey,
+                        currencyFormatter: currencyFormatter,
+                        onTypeChanged: _changeActivityType,
+                        onGroupSelected: _selectGroup,
+                        onAllCategoriesSelected: _showAllCategories,
+                        onViewTransactions: (CategoryActivityGroup group) {
+                          unawaited(_openCategoryDetails(context, group));
+                        },
                       ),
                     ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -144,7 +143,47 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         _selectedMonth.year,
         _selectedMonth.month + offset,
       );
+      _selectedGroupKey = null;
     });
+  }
+
+  void _changeActivityType(TransactionType type) {
+    if (type == _activityType) {
+      return;
+    }
+    setState(() {
+      _activityType = type;
+      _selectedGroupKey = null;
+    });
+  }
+
+  void _selectGroup(CategoryActivityGroup group) {
+    ref
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.summaryCategorySelected);
+    setState(() => _selectedGroupKey = group.selectionKey);
+  }
+
+  void _showAllCategories() {
+    ref
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.summaryAllCategoriesSelected);
+    setState(() => _selectedGroupKey = null);
+  }
+
+  Future<void> _openCategoryDetails(
+    BuildContext context,
+    CategoryActivityGroup group,
+  ) async {
+    ref
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.categoryDetailsOpened);
+    final CategoryDetailsRouteData routeData = CategoryDetailsRouteData(
+      type: _activityType,
+      categories: group.includedCategories,
+      month: _selectedMonth,
+    );
+    await context.push<void>(AppRoutes.categoryDetails(routeData));
   }
 
   bool _isCurrentMonth(DateTime currentDate) {
@@ -256,25 +295,6 @@ final class _MonthSelector extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-final class _CategoryIcon extends StatelessWidget {
-  const _CategoryIcon({required this.group});
-
-  final CategorySpendingGroup group;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: group.displaySurface,
-        shape: BoxShape.circle,
-      ),
-      child: Icon(group.displayIcon, color: group.displayAccent, size: 20),
     );
   }
 }
