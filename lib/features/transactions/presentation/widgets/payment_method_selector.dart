@@ -1,3 +1,4 @@
+import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,13 @@ final class PaymentMethodSelector extends StatelessWidget {
           'payment_method_dropdown_${type.name}_${value.name}',
         ),
         initialValue: value,
-        decoration: InputDecoration(labelText: label),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(
+            Icons.account_balance_wallet_outlined,
+            color: AppColors.brandCobalt,
+          ),
+        ),
         isExpanded: true,
         items: PaymentMethod.values
             .map((PaymentMethod method) {

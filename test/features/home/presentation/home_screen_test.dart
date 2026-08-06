@@ -1,4 +1,6 @@
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -38,6 +40,16 @@ void main() {
       find.bySemanticsLabel(RegExp('Recorded balance, NPR 37,250')),
       findsOneWidget,
     );
+    final Container balanceSurface = tester.widget<Container>(
+      find.byKey(const ValueKey<String>('recorded_balance_card')),
+    );
+    final BoxDecoration balanceDecoration =
+        balanceSurface.decoration! as BoxDecoration;
+    expect(balanceDecoration.color, AppColors.surfaceStrong);
+    expect(
+      balanceDecoration.borderRadius,
+      BorderRadius.circular(AppRadius.signatureSurface),
+    );
 
     for (final String prohibitedCopy in <String>[
       'Monthly budget',
@@ -63,8 +75,8 @@ void main() {
     final Finder incomeButton = find.byKey(
       const ValueKey<String>('home_add_income_button'),
     );
-    expect(tester.getSize(expenseButton).height, 48);
-    expect(tester.getSize(incomeButton).height, 48);
+    expect(tester.getSize(expenseButton).height, 58);
+    expect(tester.getSize(incomeButton).height, 58);
     expect(
       tester
           .getSize(
@@ -73,7 +85,7 @@ void main() {
             ),
           )
           .height,
-      inInclusiveRange(36, 40),
+      AppSpacing.xxl,
     );
     expect(find.text('Quick add'), findsNothing);
     expect(find.bySemanticsLabel('Add expense transaction'), findsOneWidget);
@@ -96,23 +108,17 @@ void main() {
     final Icon expenseIcon = tester.widget<Icon>(
       find.descendant(
         of: expenseButton,
-        matching: find.byIcon(Icons.remove_circle_outline),
+        matching: find.byIcon(Icons.north_east_rounded),
       ),
     );
     final Icon incomeIcon = tester.widget<Icon>(
       find.descendant(
         of: incomeButton,
-        matching: find.byIcon(Icons.add_circle_outline),
+        matching: find.byIcon(Icons.south_west_rounded),
       ),
     );
-    expect(
-      (expenseIcon.color! as WidgetStateColor).resolve(const <WidgetState>{}),
-      AppColors.expenseAccent,
-    );
-    expect(
-      (incomeIcon.color! as WidgetStateColor).resolve(const <WidgetState>{}),
-      AppColors.incomeAccent,
-    );
+    expect(expenseIcon.color, AppColors.expenseText);
+    expect(incomeIcon.color, AppColors.incomeAccent);
     expect(
       expenseControl.style?.backgroundColor?.resolve(const <WidgetState>{}),
       isNot(AppColors.dangerAction),
@@ -212,6 +218,23 @@ void main() {
     expect(find.text('Add income'), findsOneWidget);
     expect(find.text('Aarav Shrestha'), findsNothing);
     expect(find.textContaining('example.com'), findsNothing);
+  });
+
+  testWidgets('signature balance handles a negative monthly result', (
+    WidgetTester tester,
+  ) async {
+    await pumpBudgetingApp(
+      tester,
+      seedTransactions: <FinancialTransaction>[
+        buildTestTransaction(id: 'negative-balance', minorUnits: 99999999900),
+      ],
+    );
+
+    expect(
+      find.bySemanticsLabel(RegExp(r'Recorded balance, .*NPR 999,999,999')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the first transaction replaces Home first-use content', (

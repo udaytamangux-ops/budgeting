@@ -2,13 +2,16 @@ import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 abstract final class AppTypography {
+  // Inter is bundled with the app and is the offline geometric-humanist
+  // fallback for this pass. All roles stay centralized here.
+  static const String fontFamily = 'Inter';
   static const List<FontFeature> tabularFigures = <FontFeature>[
     FontFeature.tabularFigures(),
   ];
 
   static TextTheme textTheme(TextTheme base) {
     final TextTheme inter = base.apply(
-      fontFamily: 'Inter',
+      fontFamily: fontFamily,
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
     );
@@ -16,27 +19,28 @@ abstract final class AppTypography {
     return inter.copyWith(
       displaySmall: inter.displaySmall?.copyWith(
         color: AppColors.textPrimary,
-        fontSize: 36,
-        fontWeight: FontWeight.w700,
-        height: 1.1,
-        letterSpacing: -1,
+        fontSize: 42,
+        fontWeight: FontWeight.w600,
+        height: 1.05,
+        letterSpacing: -1.2,
         fontFeatures: tabularFigures,
       ),
       headlineSmall: inter.headlineSmall?.copyWith(
         color: AppColors.textPrimary,
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        height: 1.25,
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+        height: 1.2,
+        letterSpacing: -0.5,
       ),
       titleLarge: inter.titleLarge?.copyWith(
         color: AppColors.textPrimary,
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontSize: 21,
+        fontWeight: FontWeight.w600,
         height: 1.3,
       ),
       titleMedium: inter.titleMedium?.copyWith(
         color: AppColors.textPrimary,
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: FontWeight.w600,
         height: 1.4,
       ),
@@ -70,6 +74,27 @@ abstract final class AppTypography {
         fontWeight: FontWeight.w500,
         height: 1.4,
       ),
+      labelSmall: inter.labelSmall?.copyWith(
+        color: AppColors.textSecondary,
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        height: 1.35,
+        letterSpacing: 0.2,
+      ),
     );
+  }
+
+  static TextStyle financialDisplay(
+    BuildContext context, {
+    Color color = AppColors.textPrimary,
+  }) {
+    return Theme.of(context).textTheme.displaySmall!.copyWith(
+      color: color,
+      fontFeatures: tabularFigures,
+    );
+  }
+
+  static TextStyle sectionTitle(BuildContext context) {
+    return Theme.of(context).textTheme.titleLarge!;
   }
 }

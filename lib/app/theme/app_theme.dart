@@ -46,23 +46,33 @@ abstract final class AppTheme {
         fillColor: AppColors.surfacePrimary,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppRadius.inputAndChip),
+          ),
           borderSide: BorderSide(color: AppColors.borderStrong),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppRadius.inputAndChip),
+          ),
           borderSide: BorderSide(color: AppColors.borderStrong),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppRadius.inputAndChip),
+          ),
           borderSide: BorderSide(color: AppColors.primaryAction, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppRadius.inputAndChip),
+          ),
           borderSide: BorderSide(color: AppColors.destructiveAction),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppRadius.inputAndChip),
+          ),
           borderSide: BorderSide(color: AppColors.destructiveAction, width: 2),
         ),
         labelStyle: TextStyle(color: AppColors.textSecondary),
@@ -73,7 +83,9 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size(48, 52),
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppRadius.compactControl),
+            ),
           ),
           textStyle: textTheme.labelLarge,
         ),
@@ -83,7 +95,9 @@ abstract final class AppTheme {
           minimumSize: const Size(48, 52),
           side: const BorderSide(color: AppColors.borderStrong),
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppRadius.compactControl),
+            ),
           ),
           textStyle: textTheme.labelLarge,
         ),
@@ -91,7 +105,9 @@ abstract final class AppTheme {
       chipTheme: base.chipTheme.copyWith(
         side: const BorderSide(color: AppColors.borderSubtle),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppRadius.inputAndChip),
+          ),
         ),
         labelStyle: textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

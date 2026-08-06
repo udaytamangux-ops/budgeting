@@ -1,5 +1,5 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_motion.dart';
+import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -49,27 +49,25 @@ final class RecentTransactionsSection extends ConsumerWidget {
             icon: Icons.receipt_long_outlined,
           )
         else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: transactions.length,
-            separatorBuilder: (_, _) => const Divider(),
-            itemBuilder: (BuildContext context, int index) {
-              final FinancialTransaction transaction = transactions[index];
-              return AnimatedSwitcher(
-                duration: AppMotion.accessibleDuration(
-                  context,
-                  AppMotion.standard,
-                ),
-                child: TransactionListItem(
+          Material(
+            color: Colors.transparent,
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: transactions.length,
+              separatorBuilder: (_, _) =>
+                  const Divider(indent: 52, color: AppColors.borderSubtle),
+              itemBuilder: (BuildContext context, int index) {
+                final FinancialTransaction transaction = transactions[index];
+                return TransactionListItem(
                   key: ValueKey<String>(transaction.id),
                   transaction: transaction,
                   onTap: () => context.push(
                     AppRoutes.transactionDetails(transaction.id),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
       ],
     );

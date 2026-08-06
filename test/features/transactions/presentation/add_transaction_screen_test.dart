@@ -6,6 +6,7 @@ import 'package:budgeting_app/features/summary/presentation/widgets/spending_don
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_amount_field.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,8 +28,8 @@ void main() {
         find.byType(TransactionTypeSelector),
       );
       expect(selector.value, TransactionType.expense);
-      expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
-      expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+      expect(find.byIcon(Icons.north_east_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.south_west_rounded), findsOneWidget);
 
       PrimaryButton saveButton = tester.widget<PrimaryButton>(
         find.byKey(const ValueKey<String>('save_transaction_button')),
@@ -79,10 +80,6 @@ void main() {
       const ValueKey<String>('transaction_type_income'),
     );
 
-    Material optionMaterial(Finder option) => tester.widget<Material>(
-      find.descendant(of: option, matching: find.byType(Material)).first,
-    );
-
     Text optionText(Finder option, String label) => tester.widget<Text>(
       find.descendant(of: option, matching: find.text(label)),
     );
@@ -91,38 +88,81 @@ void main() {
       find.descendant(of: option, matching: find.byIcon(icon)),
     );
 
-    expect(optionMaterial(expenseOption).color, AppColors.expenseSurface);
     expect(
       optionText(expenseOption, 'Expense').style?.color,
       AppColors.expenseText,
     );
     expect(
-      optionIcon(expenseOption, Icons.remove_circle_outline).color,
-      AppColors.expenseIconAccent,
+      optionIcon(expenseOption, Icons.north_east_rounded).color,
+      AppColors.expenseText,
     );
-    expect(optionMaterial(incomeOption).color, AppColors.surfaceSecondary);
     expect(
       optionText(incomeOption, 'Income').style?.color,
       AppColors.textSecondary,
     );
+    expect(
+      tester.getSemantics(expenseOption).flagsCollection.isSelected,
+      Tristate.isTrue,
+    );
+    AnimatedAlign indicator = tester.widget<AnimatedAlign>(
+      find.byKey(const ValueKey<String>('transaction_type_indicator')),
+    );
+    expect(indicator.alignment, Alignment.centerLeft);
 
     await tester.tap(incomeOption);
     await tester.pump();
 
-    expect(optionMaterial(expenseOption).color, AppColors.surfaceSecondary);
     expect(
       optionText(expenseOption, 'Expense').style?.color,
       AppColors.textSecondary,
     );
-    expect(optionMaterial(incomeOption).color, AppColors.incomeSurface);
     expect(
       optionText(incomeOption, 'Income').style?.color,
       AppColors.incomeAccent,
     );
     expect(
-      optionIcon(incomeOption, Icons.add_circle_outline).color,
+      optionIcon(incomeOption, Icons.south_west_rounded).color,
       AppColors.incomeAccent,
     );
+    indicator = tester.widget<AnimatedAlign>(
+      find.byKey(const ValueKey<String>('transaction_type_indicator')),
+    );
+    expect(indicator.alignment, Alignment.centerRight);
+  });
+
+  testWidgets('amount entry has calm and focused signature states', (
+    WidgetTester tester,
+  ) async {
+    await pumpBudgetingApp(tester);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home_add_expense_button')),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder surfaceFinder = find
+        .descendant(
+          of: find.byType(TransactionAmountField),
+          matching: find.byType(AnimatedContainer),
+        )
+        .first;
+    BoxDecoration decoration =
+        tester.widget<AnimatedContainer>(surfaceFinder).decoration!
+            as BoxDecoration;
+    expect(decoration.color, AppColors.surfacePrimary);
+
+    await tester.tap(find.byKey(const ValueKey<String>('amount_input')));
+    await tester.pumpAndSettle();
+    decoration =
+        tester.widget<AnimatedContainer>(surfaceFinder).decoration!
+            as BoxDecoration;
+    expect(decoration.color, AppColors.brandSoft);
+
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('amount_input')),
+      '999999999.99',
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('optional fields expand and income uses contextual terminology', (
@@ -156,8 +196,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Income source'), findsOneWidget);
     expect(find.text('Save income'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
-    expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+    expect(find.byIcon(Icons.north_east_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.south_west_rounded), findsOneWidget);
     await tester.drag(
       find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
       const Offset(0, -1000),
@@ -400,6 +440,11 @@ void main() {
     expect(find.text('Expense added · NPR 1,250 · Food'), findsOneWidget);
     expect(find.text('NPR 36,000'), findsOneWidget);
     expect(find.text('NPR 24,000'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('7 transactions recorded'),
+      280,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('7 transactions recorded'), findsOneWidget);
     expect(find.text('Undo'), findsOneWidget);
     final Rect bannerBounds = tester.getRect(

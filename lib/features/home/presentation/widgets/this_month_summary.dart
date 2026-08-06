@@ -1,5 +1,6 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
@@ -68,18 +69,39 @@ final class ThisMonthSummary extends ConsumerWidget {
                 },
               ),
               const SizedBox(height: AppSpacing.sm),
-              Column(
-                children: <Widget>[
-                  _MonthlyFact(
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final bool shouldStack =
+                      constraints.maxWidth < 300 ||
+                      MediaQuery.textScalerOf(context).scale(14) > 20;
+                  final Widget transactionItem = _MonthlyFact(
                     icon: Icons.receipt_long_outlined,
                     label: transactionFact,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MonthlyFact(
+                  );
+                  final Widget categoryItem = _MonthlyFact(
                     icon: Icons.category_outlined,
                     label: categoryFact,
-                  ),
-                ],
+                  );
+                  if (shouldStack) {
+                    return Column(
+                      key: const ValueKey<String>('this_month_activity_strip'),
+                      children: <Widget>[
+                        transactionItem,
+                        const SizedBox(height: AppSpacing.xs),
+                        categoryItem,
+                      ],
+                    );
+                  }
+                  return Row(
+                    key: const ValueKey<String>('this_month_activity_strip'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(child: transactionItem),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(child: categoryItem),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -120,14 +142,31 @@ final class _MonthlyFact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Icon(icon, size: 18, color: AppColors.textSecondary),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-      ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surfacePrimary,
+        borderRadius: BorderRadius.circular(AppRadius.utilitySurface),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.brandSoft,
+              borderRadius: BorderRadius.circular(AppRadius.compactControl),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.brandCobalt),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
     );
   }
 }

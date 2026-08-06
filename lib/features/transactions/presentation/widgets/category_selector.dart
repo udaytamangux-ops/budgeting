@@ -49,12 +49,20 @@ final class CategorySelector extends StatelessWidget {
           if (recentCategories.length >= 2) ...<Widget>[
             Text('Recent', style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: AppSpacing.xs),
-            _CategoryOptions(
-              categories: recentCategories,
-              keyPrefix: 'recent_category',
-              selectedCategory: selectedCategory,
-              isEnabled: isEnabled,
-              onSelected: onRecentSelected ?? onSelected,
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceTinted,
+                borderRadius: BorderRadius.circular(AppRadius.utilitySurface),
+              ),
+              child: _CategoryOptions(
+                categories: recentCategories,
+                keyPrefix: 'recent_category',
+                selectedCategory: selectedCategory,
+                isEnabled: isEnabled,
+                onSelected: onRecentSelected ?? onSelected,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -152,63 +160,79 @@ final class _CategoryOption extends StatelessWidget {
       label: '${visual.label} category',
       excludeSemantics: true,
       onTap: isEnabled ? onTap : null,
-      child: Material(
-        color: isSelected ? AppColors.primarySubtle : AppColors.surfacePrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.small),
-          side: BorderSide(
-            color: isSelected
-                ? AppColors.primaryAction
-                : AppColors.borderSubtle,
+      child: AnimatedContainer(
+        duration: AppMotion.accessibleDuration(context, AppMotion.selection),
+        curve: AppMotion.emphasized,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.brandSoft : AppColors.surfacePrimary,
+          borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+          border: Border.all(
+            color: isSelected ? AppColors.brandCobalt : AppColors.borderSubtle,
             width: isSelected ? 2 : 1,
           ),
         ),
-        child: InkWell(
-          onTap: isEnabled ? onTap : null,
-          borderRadius: BorderRadius.circular(AppRadius.small),
-          overlayColor: const WidgetStatePropertyAll<Color>(
-            AppColors.primarySubtle,
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(
-                    visual.icon,
-                    size: 18,
-                    color: isSelected
-                        ? AppColors.primaryAction
-                        : visual.foreground,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Flexible(
-                    child: Text(
-                      visual.label,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: isSelected
-                            ? AppColors.primaryAction
-                            : AppColors.textPrimary,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w600,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+          child: InkWell(
+            onTap: isEnabled ? onTap : null,
+            borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+            overlayColor: const WidgetStatePropertyAll<Color>(
+              AppColors.brandSoft,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(
+                      visual.icon,
+                      size: 18,
+                      color: isSelected
+                          ? AppColors.primaryAction
+                          : visual.foreground,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        visual.label,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: isSelected
+                                  ? AppColors.primaryAction
+                                  : AppColors.textPrimary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                            ),
                       ),
                     ),
-                  ),
-                  if (isSelected) ...<Widget>[
-                    const SizedBox(width: AppSpacing.xs),
-                    const Icon(
-                      Icons.check_circle,
-                      size: 18,
-                      color: AppColors.primaryAction,
+                    AnimatedSwitcher(
+                      duration: AppMotion.accessibleDuration(
+                        context,
+                        AppMotion.selection,
+                      ),
+                      child: isSelected
+                          ? const Padding(
+                              key: ValueKey<String>('selected'),
+                              padding: EdgeInsets.only(left: AppSpacing.xs),
+                              child: Icon(
+                                Icons.check_circle,
+                                size: 18,
+                                color: AppColors.brandCobalt,
+                              ),
+                            )
+                          : const SizedBox.shrink(
+                              key: ValueKey<String>('unselected'),
+                            ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),

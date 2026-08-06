@@ -87,6 +87,7 @@ final class _AddTransactionScreenState
         : 'Save income';
 
     return Scaffold(
+      backgroundColor: AppColors.canvasWarm,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
@@ -112,9 +113,9 @@ final class _AddTransactionScreenState
               key: const ValueKey<String>('add_transaction_form_scroll'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
+                AppSpacing.contentMargin,
                 AppSpacing.sm,
-                AppSpacing.md,
+                AppSpacing.contentMargin,
                 AppSpacing.navigationClearance,
               ),
               children: <Widget>[
@@ -261,9 +262,9 @@ final class _AddTransactionScreenState
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
+              AppSpacing.contentMargin,
               AppSpacing.sm,
-              AppSpacing.md,
+              AppSpacing.contentMargin,
               AppSpacing.md,
             ),
             child: Center(

@@ -23,101 +23,142 @@ final class AvailableBalanceSummary extends ConsumerWidget {
     );
     return summary.maybeWhen(
       data: (MonthlyFinancialSummary value) {
-        final String recordedBalance = ref
-            .watch(currencyFormatterProvider)
-            .format(value.availableBalance);
-        final String income = ref
-            .watch(currencyFormatterProvider)
-            .format(value.income);
-        final String expenses = ref
-            .watch(currencyFormatterProvider)
-            .format(value.expenses);
+        final currencyFormatter = ref.watch(currencyFormatterProvider);
+        final String recordedBalance = currencyFormatter.format(
+          value.availableBalance,
+        );
+        final String income = currencyFormatter.format(value.income);
+        final String expenses = currencyFormatter.format(value.expenses);
         final AppDataStatus dataStatus = ref.watch(appDataStatusProvider);
-        return Container(
-          key: const ValueKey<String>('recorded_balance_card'),
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.recordedBalanceSurface,
-            border: Border.all(color: AppColors.recordedBalanceBorder),
-            borderRadius: BorderRadius.circular(AppRadius.large),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
+        return RepaintBoundary(
+          child: Container(
+            key: const ValueKey<String>('recorded_balance_card'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceStrong,
+              border: Border.all(color: AppColors.recordedBalanceBorder),
+              borderRadius: BorderRadius.circular(AppRadius.signatureSurface),
+            ),
+            child: Semantics(
+              label:
+                  'Recorded balance, $recordedBalance. Monthly income, '
+                  '$income. Monthly expenses, $expenses.',
+              excludeSemantics: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      'Recorded balance',
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Recorded balance',
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(color: AppColors.inkOnStrongMuted),
+                        ),
+                      ),
+                      IconButton(
+                        key: const ValueKey<String>(
+                          'recorded_balance_information_button',
+                        ),
+                        tooltip: 'About recorded balance',
+                        onPressed: () => unawaited(
+                          _showRecordedBalanceInformation(context, dataStatus),
+                        ),
+                        style: IconButton.styleFrom(
+                          foregroundColor: AppColors.inkOnStrong,
+                          backgroundColor: const Color(0x14FFFFFF),
+                          minimumSize: const Size.square(48),
+                        ),
+                        icon: const Icon(Icons.info_outline_rounded, size: 20),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    key: const ValueKey<String>(
-                      'recorded_balance_information_button',
-                    ),
-                    tooltip: 'About recorded balance',
-                    onPressed: () {
-                      unawaited(
-                        _showRecordedBalanceInformation(context, dataStatus),
-                      );
-                    },
-                    icon: const Icon(Icons.info_outline, size: 20),
-                  ),
-                ],
-              ),
-              Semantics(
-                label:
-                    'Recorded balance, $recordedBalance. Monthly income, '
-                    '$income. Monthly expenses, $expenses.',
-                excludeSemantics: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    AnimatedSwitcher(
+                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AnimatedSwitcher(
                       duration: AppMotion.accessibleDuration(
                         context,
-                        AppMotion.standard,
+                        AppMotion.financialValue,
                       ),
-                      child: Text(
-                        recordedBalance,
+                      switchInCurve: AppMotion.emphasized,
+                      switchOutCurve: AppMotion.exiting,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.08),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: Align(
                         key: ValueKey<int>(value.availableBalance.minorUnits),
-                        style: Theme.of(context).textTheme.displaySmall,
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            recordedBalance,
+                            maxLines: 1,
+                            style: AppTypography.financialDisplay(
+                              context,
+                              color: AppColors.inkOnStrong,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: _SummaryMetric(
-                            icon: Icons.arrow_downward,
-                            iconColor: AppColors.primaryAction,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  LayoutBuilder(
+                    builder:
+                        (BuildContext context, BoxConstraints constraints) {
+                          final bool shouldStack =
+                              constraints.maxWidth < 300 ||
+                              MediaQuery.textScalerOf(context).scale(14) > 21;
+                          final Widget incomeMetric = _SummaryMetric(
+                            icon: Icons.south_west_rounded,
+                            iconColor: AppColors.incomeAccent,
+                            iconSurface: AppColors.incomeSoft,
                             label: 'Income',
                             amount: income,
                             amountKey: value.income,
-                          ),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 48,
-                          color: AppColors.borderSubtle,
-                        ),
-                        Expanded(
-                          child: _SummaryMetric(
-                            icon: Icons.arrow_upward,
-                            iconColor: AppColors.textSecondary,
+                          );
+                          final Widget expenseMetric = _SummaryMetric(
+                            icon: Icons.north_east_rounded,
+                            iconColor: AppColors.expenseText,
+                            iconSurface: AppColors.expenseSoft,
                             label: 'Expenses',
                             amount: expenses,
                             amountKey: value.expenses,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                          );
+                          if (shouldStack) {
+                            return Column(
+                              children: <Widget>[
+                                incomeMetric,
+                                const SizedBox(height: AppSpacing.xs),
+                                expenseMetric,
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: <Widget>[
+                              Expanded(child: incomeMetric),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(child: expenseMetric),
+                            ],
+                          );
+                        },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -177,6 +218,7 @@ final class _SummaryMetric extends StatelessWidget {
   const _SummaryMetric({
     required this.icon,
     required this.iconColor,
+    required this.iconSurface,
     required this.label,
     required this.amount,
     required this.amountKey,
@@ -184,41 +226,61 @@ final class _SummaryMetric extends StatelessWidget {
 
   final IconData icon;
   final Color iconColor;
+  final Color iconSurface;
   final String label;
   final String amount;
   final Money amountKey;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: const Color(0x12FFFFFF),
+        borderRadius: BorderRadius.circular(AppRadius.utilitySurface),
+        border: Border.all(color: const Color(0x14FFFFFF)),
+      ),
+      child: Row(
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: AppSpacing.xxs),
-              Flexible(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            ],
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: iconSurface,
+              borderRadius: BorderRadius.circular(AppRadius.compactControl),
+            ),
+            child: Icon(icon, size: 17, color: iconColor),
           ),
-          const SizedBox(height: AppSpacing.xxs),
-          AnimatedSwitcher(
-            duration: AppMotion.accessibleDuration(context, AppMotion.fast),
-            child: Text(
-              amount,
-              key: ValueKey<int>(amountKey.minorUnits),
-              maxLines: 1,
-              overflow: TextOverflow.fade,
-              softWrap: false,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontFeatures: AppTypography.tabularFigures,
-              ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.inkOnStrongMuted,
+                  ),
+                ),
+                AnimatedSwitcher(
+                  duration: AppMotion.accessibleDuration(
+                    context,
+                    AppMotion.financialValue,
+                  ),
+                  child: Text(
+                    amount,
+                    key: ValueKey<int>(amountKey.minorUnits),
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AppColors.inkOnStrong,
+                      fontFeatures: AppTypography.tabularFigures,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

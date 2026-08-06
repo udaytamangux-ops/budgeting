@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:budgeting_app/app/routing/app_routes.dart';
+import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/available_balance_summary.dart';
@@ -33,6 +34,7 @@ final class HomeScreen extends ConsumerWidget {
       ),
     );
     return Scaffold(
+      backgroundColor: AppColors.canvasWarm,
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -53,14 +55,14 @@ final class HomeScreen extends ConsumerWidget {
                     _HomeLoadState.loaded => ListView(
                       key: const ValueKey<String>('home_content'),
                       padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
+                        AppSpacing.contentMargin,
                         AppSpacing.sm,
-                        AppSpacing.md,
+                        AppSpacing.contentMargin,
                         AppSpacing.navigationClearance,
                       ),
                       children: <Widget>[
                         const AvailableBalanceSummary(),
-                        const SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.lg),
                         HomeQuickActions(
                           onAddExpense: () => unawaited(
                             _openTransactionForm(context, AppRoutes.addExpense),
@@ -73,10 +75,10 @@ final class HomeScreen extends ConsumerWidget {
                           key: ValueKey<String>(
                             'home_quick_actions_to_month_spacing',
                           ),
-                          height: AppSpacing.section,
+                          height: AppSpacing.xxl,
                         ),
                         const ThisMonthSummary(),
-                        const SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(height: AppSpacing.section),
                         const RecentTransactionsSection(),
                       ],
                     ),

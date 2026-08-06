@@ -95,7 +95,7 @@ final class ProfileScreen extends StatelessWidget {
                       _SettingsValueTile(
                         icon: Icons.storage_outlined,
                         title: 'Data source',
-                        value: 'In-memory repository',
+                        value: 'Drift / SQLite local database',
                       ),
                       Divider(),
                       _SettingsValueTile(

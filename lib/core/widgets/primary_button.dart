@@ -1,5 +1,7 @@
 import 'package:budgeting_app/app/theme/app_motion.dart';
+import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/widgets/pressable_scale.dart';
 import 'package:flutter/material.dart';
 
 final class PrimaryButton extends StatelessWidget {
@@ -25,33 +27,42 @@ final class PrimaryButton extends StatelessWidget {
       label: isLoading ? '$label, saving' : label,
       excludeSemantics: true,
       onTap: onPressed != null && !isLoading ? onPressed : null,
-      child: SizedBox(
-        width: double.infinity,
-        child: FilledButton(
-          onPressed: isLoading ? null : onPressed,
-          child: AnimatedSwitcher(
-            duration: AppMotion.accessibleDuration(context, AppMotion.fast),
-            child: isLoading
-                ? const SizedBox.square(
-                    key: ValueKey<String>('loading'),
-                    dimension: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: Colors.white,
-                    ),
-                  )
-                : Row(
-                    key: const ValueKey<String>('label'),
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      if (icon != null) ...<Widget>[
-                        Icon(icon, size: 20),
-                        const SizedBox(width: AppSpacing.xs),
+      child: PressableScale(
+        enabled: onPressed != null && !isLoading,
+        child: SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: isLoading ? null : onPressed,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(48, 56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.compactControl),
+              ),
+            ),
+            child: AnimatedSwitcher(
+              duration: AppMotion.accessibleDuration(context, AppMotion.fast),
+              child: isLoading
+                  ? const SizedBox.square(
+                      key: ValueKey<String>('loading'),
+                      dimension: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      key: const ValueKey<String>('label'),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        if (icon != null) ...<Widget>[
+                          Icon(icon, size: 20),
+                          const SizedBox(width: AppSpacing.xs),
+                        ],
+                        Flexible(child: Text(label)),
                       ],
-                      Flexible(child: Text(label)),
-                    ],
-                  ),
+                    ),
+            ),
           ),
         ),
       ),

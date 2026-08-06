@@ -1,38 +1,60 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const Color primaryAction = Color(0xFF3559E0);
-  static const Color primaryActionPressed = Color(0xFF2947C7);
-  static const Color primarySubtle = Color(0xFFEEF2FF);
-
-  static const Color expenseAccent = Color(0xFFA4473D);
-  static const Color expenseText = expenseAccent;
-  static const Color expenseAccentStrong = Color(0xFFFF0000);
-  static const Color expenseIconAccent = expenseAccentStrong;
-  static const Color expenseSurface = Color(0xFFFFF1EF);
-  static const Color expenseSurfacePressed = Color(0xFFF8DFDB);
-  static const Color expenseBorder = Color(0xFFF0C8C2);
-
-  static const Color incomeAccent = Color(0xFF147A52);
-  static const Color incomeSurface = Color(0xFFECF8F2);
-  static const Color incomeSurfacePressed = Color(0xFFDCEFE6);
-  static const Color incomeBorder = Color(0xFFC5E5D5);
-
-  static const Color background = Color(0xFFF6F8FC);
+  // Lively Personal Ledger foundations.
+  static const Color canvasWarm = Color(0xFFF7F7F3);
   static const Color surfacePrimary = Color(0xFFFFFFFF);
-  static const Color surfaceSecondary = Color(0xFFF1F4F9);
-  static const Color recordedBalanceSurface = Color(0xFFF0F3FA);
-  static const Color recordedBalanceBorder = Color(0xFFD9E0EE);
+  static const Color surfaceTinted = Color(0xFFF0F2FF);
+  static const Color surfaceStrong = Color(0xFF20243B);
 
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF667085);
+  static const Color inkPrimary = Color(0xFF17191F);
+  static const Color inkSecondary = Color(0xFF6C7280);
+  static const Color inkSecondaryOnWarm = Color(0xFF656B77);
+  static const Color inkOnStrong = Color(0xFFFFFFFF);
+  static const Color inkOnStrongMuted = Color(0xB8FFFFFF);
+
+  static const Color brandCobalt = Color(0xFF4859E8);
+  static const Color brandPressed = Color(0xFF3947C7);
+  static const Color brandSoft = Color(0xFFEDEFFF);
+
+  static const Color incomeAccent = Color(0xFF168B65);
+  static const Color incomeSoft = Color(0xFFE7F7F0);
+
+  static const Color expenseAccentStrong = Color(0xFFF04438);
+  static const Color expenseText = Color(0xFFC43A31);
+  static const Color expenseSoft = Color(0xFFFFF0EE);
+
+  static const Color warmAccent = Color(0xFFF4B64A);
+
+  // Compatibility names used by established screens.
+  static const Color primaryAction = brandCobalt;
+  static const Color primaryActionPressed = brandPressed;
+  static const Color primarySubtle = brandSoft;
+
+  static const Color expenseAccent = expenseText;
+  static const Color expenseIconAccent = expenseAccentStrong;
+  static const Color expenseSurface = expenseSoft;
+  static const Color expenseSurfacePressed = Color(0xFFFFE2DE);
+  static const Color expenseBorder = Color(0xFFF5C5BF);
+
+  static const Color incomeSurface = incomeSoft;
+  static const Color incomeSurfacePressed = Color(0xFFD4F0E4);
+  static const Color incomeBorder = Color(0xFFBDE3D3);
+
+  static const Color background = canvasWarm;
+  static const Color surfaceSecondary = surfaceTinted;
+  static const Color recordedBalanceSurface = surfaceStrong;
+  static const Color recordedBalanceBorder = Color(0xFF30364F);
+
+  static const Color textPrimary = inkPrimary;
+  static const Color textSecondary = inkSecondaryOnWarm;
   static const Color textDisabled = Color(0xFF98A2B3);
 
-  static const Color borderSubtle = Color(0xFFE4E7EC);
-  static const Color borderStrong = Color(0xFFCBD2DC);
+  static const Color borderSubtle = Color(0xFFE2E4EA);
+  static const Color borderStrong = Color(0xFFC9CDD7);
 
-  static const Color balancePositive = Color(0xFF15803D);
-  static const Color positiveSubtle = Color(0xFFECFDF3);
+  static const Color balancePositive = incomeAccent;
+  static const Color positiveSubtle = incomeSoft;
 
   static const Color budgetWarning = Color(0xFFB45309);
   static const Color warningSubtle = Color(0xFFFFF7E8);

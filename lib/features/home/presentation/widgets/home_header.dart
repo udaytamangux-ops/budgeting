@@ -1,5 +1,6 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
@@ -18,9 +19,9 @@ final class HomeHeader extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.contentMargin,
         AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.sm,
+        AppSpacing.contentMargin,
         AppSpacing.sm,
       ),
       child: Row(
@@ -30,7 +31,10 @@ final class HomeHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Namaste', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Namaste',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   "Here's your $month activity.",
@@ -49,17 +53,19 @@ final class HomeHeader extends ConsumerWidget {
             child: InkResponse(
               key: const ValueKey<String>('home_profile_button'),
               onTap: () => context.go(AppRoutes.profile),
-              radius: 24,
+              radius: 28,
               child: SizedBox.square(
                 dimension: 48,
                 child: Center(
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.primarySubtle,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(
+                        AppRadius.inputAndChip,
+                      ),
                     ),
                     child: const Icon(
                       Icons.person_outline,

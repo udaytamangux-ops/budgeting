@@ -1,6 +1,7 @@
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/widgets/pressable_scale.dart';
 import 'package:flutter/material.dart';
 
 final class HomeQuickActions extends StatelessWidget {
@@ -20,9 +21,9 @@ final class HomeQuickActions extends StatelessWidget {
       key: const ValueKey<String>('home_add_expense_button'),
       label: 'Add expense',
       semanticLabel: 'Add expense transaction',
-      icon: Icons.remove_circle_outline,
-      accent: AppColors.expenseAccent,
-      surface: AppColors.expenseSurface,
+      icon: Icons.north_east_rounded,
+      accent: AppColors.expenseText,
+      surface: AppColors.expenseSoft,
       pressedSurface: AppColors.expenseSurfacePressed,
       border: AppColors.expenseBorder,
       onPressed: onAddExpense,
@@ -31,9 +32,9 @@ final class HomeQuickActions extends StatelessWidget {
       key: const ValueKey<String>('home_add_income_button'),
       label: 'Add income',
       semanticLabel: 'Add income transaction',
-      icon: Icons.add_circle_outline,
+      icon: Icons.south_west_rounded,
       accent: AppColors.incomeAccent,
-      surface: AppColors.incomeSurface,
+      surface: AppColors.incomeSoft,
       pressedSurface: AppColors.incomeSurfacePressed,
       border: AppColors.incomeBorder,
       onPressed: onAddIncome,
@@ -52,7 +53,7 @@ final class HomeQuickActions extends StatelessWidget {
     return Row(
       children: <Widget>[
         Expanded(child: expenseButton),
-        const SizedBox(width: AppSpacing.xs),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(child: incomeButton),
       ],
     );
@@ -88,74 +89,62 @@ final class _QuickActionButton extends StatelessWidget {
       enabled: onPressed != null,
       label: semanticLabel,
       excludeSemantics: true,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: ButtonStyle(
-          minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 48)),
-          maximumSize: const WidgetStatePropertyAll<Size>(
-            Size(double.infinity, 48),
-          ),
-          padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-            EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          ),
-          shape: const WidgetStatePropertyAll<OutlinedBorder>(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(AppRadius.small)),
+      child: PressableScale(
+        enabled: onPressed != null,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: ButtonStyle(
+            minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 58)),
+            padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+              EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            ),
+            shape: WidgetStatePropertyAll<OutlinedBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+              ),
+            ),
+            backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return AppColors.surfaceSecondary;
+              }
+              return states.contains(WidgetState.pressed)
+                  ? pressedSurface
+                  : surface;
+            }),
+            foregroundColor: WidgetStatePropertyAll<Color>(accent),
+            side: WidgetStateProperty.resolveWith<BorderSide>((states) {
+              if (states.contains(WidgetState.focused)) {
+                return const BorderSide(color: AppColors.brandCobalt, width: 2);
+              }
+              return BorderSide(
+                color: states.contains(WidgetState.disabled)
+                    ? AppColors.borderSubtle
+                    : border,
+              );
+            }),
+            overlayColor: const WidgetStatePropertyAll<Color>(
+              Colors.transparent,
             ),
           ),
-          backgroundColor: WidgetStateProperty.resolveWith<Color>((
-            Set<WidgetState> states,
-          ) {
-            if (states.contains(WidgetState.disabled)) {
-              return AppColors.surfaceSecondary;
-            }
-            if (states.contains(WidgetState.pressed)) {
-              return pressedSurface;
-            }
-            return surface;
-          }),
-          foregroundColor: WidgetStateProperty.resolveWith<Color>((
-            Set<WidgetState> states,
-          ) {
-            if (states.contains(WidgetState.disabled)) {
-              return AppColors.textDisabled;
-            }
-            if (states.contains(WidgetState.pressed)) {
-              return AppColors.textPrimary;
-            }
-            return AppColors.textPrimary;
-          }),
-          side: WidgetStateProperty.resolveWith<BorderSide>((
-            Set<WidgetState> states,
-          ) {
-            if (states.contains(WidgetState.focused)) {
-              return const BorderSide(color: AppColors.primaryAction, width: 2);
-            }
-            if (states.contains(WidgetState.disabled)) {
-              return const BorderSide(color: AppColors.borderSubtle);
-            }
-            return BorderSide(color: border);
-          }),
-          overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              icon,
-              size: 18,
-              color: WidgetStateColor.resolveWith((Set<WidgetState> states) {
-                return states.contains(WidgetState.disabled)
-                    ? AppColors.textDisabled
-                    : accent;
-              }),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Flexible(
-              child: Text(label, maxLines: 1, overflow: TextOverflow.fade),
-            ),
-          ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.surfacePrimary.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(AppRadius.compactControl),
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(label, maxLines: 1, overflow: TextOverflow.fade),
+              ),
+            ],
+          ),
         ),
       ),
     );

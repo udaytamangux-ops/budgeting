@@ -1,4 +1,5 @@
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -18,35 +19,81 @@ final class TransactionTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isExpense = value == TransactionType.expense;
+    final Duration duration = AppMotion.accessibleDuration(
+      context,
+      AppMotion.selection,
+    );
     return Semantics(
       container: true,
       label: 'Transaction type',
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: _TransactionTypeOption(
-              key: const ValueKey<String>('transaction_type_expense'),
-              type: TransactionType.expense,
-              label: 'Expense',
-              icon: Icons.remove_circle_outline,
-              isSelected: value == TransactionType.expense,
-              isEnabled: isEnabled,
-              onTap: () => onChanged(TransactionType.expense),
+      child: Container(
+        key: const ValueKey<String>('transaction_type_segmented_control'),
+        padding: const EdgeInsets.all(AppSpacing.xxs),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceTinted,
+          borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+          border: Border.all(color: AppColors.borderSubtle),
+        ),
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: AnimatedAlign(
+                key: const ValueKey<String>('transaction_type_indicator'),
+                alignment: isExpense
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+                duration: duration,
+                curve: AppMotion.emphasized,
+                child: FractionallySizedBox(
+                  widthFactor: 0.5,
+                  heightFactor: 1,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: isExpense
+                          ? AppColors.expenseSoft
+                          : AppColors.incomeSoft,
+                      borderRadius: BorderRadius.circular(
+                        AppRadius.compactControl,
+                      ),
+                      border: Border.all(
+                        color: isExpense
+                            ? AppColors.expenseBorder
+                            : AppColors.incomeBorder,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: _TransactionTypeOption(
-              key: const ValueKey<String>('transaction_type_income'),
-              type: TransactionType.income,
-              label: 'Income',
-              icon: Icons.add_circle_outline,
-              isSelected: value == TransactionType.income,
-              isEnabled: isEnabled,
-              onTap: () => onChanged(TransactionType.income),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: _TransactionTypeOption(
+                    key: const ValueKey<String>('transaction_type_expense'),
+                    type: TransactionType.expense,
+                    label: 'Expense',
+                    icon: Icons.north_east_rounded,
+                    isSelected: isExpense,
+                    isEnabled: isEnabled,
+                    onTap: () => onChanged(TransactionType.expense),
+                  ),
+                ),
+                Expanded(
+                  child: _TransactionTypeOption(
+                    key: const ValueKey<String>('transaction_type_income'),
+                    type: TransactionType.income,
+                    label: 'Income',
+                    icon: Icons.south_west_rounded,
+                    isSelected: !isExpense,
+                    isEnabled: isEnabled,
+                    onTap: () => onChanged(TransactionType.income),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -73,30 +120,13 @@ final class _TransactionTypeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isExpense = type == TransactionType.expense;
-    final Color selectedSurface = isExpense
-        ? AppColors.expenseSurface
-        : AppColors.incomeSurface;
-    final Color selectedPressedSurface = isExpense
-        ? AppColors.expenseSurfacePressed
-        : AppColors.incomeSurfacePressed;
-    final Color selectedText = isExpense
+    final Color selectedColor = isExpense
         ? AppColors.expenseText
         : AppColors.incomeAccent;
-    final Color selectedIcon = isExpense
-        ? AppColors.expenseIconAccent
-        : AppColors.incomeAccent;
-    final Color selectedBorder = isExpense
-        ? AppColors.expenseBorder
-        : AppColors.incomeBorder;
-    final Color textColor = !isEnabled
+    final Color color = !isEnabled
         ? AppColors.textDisabled
         : isSelected
-        ? selectedText
-        : AppColors.textSecondary;
-    final Color iconColor = !isEnabled
-        ? AppColors.textDisabled
-        : isSelected
-        ? selectedIcon
+        ? selectedColor
         : AppColors.textSecondary;
     return Semantics(
       button: true,
@@ -105,50 +135,54 @@ final class _TransactionTypeOption extends StatelessWidget {
       label: '$label transaction type',
       excludeSemantics: true,
       onTap: isEnabled ? onTap : null,
-      child: Material(
-        color: isSelected ? selectedSurface : AppColors.surfaceSecondary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-          side: BorderSide(
-            color: isSelected ? selectedBorder : AppColors.borderSubtle,
-            width: isSelected ? 2 : 1,
-          ),
+      child: InkWell(
+        onTap: isEnabled ? onTap : null,
+        borderRadius: BorderRadius.circular(AppRadius.compactControl),
+        overlayColor: WidgetStatePropertyAll<Color>(
+          selectedColor.withValues(alpha: 0.08),
         ),
-        child: InkWell(
-          onTap: isEnabled ? onTap : null,
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-          overlayColor: WidgetStateProperty.resolveWith<Color?>((
-            Set<WidgetState> states,
-          ) {
-            if (states.contains(WidgetState.pressed)) {
-              return isSelected
-                  ? selectedPressedSurface
-                  : AppColors.surfacePrimary;
-            }
-            return null;
-          }),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 52),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Icon(icon, color: iconColor, size: 20),
-                  const SizedBox(width: AppSpacing.xs),
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: textColor,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w600,
-                      ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 54),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: AppSpacing.xs),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: color,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                     ),
                   ),
-                ],
-              ),
+                ),
+                AnimatedSwitcher(
+                  duration: AppMotion.accessibleDuration(
+                    context,
+                    AppMotion.selection,
+                  ),
+                  child: isSelected
+                      ? Padding(
+                          key: const ValueKey<String>('selected'),
+                          padding: const EdgeInsets.only(left: AppSpacing.xs),
+                          child: Icon(
+                            Icons.check_rounded,
+                            color: color,
+                            size: 18,
+                          ),
+                        )
+                      : const SizedBox.shrink(
+                          key: ValueKey<String>('unselected'),
+                        ),
+                ),
+              ],
             ),
           ),
         ),

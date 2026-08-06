@@ -2,6 +2,7 @@ import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -26,10 +27,14 @@ final class TransactionAmountField extends StatefulWidget {
 }
 
 final class _TransactionAmountFieldState extends State<TransactionAmountField> {
+  late bool _hasAmount;
+
   @override
   void initState() {
     super.initState();
+    _hasAmount = widget.controller.text.isNotEmpty;
     widget.focusNode.addListener(_handleFocusChange);
+    widget.controller.addListener(_handleAmountPresenceChange);
   }
 
   @override
@@ -39,11 +44,17 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
       oldWidget.focusNode.removeListener(_handleFocusChange);
       widget.focusNode.addListener(_handleFocusChange);
     }
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_handleAmountPresenceChange);
+      widget.controller.addListener(_handleAmountPresenceChange);
+      _hasAmount = widget.controller.text.isNotEmpty;
+    }
   }
 
   @override
   void dispose() {
     widget.focusNode.removeListener(_handleFocusChange);
+    widget.controller.removeListener(_handleAmountPresenceChange);
     super.dispose();
   }
 
@@ -53,7 +64,7 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
     final Color borderColor = hasError
         ? AppColors.destructiveAction
         : widget.focusNode.hasFocus
-        ? AppColors.primaryAction
+        ? AppColors.brandCobalt
         : AppColors.borderStrong;
 
     return Semantics(
@@ -66,31 +77,41 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
             duration: AppMotion.accessibleDuration(context, AppMotion.fast),
             curve: AppMotion.emphasized,
             padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
               AppSpacing.md,
-              AppSpacing.sm,
+              AppSpacing.lg,
               AppSpacing.md,
-              AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfacePrimary,
+              color: widget.focusNode.hasFocus
+                  ? AppColors.brandSoft
+                  : AppColors.surfacePrimary,
               border: Border.all(
                 color: borderColor,
                 width: widget.focusNode.hasFocus || hasError ? 2 : 1,
               ),
-              borderRadius: BorderRadius.circular(AppRadius.medium),
+              borderRadius: BorderRadius.circular(AppRadius.signatureSurface),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Amount', style: Theme.of(context).textTheme.labelMedium),
-                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  'Amount',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: widget.focusNode.hasFocus
+                        ? AppColors.brandCobalt
+                        : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Text(
                       'NPR',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: AppColors.textSecondary,
+                        fontFeatures: AppTypography.tabularFigures,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -113,7 +134,13 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
                           scrollPadding: const EdgeInsets.only(
                             bottom: AppSpacing.navigationClearance,
                           ),
-                          style: Theme.of(context).textTheme.displaySmall,
+                          cursorColor: AppColors.brandCobalt,
+                          style: AppTypography.financialDisplay(context)
+                              .copyWith(
+                                fontWeight: _hasAmount
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                              ),
                           decoration: const InputDecoration(
                             isCollapsed: true,
                             contentPadding: EdgeInsets.zero,
@@ -161,6 +188,13 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
   void _handleFocusChange() {
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  void _handleAmountPresenceChange() {
+    final bool hasAmount = widget.controller.text.isNotEmpty;
+    if (_hasAmount != hasAmount && mounted) {
+      setState(() => _hasAmount = hasAmount);
     }
   }
 }

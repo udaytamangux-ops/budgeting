@@ -1,4 +1,5 @@
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
@@ -127,52 +128,56 @@ final class _QuickDateOption extends StatelessWidget {
       label: semanticLabel,
       excludeSemantics: true,
       onTap: isEnabled ? onTap : null,
-      child: Material(
-        color: isSelected ? AppColors.primarySubtle : AppColors.surfacePrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.small),
-          side: BorderSide(
-            color: isSelected
-                ? AppColors.primaryAction
-                : AppColors.borderSubtle,
+      child: AnimatedContainer(
+        duration: AppMotion.accessibleDuration(context, AppMotion.selection),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.brandSoft : AppColors.surfacePrimary,
+          borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+          border: Border.all(
+            color: isSelected ? AppColors.brandCobalt : AppColors.borderSubtle,
             width: isSelected ? 2 : 1,
           ),
         ),
-        child: InkWell(
-          onTap: isEnabled ? onTap : null,
-          borderRadius: BorderRadius.circular(AppRadius.small),
-          overlayColor: const WidgetStatePropertyAll<Color>(
-            AppColors.primarySubtle,
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  if (isSelected) ...<Widget>[
-                    const Icon(
-                      Icons.check,
-                      size: 18,
-                      color: AppColors.primaryAction,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                  ],
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: isSelected
-                            ? AppColors.primaryAction
-                            : AppColors.textPrimary,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w600,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+          child: InkWell(
+            onTap: isEnabled ? onTap : null,
+            borderRadius: BorderRadius.circular(AppRadius.inputAndChip),
+            overlayColor: const WidgetStatePropertyAll<Color>(
+              AppColors.brandSoft,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (isSelected) ...<Widget>[
+                      const Icon(
+                        Icons.check,
+                        size: 18,
+                        color: AppColors.primaryAction,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: isSelected
+                                  ? AppColors.primaryAction
+                                  : AppColors.textPrimary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                            ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

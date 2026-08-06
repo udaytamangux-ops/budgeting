@@ -50,6 +50,8 @@ void main() {
     );
     expect(find.text('Developer information'), findsOneWidget);
     expect(find.text('Debug information'), findsNothing);
+    expect(find.text('Drift / SQLite local database'), findsOneWidget);
+    expect(find.text('In-memory repository'), findsNothing);
     await tester.scrollUntilVisible(
       privacySetting,
       -280,
