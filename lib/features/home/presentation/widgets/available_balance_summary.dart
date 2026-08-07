@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/data/app_data_status.dart';
@@ -38,8 +38,8 @@ final class AvailableBalanceSummary extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.recordedBalanceSurface,
-            border: Border.all(color: AppColors.recordedBalanceBorder),
+            color: context.appColors.recordedBalanceSurface,
+            border: Border.all(color: context.appColors.recordedBalanceBorder),
             borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Column(
@@ -92,7 +92,7 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                         Expanded(
                           child: _SummaryMetric(
                             icon: Icons.arrow_downward,
-                            iconColor: AppColors.primaryAction,
+                            iconColor: context.appColors.incomeAccent,
                             label: 'Income',
                             amount: income,
                             amountKey: value.income,
@@ -101,12 +101,12 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                         Container(
                           width: 1,
                           height: 48,
-                          color: AppColors.borderSubtle,
+                          color: context.appColors.borderSubtle,
                         ),
                         Expanded(
                           child: _SummaryMetric(
                             icon: Icons.arrow_upward,
-                            iconColor: AppColors.textSecondary,
+                            iconColor: context.appColors.expenseAccent,
                             label: 'Expenses',
                             amount: expenses,
                             amountKey: value.expenses,

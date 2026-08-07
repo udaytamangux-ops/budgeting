@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
@@ -112,8 +112,10 @@ final class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.surfacePrimary,
-                        border: Border.all(color: AppColors.borderSubtle),
+                        color: context.appColors.surfacePrimary,
+                        border: Border.all(
+                          color: context.appColors.borderSubtle,
+                        ),
                         borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                       child: BudgetProgressIndicator(
@@ -320,8 +322,8 @@ final class _UnallocatedBudget extends StatelessWidget {
     final bool isOverAllocated = amount.isNegative;
     final String formatted = currencyFormatter.format(amount.absolute);
     final Color foreground = isOverAllocated
-        ? AppColors.destructiveAction
-        : AppColors.textPrimary;
+        ? context.appColors.destructiveAction
+        : context.appColors.textPrimary;
     final Widget label = Row(
       children: <Widget>[
         Icon(
@@ -329,8 +331,8 @@ final class _UnallocatedBudget extends StatelessWidget {
               ? Icons.error_outline
               : Icons.account_balance_wallet_outlined,
           color: isOverAllocated
-              ? AppColors.destructiveAction
-              : AppColors.textSecondary,
+              ? context.appColors.destructiveAction
+              : context.appColors.textSecondary,
           size: 20,
         ),
         const SizedBox(width: AppSpacing.xs),

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
@@ -77,17 +77,17 @@ final class _TransactionDetailsContent extends ConsumerWidget {
     final TransactionCategoryVisual category = transaction.category.visual;
     final bool isIncome = transaction.type == TransactionType.income;
     final Color amountColor = isIncome
-        ? AppColors.incomeAccent
-        : AppColors.expenseText;
+        ? context.appColors.incomeAccent
+        : context.appColors.expenseText;
     final Color typeSurface = isIncome
-        ? AppColors.incomeSurface
-        : AppColors.expenseSurface;
+        ? context.appColors.incomeSurface
+        : context.appColors.expenseSurface;
     final Color typeText = isIncome
-        ? AppColors.incomeAccent
-        : AppColors.expenseText;
+        ? context.appColors.incomeAccent
+        : context.appColors.expenseText;
     final Color typeIcon = isIncome
-        ? AppColors.incomeAccent
-        : AppColors.expenseAccentStrong;
+        ? context.appColors.incomeAccent
+        : context.appColors.expenseAccentStrong;
 
     return SafeArea(
       top: false,
@@ -213,7 +213,7 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                       ? null
                       : () => _confirmDelete(context, ref, amount),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.destructiveAction,
+                    foregroundColor: context.appColors.destructiveAction,
                     minimumSize: const Size(48, 48),
                   ),
                   icon: actionState.isDeleting
@@ -236,13 +236,13 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: AppColors.dangerSubtle,
+                      color: context.appColors.dangerSubtle,
                       borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: Text(
                       actionState.errorMessage!,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.destructiveAction,
+                        color: context.appColors.destructiveAction,
                       ),
                     ),
                   ),
@@ -293,7 +293,7 @@ final class _TransactionDetailsContent extends ConsumerWidget {
             FilledButton(
               onPressed: () => dialogContext.pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.destructiveAction,
+                backgroundColor: context.appColors.destructiveAction,
               ),
               child: const Text('Delete transaction'),
             ),

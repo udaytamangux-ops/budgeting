@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
@@ -74,8 +74,8 @@ final class BudgetProgressIndicator extends StatelessWidget {
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
                 color: summary.usedFraction >= 0.9
-                    ? AppColors.budgetWarning
-                    : AppColors.primaryAction,
+                    ? context.appColors.warning
+                    : context.appColors.primaryAction,
               );
             },
           ),

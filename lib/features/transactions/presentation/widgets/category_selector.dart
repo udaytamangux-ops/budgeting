@@ -1,6 +1,6 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
@@ -81,7 +81,7 @@ final class CategorySelector extends StatelessWidget {
                       child: Text(
                         errorText!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.destructiveAction,
+                          color: context.appColors.destructiveAction,
                         ),
                       ),
                     ),
@@ -153,21 +153,23 @@ final class _CategoryOption extends StatelessWidget {
       excludeSemantics: true,
       onTap: isEnabled ? onTap : null,
       child: Material(
-        color: isSelected ? AppColors.primarySubtle : AppColors.surfacePrimary,
+        color: isSelected
+            ? context.appColors.primarySubtle
+            : context.appColors.surfacePrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.small),
           side: BorderSide(
             color: isSelected
-                ? AppColors.primaryAction
-                : AppColors.borderSubtle,
+                ? context.appColors.primaryAction
+                : context.appColors.borderSubtle,
             width: isSelected ? 2 : 1,
           ),
         ),
         child: InkWell(
           onTap: isEnabled ? onTap : null,
           borderRadius: BorderRadius.circular(AppRadius.small),
-          overlayColor: const WidgetStatePropertyAll<Color>(
-            AppColors.primarySubtle,
+          overlayColor: WidgetStatePropertyAll<Color>(
+            context.appColors.primarySubtle,
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
@@ -183,7 +185,7 @@ final class _CategoryOption extends StatelessWidget {
                     visual.icon,
                     size: 18,
                     color: isSelected
-                        ? AppColors.primaryAction
+                        ? context.appColors.primaryAction
                         : visual.foreground,
                   ),
                   const SizedBox(width: AppSpacing.xs),
@@ -192,8 +194,8 @@ final class _CategoryOption extends StatelessWidget {
                       visual.label,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: isSelected
-                            ? AppColors.primaryAction
-                            : AppColors.textPrimary,
+                            ? context.appColors.primaryAction
+                            : context.appColors.textPrimary,
                         fontWeight: isSelected
                             ? FontWeight.w700
                             : FontWeight.w600,
@@ -202,10 +204,10 @@ final class _CategoryOption extends StatelessWidget {
                   ),
                   if (isSelected) ...<Widget>[
                     const SizedBox(width: AppSpacing.xs),
-                    const Icon(
+                    Icon(
                       Icons.check_circle,
                       size: 18,
-                      color: AppColors.primaryAction,
+                      color: context.appColors.primaryAction,
                     ),
                   ],
                 ],

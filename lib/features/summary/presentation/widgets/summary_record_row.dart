@@ -1,6 +1,6 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:flutter/material.dart';
@@ -50,11 +50,11 @@ final class SummaryRecordRow extends StatelessWidget {
                   ),
                   if (isSelected) ...<Widget>[
                     const SizedBox(width: AppSpacing.xs),
-                    const Icon(
+                    Icon(
                       Icons.check_circle,
-                      key: ValueKey<String>('selected_record_indicator'),
+                      key: const ValueKey<String>('selected_record_indicator'),
                       size: 18,
-                      color: AppColors.primaryAction,
+                      color: context.appColors.primaryAction,
                     ),
                   ],
                 ],
@@ -75,7 +75,7 @@ final class SummaryRecordRow extends StatelessWidget {
       value,
       textAlign: TextAlign.end,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: AppColors.textPrimary,
+        color: context.appColors.textPrimary,
         fontFeatures: AppTypography.tabularFigures,
       ),
     );
@@ -129,11 +129,11 @@ final class SummaryRecordRow extends StatelessWidget {
         duration: AppMotion.accessibleDuration(context, AppMotion.fast),
         decoration: BoxDecoration(
           color: isSelected
-              ? selectedSurface ?? AppColors.primarySubtle
+              ? selectedSurface ?? context.appColors.primarySubtle
               : Colors.transparent,
           border: Border.all(
             color: isSelected
-                ? selectedBorder ?? AppColors.primaryAction
+                ? selectedBorder ?? context.appColors.primaryAction
                 : Colors.transparent,
           ),
           borderRadius: BorderRadius.circular(AppRadius.small),
@@ -144,8 +144,8 @@ final class SummaryRecordRow extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
-            overlayColor: const WidgetStatePropertyAll<Color>(
-              AppColors.primarySubtle,
+            overlayColor: WidgetStatePropertyAll<Color>(
+              context.appColors.primarySubtle,
             ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 48),

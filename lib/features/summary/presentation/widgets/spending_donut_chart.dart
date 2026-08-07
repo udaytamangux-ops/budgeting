@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
@@ -85,6 +86,8 @@ final class SpendingDonutChart extends StatelessWidget {
                       groups: groups,
                       total: total,
                       selectedGroupKey: selectedGroupKey,
+                      trackColor: context.appColors.surfaceSecondary,
+                      selectionOutlineColor: context.appColors.surfacePrimary,
                     ),
                   ),
                 ),
@@ -125,7 +128,9 @@ final class SpendingDonutChart extends StatelessWidget {
                               'donut_center_percentage',
                             ),
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textPrimary),
+                                ?.copyWith(
+                                  color: context.appColors.textPrimary,
+                                ),
                           ),
                         ],
                       ],
@@ -249,11 +254,15 @@ final class _SpendingDonutPainter extends CustomPainter {
     required this.groups,
     required this.total,
     required this.selectedGroupKey,
+    required this.trackColor,
+    required this.selectionOutlineColor,
   });
 
   final List<CategoryActivityGroup> groups;
   final Money total;
   final String? selectedGroupKey;
+  final Color trackColor;
+  final Color selectionOutlineColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -265,7 +274,7 @@ final class _SpendingDonutPainter extends CustomPainter {
         math.min(size.width, size.height) / 2 - selectedOutlineWidth / 2;
     final Rect arcBounds = Rect.fromCircle(center: center, radius: radius);
     final Paint trackPaint = Paint()
-      ..color = AppColors.surfaceSecondary
+      ..color = trackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = trackWidth;
     canvas.drawCircle(center, radius, trackPaint);
@@ -288,7 +297,7 @@ final class _SpendingDonutPainter extends CustomPainter {
       final bool isSelected = group.selectionKey == selectedGroupKey;
       if (isSelected) {
         final Paint outlinePaint = Paint()
-          ..color = AppColors.surfacePrimary
+          ..color = selectionOutlineColor
           ..style = PaintingStyle.stroke
           ..strokeWidth = selectedOutlineWidth
           ..strokeCap = StrokeCap.butt;
@@ -324,6 +333,8 @@ final class _SpendingDonutPainter extends CustomPainter {
   bool shouldRepaint(covariant _SpendingDonutPainter oldDelegate) {
     if (total != oldDelegate.total ||
         selectedGroupKey != oldDelegate.selectedGroupKey ||
+        trackColor != oldDelegate.trackColor ||
+        selectionOutlineColor != oldDelegate.selectionOutlineColor ||
         groups.length != oldDelegate.groups.length) {
       return true;
     }

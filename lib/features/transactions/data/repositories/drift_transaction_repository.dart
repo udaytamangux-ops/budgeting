@@ -1,3 +1,4 @@
+import 'package:budgeting_app/core/data/owner_scope.dart';
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/core/errors/app_exception.dart';
 import 'package:budgeting_app/features/transactions/data/database/transaction_database_mapper.dart';
@@ -6,15 +7,19 @@ import 'package:budgeting_app/features/transactions/domain/repositories/transact
 import 'package:budgeting_app/features/transactions/domain/services/financial_summary_service.dart';
 
 final class DriftTransactionRepository implements TransactionRepository {
-  const DriftTransactionRepository(this._database);
+  const DriftTransactionRepository(
+    this._database, {
+    this.ownerScope = OwnerScopes.guest,
+  });
 
   final AppDatabase _database;
+  final String ownerScope;
   static const FinancialSummaryService _summaryService =
       FinancialSummaryService();
 
   @override
   Stream<List<FinancialTransaction>> watchTransactions() {
-    return _database.watchAllStoredTransactions().map((rows) {
+    return _database.watchStoredTransactionsForOwner(ownerScope).map((rows) {
       final List<FinancialTransaction> transactions = rows
           .map(TransactionDatabaseMapper.fromRow)
           .toList(growable: false);
@@ -27,6 +32,7 @@ final class DriftTransactionRepository implements TransactionRepository {
     try {
       final StoredTransaction? row = await _database.findStoredTransaction(
         transactionId,
+        ownerScope: ownerScope,
       );
       return row == null ? null : TransactionDatabaseMapper.fromRow(row);
     } catch (error) {
@@ -40,13 +46,20 @@ final class DriftTransactionRepository implements TransactionRepository {
   @override
   Future<void> createTransaction(FinancialTransaction transaction) async {
     try {
-      if (await _database.findStoredTransaction(transaction.id) != null) {
+      if (await _database.findStoredTransaction(
+            transaction.id,
+            ownerScope: ownerScope,
+          ) !=
+          null) {
         throw const TransactionRepositoryException(
           'This transaction has already been saved.',
         );
       }
       await _database.insertStoredTransaction(
-        TransactionDatabaseMapper.toCompanion(transaction),
+        TransactionDatabaseMapper.toCompanion(
+          transaction,
+          ownerScope: ownerScope,
+        ),
       );
     } on AppException {
       rethrow;
@@ -63,7 +76,11 @@ final class DriftTransactionRepository implements TransactionRepository {
     try {
       final int updated = await _database.updateStoredTransaction(
         transaction.id,
-        TransactionDatabaseMapper.toCompanion(transaction),
+        TransactionDatabaseMapper.toCompanion(
+          transaction,
+          ownerScope: ownerScope,
+        ),
+        ownerScope: ownerScope,
       );
       if (updated == 0) {
         throw TransactionNotFoundException(transaction.id);
@@ -83,6 +100,7 @@ final class DriftTransactionRepository implements TransactionRepository {
     try {
       final int deleted = await _database.deleteStoredTransaction(
         transactionId,
+        ownerScope: ownerScope,
       );
       if (deleted == 0) {
         throw TransactionNotFoundException(transactionId);

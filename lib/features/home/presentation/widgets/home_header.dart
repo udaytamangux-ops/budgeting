@@ -1,5 +1,5 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
@@ -35,7 +35,7 @@ final class HomeHeader extends ConsumerWidget {
                 Text(
                   "Here's your $month activity.",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -57,13 +57,13 @@ final class HomeHeader extends ConsumerWidget {
                     width: 40,
                     height: 40,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primarySubtle,
+                    decoration: BoxDecoration(
+                      color: context.appColors.primarySubtle,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.person_outline,
-                      color: AppColors.primaryAction,
+                      color: context.appColors.primaryAction,
                       size: 22,
                     ),
                   ),

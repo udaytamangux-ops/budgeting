@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/data/app_data_status.dart';
 import 'package:flutter/material.dart';
@@ -63,15 +63,15 @@ final class PrivacyAndDataScreen extends ConsumerWidget {
                 Text(
                   'How records and connections work in this version.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Material(
-                  color: AppColors.surfacePrimary,
+                  color: context.appColors.surfacePrimary,
                   clipBehavior: Clip.antiAlias,
                   shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: AppColors.borderSubtle),
+                    side: BorderSide(color: context.appColors.borderSubtle),
                     borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   child: Column(
@@ -129,7 +129,7 @@ final class _DataInformationRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Icon(information.icon, color: AppColors.textSecondary),
+            Icon(information.icon, color: context.appColors.textSecondary),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -162,16 +162,16 @@ final class _FutureTransparencyNote extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const Icon(Icons.info_outline, color: AppColors.textSecondary),
+        Icon(Icons.info_outline, color: context.appColors.textSecondary),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
             'If storage, backup, or synchronisation changes in a future '
             'version, this '
             'information should be updated before the feature is enabled.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: context.appColors.textSecondary,
+            ),
           ),
         ),
       ],

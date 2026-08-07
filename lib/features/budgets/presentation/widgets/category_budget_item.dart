@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
@@ -31,9 +31,9 @@ final class CategoryBudgetItem extends StatelessWidget {
         ? _BudgetStatus.nearLimit
         : _BudgetStatus.normal;
     final Color statusColor = switch (status) {
-      _BudgetStatus.normal => AppColors.primaryAction,
-      _BudgetStatus.nearLimit => AppColors.budgetWarning,
-      _BudgetStatus.exceeded => AppColors.destructiveAction,
+      _BudgetStatus.normal => context.appColors.primaryAction,
+      _BudgetStatus.nearLimit => context.appColors.warning,
+      _BudgetStatus.exceeded => context.appColors.destructiveAction,
     };
     final String statusLabel = switch (status) {
       _BudgetStatus.normal => 'On track',
@@ -100,7 +100,7 @@ final class CategoryBudgetItem extends StatelessWidget {
                     Text(
                       'Spent $spent',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.appColors.textPrimary,
                         fontFeatures: AppTypography.tabularFigures,
                       ),
                     ),
@@ -149,7 +149,7 @@ final class CategoryBudgetItem extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: status == _BudgetStatus.exceeded
                           ? statusColor
-                          : AppColors.textSecondary,
+                          : context.appColors.textSecondary,
                     ),
                   ),
                 ),

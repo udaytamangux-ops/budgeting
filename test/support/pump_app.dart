@@ -1,5 +1,11 @@
 import 'package:budgeting_app/app/app.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/access/data/repositories/in_memory_access_preference_repository.dart';
+import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
+import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/settings/data/repositories/in_memory_theme_preference_repository.dart';
+import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/data/sources/mock_transaction_source.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -15,6 +21,10 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
   bool useMockTransactions = false,
   Stream<List<FinancialTransaction>>? transactionStream,
   Duration operationDelay = Duration.zero,
+  AccessMode accessMode = AccessMode.guest,
+  AppThemePreference themePreference = AppThemePreference.system,
+  InMemoryAccessPreferenceRepository? accessRepository,
+  InMemoryThemePreferenceRepository? themeRepository,
 }) async {
   assert(
     seedTransactions == null || !useMockTransactions,
@@ -30,8 +40,26 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
         operationDelay: operationDelay,
         now: () => fixedNow,
       );
+  final InMemoryAccessPreferenceRepository resolvedAccessRepository =
+      accessRepository ??
+      InMemoryAccessPreferenceRepository(initialMode: accessMode);
+  final InMemoryThemePreferenceRepository resolvedThemeRepository =
+      themeRepository ??
+      InMemoryThemePreferenceRepository(initialMode: themePreference);
+  if (accessRepository == null) {
+    addTearDown(resolvedAccessRepository.dispose);
+  }
+  if (themeRepository == null) {
+    addTearDown(resolvedThemeRepository.dispose);
+  }
   final List<Override> overrides = <Override>[
     appClockProvider.overrideWithValue(() => fixedNow),
+    accessPreferenceRepositoryProvider.overrideWithValue(
+      resolvedAccessRepository,
+    ),
+    themePreferenceRepositoryProvider.overrideWithValue(
+      resolvedThemeRepository,
+    ),
     transactionRepositoryProvider.overrideWithValue(repository),
   ];
   if (transactionStream != null) {

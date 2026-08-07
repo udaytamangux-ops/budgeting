@@ -1,4 +1,4 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -23,9 +23,9 @@ final class AppErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Icon(
+            Icon(
               Icons.error_outline,
-              color: AppColors.destructiveAction,
+              color: context.appColors.destructiveAction,
               size: 32,
             ),
             const SizedBox(height: AppSpacing.sm),

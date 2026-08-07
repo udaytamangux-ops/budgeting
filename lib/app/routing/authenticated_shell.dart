@@ -1,7 +1,7 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_created_banner.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +26,7 @@ final class AuthenticatedShell extends ConsumerWidget {
       bottomNavigationBar: BottomAppBar(
         height: 76,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-        color: AppColors.surfacePrimary,
+        color: context.appColors.surfacePrimary,
         elevation: 1,
         child: Row(
           children: <Widget>[
@@ -55,7 +55,7 @@ final class AuthenticatedShell extends ConsumerWidget {
                   key: const ValueKey<String>('central_add_button'),
                   tooltip: 'Add transaction',
                   onPressed: () => _openAddTransaction(context),
-                  backgroundColor: AppColors.primaryAction,
+                  backgroundColor: context.appColors.primaryAction,
                   foregroundColor: Colors.white,
                   elevation: 1,
                   focusElevation: 1,
@@ -128,8 +128,8 @@ final class _NavigationDestination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color color = isSelected
-        ? AppColors.primaryAction
-        : AppColors.textSecondary;
+        ? context.appColors.primaryAction
+        : context.appColors.textSecondary;
     return Semantics(
       button: true,
       selected: isSelected,
@@ -146,7 +146,9 @@ final class _NavigationDestination extends StatelessWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primarySubtle : Colors.transparent,
+            color: isSelected
+                ? context.appColors.primarySubtle
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: Column(

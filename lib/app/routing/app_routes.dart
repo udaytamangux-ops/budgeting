@@ -1,9 +1,12 @@
 import 'package:budgeting_app/app/routing/category_details_route_data.dart';
 
 abstract final class AppRoutes {
-  static const String welcome = '/welcome';
-  static const String login = '/login';
-  static const String signup = '/signup';
+  static const String access = '/access';
+  static const String signIn = '/sign-in';
+  static const String signUp = '/sign-up';
+  static const String welcome = access;
+  static const String login = signIn;
+  static const String signup = signUp;
   static const String onboarding = '/onboarding';
   static const String home = '/app/home';
   static const String transactions = '/app/transactions';

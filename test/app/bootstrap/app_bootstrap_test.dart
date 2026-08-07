@@ -1,5 +1,9 @@
 import 'package:budgeting_app/app/bootstrap/app_bootstrap.dart';
 import 'package:budgeting_app/core/database/app_database.dart';
+import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
+import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/data/sources/mock_transaction_source.dart';
@@ -63,6 +67,14 @@ void main() {
         same(container.read(transactionRepositoryProvider)),
       );
       expect(await container.read(transactionListProvider.future), isEmpty);
+      expect(
+        await container.read(accessModeProvider.future),
+        AccessMode.undecided,
+      );
+      expect(
+        await container.read(themePreferenceProvider.future),
+        AppThemePreference.system,
+      );
     },
   );
 }

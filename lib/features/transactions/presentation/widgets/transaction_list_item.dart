@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
@@ -35,10 +35,15 @@ final class TransactionListItem extends ConsumerWidget {
     final String amountPrefix = isIncome ? '+' : '−';
     final String title = transaction.merchant ?? visual.label;
     final Color iconForeground = isIncome
-        ? AppColors.incomeAccent
+        ? context.appColors.incomeAccent
         : visual.foreground;
     final Color iconBackground = isIncome
-        ? AppColors.incomeSurface
+        ? context.appColors.incomeSurface
+        : Theme.of(context).brightness == Brightness.dark
+        ? Color.alphaBlend(
+            visual.foreground.withValues(alpha: 0.18),
+            context.appColors.surfacePrimary,
+          )
         : visual.background;
 
     return Semantics(
@@ -51,8 +56,8 @@ final class TransactionListItem extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.small),
-        overlayColor: const WidgetStatePropertyAll<Color>(
-          AppColors.primarySubtle,
+        overlayColor: WidgetStatePropertyAll<Color>(
+          context.appColors.primarySubtle,
         ),
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
@@ -157,9 +162,9 @@ final class _TransactionDetails extends StatelessWidget {
           key: ValueKey<String>('transaction_title_$transactionId'),
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: AppColors.textPrimary),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: context.appColors.textPrimary,
+          ),
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(
@@ -167,9 +172,9 @@ final class _TransactionDetails extends StatelessWidget {
           key: ValueKey<String>('transaction_metadata_$transactionId'),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: context.appColors.textSecondary,
+          ),
         ),
       ],
     );
@@ -196,7 +201,9 @@ final class _TransactionAmount extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.end,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: isIncome ? AppColors.incomeAccent : AppColors.expenseAccent,
+        color: isIncome
+            ? context.appColors.incomeAccent
+            : context.appColors.expenseAccent,
         fontFeatures: AppTypography.tabularFigures,
       ),
     );

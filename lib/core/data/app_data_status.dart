@@ -15,7 +15,8 @@ final class AppDataStatus {
   String get storageDescription => switch (mode) {
     AppDataMode.localDevice =>
       'Your records are stored locally on this device and remain available '
-          'after the app is closed.',
+          'after the app is closed. Uninstalling the app or clearing app data '
+          'may remove them.',
     AppDataMode.cloudSynced =>
       'Records are associated with an account and synchronised through the '
           'cloud.',

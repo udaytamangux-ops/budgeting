@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
@@ -257,7 +257,10 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 (DateTime month) => ListTile(
                   title: Text(ref.read(dateFormatterProvider).monthYear(month)),
                   trailing: _isSameMonth(month, _selectedMonth)
-                      ? const Icon(Icons.check, color: AppColors.primaryAction)
+                      ? Icon(
+                          Icons.check,
+                          color: context.appColors.primaryAction,
+                        )
                       : null,
                   selected: _isSameMonth(month, _selectedMonth),
                   onTap: () => sheetContext.pop(month),

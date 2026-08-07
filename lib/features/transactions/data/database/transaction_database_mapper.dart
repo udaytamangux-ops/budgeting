@@ -6,8 +6,9 @@ import 'package:drift/drift.dart';
 
 abstract final class TransactionDatabaseMapper {
   static StoredTransactionsCompanion toCompanion(
-    FinancialTransaction transaction,
-  ) {
+    FinancialTransaction transaction, {
+    required String ownerScope,
+  }) {
     return StoredTransactionsCompanion(
       id: Value<String>(transaction.id),
       typeKey: Value<String>(_typeToKey(transaction.type)),
@@ -28,6 +29,7 @@ abstract final class TransactionDatabaseMapper {
       updatedAtUtcMicros: Value<int>(
         transaction.updatedAt.toUtc().microsecondsSinceEpoch,
       ),
+      ownerScope: Value<String>(ownerScope),
     );
   }
 

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/routing/category_details_route_data.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
@@ -212,8 +212,8 @@ final class _MonthlyRecords extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.surfaceSecondary,
-            border: Border.all(color: AppColors.borderSubtle),
+            color: context.appColors.surfaceSecondary,
+            border: Border.all(color: context.appColors.borderSubtle),
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: Column(
@@ -263,8 +263,8 @@ final class _MonthSelector extends StatelessWidget {
     return Container(
       key: const ValueKey<String>('summary_month_selector'),
       decoration: BoxDecoration(
-        color: AppColors.surfacePrimary,
-        border: Border.all(color: AppColors.borderSubtle),
+        color: context.appColors.surfacePrimary,
+        border: Border.all(color: context.appColors.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Row(

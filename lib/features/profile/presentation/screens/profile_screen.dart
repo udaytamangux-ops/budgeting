@@ -1,18 +1,26 @@
+import 'dart:async';
+
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-final class ProfileScreen extends StatelessWidget {
+final class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({this.showDeveloperInformation = kDebugMode, super.key});
 
   final bool showDeveloperInformation;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppThemePreference themePreference =
+        ref.watch(themePreferenceProvider).valueOrNull ??
+        AppThemePreference.system;
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: SafeArea(
@@ -31,6 +39,14 @@ final class ProfileScreen extends StatelessWidget {
               children: <Widget>[
                 const _ProfileIdentity(),
                 const SizedBox(height: AppSpacing.xxl),
+                const _SectionTitle(title: 'Account'),
+                const SizedBox(height: AppSpacing.sm),
+                const _GuestAccountSection(),
+                const SizedBox(height: AppSpacing.xxl),
+                const _SectionTitle(title: 'Appearance'),
+                const SizedBox(height: AppSpacing.sm),
+                _AppearanceSetting(currentPreference: themePreference),
+                const SizedBox(height: AppSpacing.xxl),
                 const _SectionTitle(title: 'Preferences'),
                 const SizedBox(height: AppSpacing.sm),
                 const _SettingsRegion(
@@ -45,12 +61,6 @@ final class ProfileScreen extends StatelessWidget {
                       icon: Icons.calendar_today_outlined,
                       title: 'Date format',
                       value: '4 August 2026',
-                    ),
-                    Divider(),
-                    _SettingsValueTile(
-                      icon: Icons.light_mode_outlined,
-                      title: 'Theme',
-                      value: 'Light',
                     ),
                     Divider(),
                     SwitchListTile(
@@ -95,13 +105,13 @@ final class ProfileScreen extends StatelessWidget {
                       _SettingsValueTile(
                         icon: Icons.storage_outlined,
                         title: 'Data source',
-                        value: 'In-memory repository',
+                        value: 'Drift / SQLite local database',
                       ),
                       Divider(),
                       _SettingsValueTile(
-                        icon: Icons.developer_mode_outlined,
-                        title: 'Session',
-                        value: 'Development access enabled',
+                        icon: Icons.person_outline,
+                        title: 'Access',
+                        value: 'Guest access enabled',
                       ),
                     ],
                   ),
@@ -121,13 +131,13 @@ final class _ProfileIdentity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Local profile, no account connected',
+      label: 'Using without an account. Records are stored on this device.',
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surfacePrimary,
-          border: Border.all(color: AppColors.borderSubtle),
+          color: context.appColors.surfacePrimary,
+          border: Border.all(color: context.appColors.borderSubtle),
           borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Row(
@@ -136,13 +146,13 @@ final class _ProfileIdentity extends StatelessWidget {
               width: 52,
               height: 52,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AppColors.primarySubtle,
+              decoration: BoxDecoration(
+                color: context.appColors.primarySubtle,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.person_outline,
-                color: AppColors.primaryAction,
+                color: context.appColors.primaryAction,
                 size: 24,
               ),
             ),
@@ -152,12 +162,12 @@ final class _ProfileIdentity extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Local profile',
+                    'Using without an account',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    'No account connected',
+                    'Your records are stored on this device.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -168,6 +178,153 @@ final class _ProfileIdentity extends StatelessWidget {
       ),
     );
   }
+}
+
+final class _GuestAccountSection extends StatelessWidget {
+  const _GuestAccountSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SettingsRegion(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                'Cloud backup and cross-device sync are not available yet.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                key: const ValueKey<String>('profile_create_account_button'),
+                onPressed: () => context.push(AppRoutes.signUp),
+                icon: const Icon(Icons.person_add_outlined),
+                label: const Text('Create account'),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              TextButton(
+                key: const ValueKey<String>('profile_sign_in_button'),
+                onPressed: () => context.push(AppRoutes.signIn),
+                child: const Text('Sign in'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+final class _AppearanceSetting extends ConsumerWidget {
+  const _AppearanceSetting({required this.currentPreference});
+
+  final AppThemePreference currentPreference;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _SettingsRegion(
+      children: <Widget>[
+        ListTile(
+          key: const ValueKey<String>('appearance_setting'),
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          leading: const Icon(Icons.contrast_outlined),
+          title: const Text('Theme'),
+          subtitle: Text(_preferenceLabel(context, currentPreference)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () =>
+              unawaited(_showAppearanceSheet(context, ref, currentPreference)),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showAppearanceSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AppThemePreference selected,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Text(
+                    'Appearance',
+                    style: Theme.of(sheetContext).textTheme.titleLarge,
+                  ),
+                ),
+                for (final AppThemePreference preference
+                    in AppThemePreference.values)
+                  Semantics(
+                    selected: preference == selected,
+                    button: true,
+                    child: ListTile(
+                      key: ValueKey<String>('theme_option_${preference.name}'),
+                      minTileHeight: 56,
+                      title: Text(_optionTitle(preference)),
+                      subtitle: preference == AppThemePreference.system
+                          ? Text(
+                              'Currently follows ${_effectiveSystemLabel(context)}',
+                            )
+                          : null,
+                      trailing: Icon(
+                        preference == selected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                        color: preference == selected
+                            ? sheetContext.appColors.primaryAction
+                            : sheetContext.appColors.textSecondary,
+                      ),
+                      selected: preference == selected,
+                      onTap: () async {
+                        await ref
+                            .read(themePreferenceRepositoryProvider)
+                            .setThemeMode(preference);
+                        if (sheetContext.mounted) {
+                          Navigator.of(sheetContext).pop();
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _preferenceLabel(BuildContext context, AppThemePreference preference) {
+    return preference == AppThemePreference.system
+        ? 'System · ${_effectiveSystemLabel(context)}'
+        : _optionTitle(preference);
+  }
+
+  String _effectiveSystemLabel(BuildContext context) {
+    return MediaQuery.platformBrightnessOf(context) == Brightness.dark
+        ? 'Dark'
+        : 'Light';
+  }
+
+  String _optionTitle(AppThemePreference preference) => switch (preference) {
+    AppThemePreference.system => 'System',
+    AppThemePreference.light => 'Light',
+    AppThemePreference.dark => 'Dark',
+  };
 }
 
 final class _SectionTitle extends StatelessWidget {
@@ -189,10 +346,10 @@ final class _SettingsRegion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfacePrimary,
+      color: context.appColors.surfacePrimary,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        side: const BorderSide(color: AppColors.borderSubtle),
+        side: BorderSide(color: context.appColors.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Column(children: children),

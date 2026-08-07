@@ -1,5 +1,5 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
@@ -122,7 +122,7 @@ final class _MonthlyFact extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
-        Icon(icon, size: 18, color: AppColors.textSecondary),
+        Icon(icon, size: 18, color: context.appColors.textSecondary),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Text(label, style: Theme.of(context).textTheme.bodyMedium),

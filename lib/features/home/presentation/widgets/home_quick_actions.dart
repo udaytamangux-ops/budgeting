@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -21,10 +21,10 @@ final class HomeQuickActions extends StatelessWidget {
       label: 'Add expense',
       semanticLabel: 'Add expense transaction',
       icon: Icons.remove_circle_outline,
-      accent: AppColors.expenseAccent,
-      surface: AppColors.expenseSurface,
-      pressedSurface: AppColors.expenseSurfacePressed,
-      border: AppColors.expenseBorder,
+      accent: context.appColors.expenseAccent,
+      surface: context.appColors.expenseSurface,
+      pressedSurface: context.appColors.expenseSurfacePressed,
+      border: context.appColors.expenseBorder,
       onPressed: onAddExpense,
     );
     final Widget incomeButton = _QuickActionButton(
@@ -32,10 +32,10 @@ final class HomeQuickActions extends StatelessWidget {
       label: 'Add income',
       semanticLabel: 'Add income transaction',
       icon: Icons.add_circle_outline,
-      accent: AppColors.incomeAccent,
-      surface: AppColors.incomeSurface,
-      pressedSurface: AppColors.incomeSurfacePressed,
-      border: AppColors.incomeBorder,
+      accent: context.appColors.incomeAccent,
+      surface: context.appColors.incomeSurface,
+      pressedSurface: context.appColors.incomeSurfacePressed,
+      border: context.appColors.incomeBorder,
       onPressed: onAddIncome,
     );
 
@@ -107,7 +107,7 @@ final class _QuickActionButton extends StatelessWidget {
             Set<WidgetState> states,
           ) {
             if (states.contains(WidgetState.disabled)) {
-              return AppColors.surfaceSecondary;
+              return context.appColors.surfaceSecondary;
             }
             if (states.contains(WidgetState.pressed)) {
               return pressedSurface;
@@ -118,21 +118,24 @@ final class _QuickActionButton extends StatelessWidget {
             Set<WidgetState> states,
           ) {
             if (states.contains(WidgetState.disabled)) {
-              return AppColors.textDisabled;
+              return context.appColors.textDisabled;
             }
             if (states.contains(WidgetState.pressed)) {
-              return AppColors.textPrimary;
+              return context.appColors.textPrimary;
             }
-            return AppColors.textPrimary;
+            return context.appColors.textPrimary;
           }),
           side: WidgetStateProperty.resolveWith<BorderSide>((
             Set<WidgetState> states,
           ) {
             if (states.contains(WidgetState.focused)) {
-              return const BorderSide(color: AppColors.primaryAction, width: 2);
+              return BorderSide(
+                color: context.appColors.primaryAction,
+                width: 2,
+              );
             }
             if (states.contains(WidgetState.disabled)) {
-              return const BorderSide(color: AppColors.borderSubtle);
+              return BorderSide(color: context.appColors.borderSubtle);
             }
             return BorderSide(color: border);
           }),
@@ -147,7 +150,7 @@ final class _QuickActionButton extends StatelessWidget {
               size: 18,
               color: WidgetStateColor.resolveWith((Set<WidgetState> states) {
                 return states.contains(WidgetState.disabled)
-                    ? AppColors.textDisabled
+                    ? context.appColors.textDisabled
                     : accent;
               }),
             ),

@@ -25,7 +25,7 @@ void main() {
   });
 
   test('database and repository start empty without mock seeding', () async {
-    expect(database.schemaVersion, 1);
+    expect(database.schemaVersion, 2);
     expect(await repository.watchTransactions().first, isEmpty);
   });
 
@@ -208,5 +208,65 @@ void main() {
       repository.watchTransactions().first,
       throwsA(isA<FormatException>()),
     );
+  });
+
+  test('new rows are scoped to guest and reads remain owner-scoped', () async {
+    final DriftTransactionRepository futureUserRepository =
+        DriftTransactionRepository(database, ownerScope: 'user:future-id');
+    final FinancialTransaction guestTransaction = buildTestTransaction(
+      id: 'guest-owned',
+    );
+    final FinancialTransaction futureUserTransaction = buildTestTransaction(
+      id: 'future-user-owned',
+      type: TransactionType.income,
+      category: TransactionCategory.salary,
+    );
+
+    await repository.createTransaction(guestTransaction);
+    await futureUserRepository.createTransaction(futureUserTransaction);
+
+    expect(
+      (await repository.watchTransactions().first).single.id,
+      guestTransaction.id,
+    );
+    expect(
+      (await futureUserRepository.watchTransactions().first).single.id,
+      futureUserTransaction.id,
+    );
+    expect(
+      (await database.findStoredTransaction(guestTransaction.id))?.ownerScope,
+      'guest',
+    );
+    expect(
+      await repository.getTransactionById(futureUserTransaction.id),
+      isNull,
+    );
+  });
+
+  test('editing a row preserves its owner scope', () async {
+    final DriftTransactionRepository futureUserRepository =
+        DriftTransactionRepository(database, ownerScope: 'user:future-id');
+    final FinancialTransaction original = buildTestTransaction(
+      id: 'owner-preserved',
+      type: TransactionType.income,
+      category: TransactionCategory.salary,
+    );
+    await futureUserRepository.createTransaction(original);
+
+    await futureUserRepository.updateTransaction(
+      original.copyWith(
+        amount: const Money(minorUnits: 999999),
+        updatedAt: fixedNow.add(const Duration(minutes: 1)),
+      ),
+    );
+
+    expect(
+      (await database.findStoredTransaction(
+        original.id,
+        ownerScope: 'user:future-id',
+      ))?.ownerScope,
+      'user:future-id',
+    );
+    expect(await repository.getTransactionById(original.id), isNull);
   });
 }

@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -69,11 +69,11 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Material(
-            color: AppColors.surfacePrimary,
+            color: context.appColors.surfacePrimary,
             elevation: 1,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.medium),
-              side: const BorderSide(color: AppColors.borderStrong),
+              side: BorderSide(color: context.appColors.borderStrong),
             ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -96,8 +96,8 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
                                 ? Icons.error_outline
                                 : Icons.check_circle,
                             color: hasFailure
-                                ? AppColors.destructiveAction
-                                : AppColors.primaryAction,
+                                ? context.appColors.destructiveAction
+                                : context.appColors.primaryAction,
                           ),
                         ),
                       ),
@@ -118,8 +118,10 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
                                   style: Theme.of(context).textTheme.labelLarge
                                       ?.copyWith(
                                         color: hasFailure
-                                            ? AppColors.destructiveAction
-                                            : AppColors.textPrimary,
+                                            ? context
+                                                  .appColors
+                                                  .destructiveAction
+                                            : context.appColors.textPrimary,
                                       ),
                                 ),
                                 if (detail != null) ...<Widget>[
@@ -128,7 +130,9 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
                                     detail,
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
-                                          color: AppColors.destructiveAction,
+                                          color: context
+                                              .appColors
+                                              .destructiveAction,
                                         ),
                                   ),
                                 ],

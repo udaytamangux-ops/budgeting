@@ -1,11 +1,13 @@
-import 'package:budgeting_app/app/bootstrap/development_session.dart';
 import 'package:budgeting_app/app/routing/app_route_names.dart';
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/routing/authenticated_shell.dart';
 import 'package:budgeting_app/app/routing/category_details_route_data.dart';
 import 'package:budgeting_app/app/routing/transaction_form_route.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
-import 'package:budgeting_app/features/auth/presentation/screens/authentication_placeholder_screen.dart';
+import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
+import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/access/presentation/screens/access_choice_screen.dart';
+import 'package:budgeting_app/features/access/presentation/screens/account_unavailable_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/privacy_and_data_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
@@ -24,34 +26,59 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
 );
 
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
-  ref.watch(sessionStatusProvider);
+  final ChangeNotifier refreshNotifier = ref.watch(
+    _accessRouterRefreshProvider,
+  );
   final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.home,
+    refreshListenable: refreshNotifier,
+    redirect: (BuildContext context, GoRouterState state) {
+      final AccessMode accessMode =
+          ref.read(accessModeProvider).valueOrNull ?? AccessMode.undecided;
+      final String location = state.matchedLocation;
+      final bool isAccessEntry =
+          location == AppRoutes.access ||
+          location == AppRoutes.signIn ||
+          location == AppRoutes.signUp;
+
+      if (accessMode != AccessMode.guest && !isAccessEntry) {
+        final String requestedLocation = state.uri.toString();
+        final Map<String, String> query = requestedLocation.startsWith('/app/')
+            ? <String, String>{'from': requestedLocation}
+            : const <String, String>{};
+        return Uri(path: AppRoutes.access, queryParameters: query).toString();
+      }
+
+      if (accessMode == AccessMode.guest && location == AppRoutes.access) {
+        return _safeIntendedLocation(state.uri.queryParameters['from']) ??
+            AppRoutes.home;
+      }
+      return null;
+    },
     routes: <RouteBase>[
       GoRoute(
-        path: AppRoutes.welcome,
-        name: AppRouteNames.welcome,
-        builder: (_, _) =>
-            const AuthenticationPlaceholderScreen(title: 'Welcome'),
+        path: AppRoutes.access,
+        name: AppRouteNames.access,
+        builder: (BuildContext context, GoRouterState state) {
+          return AccessChoiceScreen(
+            intendedLocation: _safeIntendedLocation(
+              state.uri.queryParameters['from'],
+            ),
+          );
+        },
       ),
       GoRoute(
-        path: AppRoutes.login,
-        name: AppRouteNames.login,
+        path: AppRoutes.signIn,
+        name: AppRouteNames.signIn,
         builder: (_, _) =>
-            const AuthenticationPlaceholderScreen(title: 'Log in'),
+            const AccountUnavailableScreen(actionTitle: 'Sign in'),
       ),
       GoRoute(
-        path: AppRoutes.signup,
-        name: AppRouteNames.signup,
+        path: AppRoutes.signUp,
+        name: AppRouteNames.signUp,
         builder: (_, _) =>
-            const AuthenticationPlaceholderScreen(title: 'Sign up'),
-      ),
-      GoRoute(
-        path: AppRoutes.onboarding,
-        name: AppRouteNames.onboarding,
-        builder: (_, _) =>
-            const AuthenticationPlaceholderScreen(title: 'Onboarding'),
+            const AccountUnavailableScreen(actionTitle: 'Create account'),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -193,3 +220,21 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+final Provider<ChangeNotifier> _accessRouterRefreshProvider =
+    Provider<ChangeNotifier>((Ref ref) {
+      final _RouterRefreshNotifier notifier = _RouterRefreshNotifier();
+      ref.listen<AsyncValue<AccessMode>>(accessModeProvider, (_, _) {
+        notifier.refresh();
+      });
+      ref.onDispose(notifier.dispose);
+      return notifier;
+    });
+
+final class _RouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
+String? _safeIntendedLocation(String? value) {
+  return value != null && value.startsWith('/app/') ? value : null;
+}

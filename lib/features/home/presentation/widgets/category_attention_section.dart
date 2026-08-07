@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/monthly_budget_summary.dart';
@@ -49,14 +49,14 @@ final class CategoryAttentionSection extends ConsumerWidget {
             ? '$spent spent against the $limit Food limit.'
             : '$remaining remains from the $limit Food limit.';
         final Color statusColor = switch (tone) {
-          _CategoryBudgetTone.normal => AppColors.balancePositive,
-          _CategoryBudgetTone.nearLimit => AppColors.budgetWarning,
-          _CategoryBudgetTone.exceeded => AppColors.destructiveAction,
+          _CategoryBudgetTone.normal => context.appColors.balancePositive,
+          _CategoryBudgetTone.nearLimit => context.appColors.warning,
+          _CategoryBudgetTone.exceeded => context.appColors.destructiveAction,
         };
         final Color surfaceColor = switch (tone) {
-          _CategoryBudgetTone.normal => AppColors.surfacePrimary,
-          _CategoryBudgetTone.nearLimit => AppColors.warningSubtle,
-          _CategoryBudgetTone.exceeded => AppColors.dangerSubtle,
+          _CategoryBudgetTone.normal => context.appColors.surfacePrimary,
+          _CategoryBudgetTone.nearLimit => context.appColors.warningSubtle,
+          _CategoryBudgetTone.exceeded => context.appColors.dangerSubtle,
         };
 
         return Column(
@@ -74,7 +74,7 @@ final class CategoryAttentionSection extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: surfaceColor,
                   borderRadius: BorderRadius.circular(AppRadius.medium),
-                  border: Border.all(color: AppColors.borderSubtle),
+                  border: Border.all(color: context.appColors.borderSubtle),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,8 +84,8 @@ final class CategoryAttentionSection extends ConsumerWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: tone == _CategoryBudgetTone.normal
-                            ? AppColors.primarySubtle
-                            : AppColors.surfacePrimary,
+                            ? context.appColors.primarySubtle
+                            : context.appColors.surfacePrimary,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

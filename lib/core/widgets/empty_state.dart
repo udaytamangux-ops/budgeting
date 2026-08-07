@@ -1,4 +1,4 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -29,11 +29,11 @@ final class EmptyState extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceSecondary,
+            decoration: BoxDecoration(
+              color: context.appColors.surfaceSecondary,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.textSecondary),
+            child: Icon(icon, color: context.appColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(title, style: Theme.of(context).textTheme.titleMedium),

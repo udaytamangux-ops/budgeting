@@ -1,6 +1,5 @@
-import 'dart:async';
-
-import 'package:budgeting_app/core/database/app_database.dart';
+import 'package:budgeting_app/core/data/owner_scope.dart';
+import 'package:budgeting_app/core/database/database_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/budget_configuration.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/monthly_budget_summary.dart';
@@ -15,17 +14,15 @@ import 'package:budgeting_app/features/transactions/domain/services/financial_su
 import 'package:budgeting_app/features/transactions/domain/services/recent_transaction_categories_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final Provider<AppDatabase> appDatabaseProvider = Provider<AppDatabase>((
-  Ref ref,
-) {
-  final AppDatabase database = AppDatabase.open();
-  ref.onDispose(() => unawaited(database.close()));
-  return database;
-});
+export 'package:budgeting_app/core/database/database_providers.dart'
+    show appDatabaseProvider;
 
 final Provider<TransactionRepository> transactionRepositoryProvider =
     Provider<TransactionRepository>((Ref ref) {
-      return DriftTransactionRepository(ref.watch(appDatabaseProvider));
+      return DriftTransactionRepository(
+        ref.watch(appDatabaseProvider),
+        ownerScope: ref.watch(activeOwnerScopeProvider),
+      );
     });
 
 final StreamProvider<List<FinancialTransaction>> transactionListProvider =

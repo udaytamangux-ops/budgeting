@@ -1,5 +1,11 @@
+import 'package:budgeting_app/features/access/data/repositories/in_memory_access_preference_repository.dart';
+import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
+import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:budgeting_app/features/settings/data/repositories/in_memory_theme_preference_repository.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/pump_app.dart';
@@ -12,11 +18,19 @@ void main() {
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Local profile'), findsOneWidget);
-    expect(find.text('No account connected'), findsOneWidget);
+    expect(find.text('Using without an account'), findsOneWidget);
+    expect(
+      find.text('Your records are stored on this device.'),
+      findsOneWidget,
+    );
     expect(find.text('Aarav Shrestha'), findsNothing);
     expect(find.textContaining('example.com'), findsNothing);
     expect(find.text('AS'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.text('Currency'),
+      240,
+      scrollable: _profileScrollable,
+    );
     expect(find.text('Currency'), findsOneWidget);
     expect(find.textContaining('Nepalese rupee'), findsOneWidget);
     expect(find.text('Date format'), findsOneWidget);
@@ -49,6 +63,7 @@ void main() {
       scrollable: _profileScrollable,
     );
     expect(find.text('Developer information'), findsOneWidget);
+    expect(find.text('Drift / SQLite local database'), findsOneWidget);
     expect(find.text('Debug information'), findsNothing);
     await tester.scrollUntilVisible(
       privacySetting,
@@ -89,21 +104,38 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('Local profile'),
+      find.text('Using without an account'),
       -280,
       scrollable: _profileScrollable,
     );
-    expect(find.text('Local profile'), findsOneWidget);
+    expect(find.text('Using without an account'), findsOneWidget);
   });
 
   testWidgets('Developer information can be omitted outside debug mode', (
     WidgetTester tester,
   ) async {
+    final InMemoryAccessPreferenceRepository accessRepository =
+        InMemoryAccessPreferenceRepository(initialMode: AccessMode.guest);
+    final InMemoryThemePreferenceRepository themeRepository =
+        InMemoryThemePreferenceRepository();
+    addTearDown(accessRepository.dispose);
+    addTearDown(themeRepository.dispose);
     await tester.pumpWidget(
-      const MaterialApp(home: ProfileScreen(showDeveloperInformation: false)),
+      ProviderScope(
+        overrides: <Override>[
+          accessPreferenceRepositoryProvider.overrideWithValue(
+            accessRepository,
+          ),
+          themePreferenceRepositoryProvider.overrideWithValue(themeRepository),
+        ],
+        child: const MaterialApp(
+          home: ProfileScreen(showDeveloperInformation: false),
+        ),
+      ),
     );
+    await tester.pumpAndSettle();
 
-    expect(find.text('Local profile'), findsOneWidget);
+    expect(find.text('Using without an account'), findsOneWidget);
     expect(find.text('Developer information'), findsNothing);
     expect(find.text('In-memory repository'), findsNothing);
   });

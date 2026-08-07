@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:budgeting_app/app/app.dart';
 import 'package:budgeting_app/app/bootstrap/app_bootstrap.dart';
 import 'package:budgeting_app/core/database/app_database.dart';
+import 'package:budgeting_app/features/access/data/repositories/drift_access_preference_repository.dart';
+import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -198,6 +200,11 @@ Future<_PersistentAppSession> _openSession(
   File databaseFile,
 ) async {
   final AppDatabase database = AppDatabase(NativeDatabase(databaseFile));
+  final DriftAccessPreferenceRepository accessRepository =
+      DriftAccessPreferenceRepository(database);
+  if (await accessRepository.getAccessMode() == AccessMode.undecided) {
+    await accessRepository.setGuestMode();
+  }
   final ProviderContainer container = await AppBootstrap.createContainer(
     database: database,
   );

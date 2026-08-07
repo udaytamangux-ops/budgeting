@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:flutter/material.dart';
@@ -74,30 +74,30 @@ final class _TransactionTypeOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isExpense = type == TransactionType.expense;
     final Color selectedSurface = isExpense
-        ? AppColors.expenseSurface
-        : AppColors.incomeSurface;
+        ? context.appColors.expenseSurface
+        : context.appColors.incomeSurface;
     final Color selectedPressedSurface = isExpense
-        ? AppColors.expenseSurfacePressed
-        : AppColors.incomeSurfacePressed;
+        ? context.appColors.expenseSurfacePressed
+        : context.appColors.incomeSurfacePressed;
     final Color selectedText = isExpense
-        ? AppColors.expenseText
-        : AppColors.incomeAccent;
+        ? context.appColors.expenseText
+        : context.appColors.incomeAccent;
     final Color selectedIcon = isExpense
-        ? AppColors.expenseIconAccent
-        : AppColors.incomeAccent;
+        ? context.appColors.expenseIconAccent
+        : context.appColors.incomeAccent;
     final Color selectedBorder = isExpense
-        ? AppColors.expenseBorder
-        : AppColors.incomeBorder;
+        ? context.appColors.expenseBorder
+        : context.appColors.incomeBorder;
     final Color textColor = !isEnabled
-        ? AppColors.textDisabled
+        ? context.appColors.textDisabled
         : isSelected
         ? selectedText
-        : AppColors.textSecondary;
+        : context.appColors.textSecondary;
     final Color iconColor = !isEnabled
-        ? AppColors.textDisabled
+        ? context.appColors.textDisabled
         : isSelected
         ? selectedIcon
-        : AppColors.textSecondary;
+        : context.appColors.textSecondary;
     return Semantics(
       button: true,
       selected: isSelected,
@@ -106,11 +106,13 @@ final class _TransactionTypeOption extends StatelessWidget {
       excludeSemantics: true,
       onTap: isEnabled ? onTap : null,
       child: Material(
-        color: isSelected ? selectedSurface : AppColors.surfaceSecondary,
+        color: isSelected
+            ? selectedSurface
+            : context.appColors.surfaceSecondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.medium),
           side: BorderSide(
-            color: isSelected ? selectedBorder : AppColors.borderSubtle,
+            color: isSelected ? selectedBorder : context.appColors.borderSubtle,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -123,7 +125,7 @@ final class _TransactionTypeOption extends StatelessWidget {
             if (states.contains(WidgetState.pressed)) {
               return isSelected
                   ? selectedPressedSurface
-                  : AppColors.surfacePrimary;
+                  : context.appColors.surfacePrimary;
             }
             return null;
           }),

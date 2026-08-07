@@ -172,8 +172,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Profile'), findsWidgets);
-    expect(find.text('Local profile'), findsOneWidget);
-    expect(find.text('No account connected'), findsOneWidget);
+    expect(find.text('Using without an account'), findsOneWidget);
+    expect(
+      find.text('Your records are stored on this device.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Home renders a useful empty state', (WidgetTester tester) async {

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/routing/category_details_route_data.dart';
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
@@ -217,8 +217,8 @@ final class _CategoryDetailsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color amountColor = type == TransactionType.expense
-        ? AppColors.expenseText
-        : AppColors.incomeAccent;
+        ? context.appColors.expenseText
+        : context.appColors.incomeAccent;
     final String semanticLabel = <String>[
       categoryLabel,
       monthYear,
@@ -235,8 +235,8 @@ final class _CategoryDetailsHeader extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surfaceSecondary,
-          border: Border.all(color: AppColors.borderSubtle),
+          color: context.appColors.surfaceSecondary,
+          border: Border.all(color: context.appColors.borderSubtle),
           borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Column(

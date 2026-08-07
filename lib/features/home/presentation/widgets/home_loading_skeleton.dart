@@ -1,5 +1,5 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -51,7 +51,7 @@ final class _SkeletonBlock extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.surfaceSecondary,
+          color: context.appColors.surfaceSecondary,
           borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
       ),

@@ -1,6 +1,6 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/primary_button.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -128,7 +128,7 @@ final class _AddTransactionScreenState
                       'A new transaction will be created using details from '
                       'the original.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ),
@@ -255,9 +255,11 @@ final class _AddTransactionScreenState
       bottomNavigationBar: SafeArea(
         top: false,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.surfacePrimary,
-            border: Border(top: BorderSide(color: AppColors.borderSubtle)),
+          decoration: BoxDecoration(
+            color: context.appColors.surfacePrimary,
+            border: Border(
+              top: BorderSide(color: context.appColors.borderSubtle),
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -287,7 +289,7 @@ final class _AddTransactionScreenState
                               ),
                               padding: const EdgeInsets.all(AppSpacing.sm),
                               decoration: BoxDecoration(
-                                color: AppColors.dangerSubtle,
+                                color: context.appColors.dangerSubtle,
                                 borderRadius: BorderRadius.circular(
                                   AppRadius.small,
                                 ),
@@ -296,9 +298,10 @@ final class _AddTransactionScreenState
                                 liveRegion: true,
                                 child: Row(
                                   children: <Widget>[
-                                    const Icon(
+                                    Icon(
                                       Icons.error_outline,
-                                      color: AppColors.destructiveAction,
+                                      color:
+                                          context.appColors.destructiveAction,
                                     ),
                                     const SizedBox(width: AppSpacing.xs),
                                     Expanded(
@@ -308,8 +311,9 @@ final class _AddTransactionScreenState
                                             .textTheme
                                             .bodyMedium
                                             ?.copyWith(
-                                              color:
-                                                  AppColors.destructiveAction,
+                                              color: context
+                                                  .appColors
+                                                  .destructiveAction,
                                             ),
                                       ),
                                     ),

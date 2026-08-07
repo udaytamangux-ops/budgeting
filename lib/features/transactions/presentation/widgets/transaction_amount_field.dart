@@ -1,6 +1,6 @@
-import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
+import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,10 +51,10 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
   Widget build(BuildContext context) {
     final bool hasError = widget.errorText != null;
     final Color borderColor = hasError
-        ? AppColors.destructiveAction
+        ? context.appColors.destructiveAction
         : widget.focusNode.hasFocus
-        ? AppColors.primaryAction
-        : AppColors.borderStrong;
+        ? context.appColors.primaryAction
+        : context.appColors.borderStrong;
 
     return Semantics(
       textField: true,
@@ -72,7 +72,7 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
               AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfacePrimary,
+              color: context.appColors.surfacePrimary,
               border: Border.all(
                 color: borderColor,
                 width: widget.focusNode.hasFocus || hasError ? 2 : 1,
@@ -90,7 +90,7 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
                     Text(
                       'NPR',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -147,7 +147,7 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
                       child: Text(
                         widget.errorText!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.destructiveAction,
+                          color: context.appColors.destructiveAction,
                         ),
                       ),
                     ),
