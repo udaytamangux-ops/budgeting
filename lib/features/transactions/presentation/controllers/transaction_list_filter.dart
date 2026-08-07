@@ -1,6 +1,7 @@
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 

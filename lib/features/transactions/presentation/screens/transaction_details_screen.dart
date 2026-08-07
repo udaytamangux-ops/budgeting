@@ -14,6 +14,7 @@ import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_details_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
@@ -192,7 +193,7 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                   value: transaction.merchant!,
                 ),
               _DetailRow(
-                label: isIncome ? 'Received via' : 'Payment method',
+                label: isIncome ? 'Received via' : 'Paid via',
                 value: transaction.paymentMethod.label,
               ),
               _DetailRow(

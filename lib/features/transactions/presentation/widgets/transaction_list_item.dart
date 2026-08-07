@@ -7,6 +7,7 @@ import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';

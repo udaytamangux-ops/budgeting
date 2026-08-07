@@ -3,7 +3,6 @@ import 'package:budgeting_app/features/transactions/domain/entities/financial_tr
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
-import 'package:budgeting_app/features/transactions/presentation/controllers/session_payment_method_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +23,10 @@ void main() {
       overrides: <Override>[
         appClockProvider.overrideWithValue(() => fixedNow),
         transactionRepositoryProvider.overrideWithValue(repository),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              const AsyncValue<List<PaymentMethod>>.data(<PaymentMethod>[]),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -103,22 +106,57 @@ void main() {
     },
   );
 
-  test('new Income reuses only the remembered Income payment method', () {
+  test('fresh forms use type-specific payment method defaults', () {
+    ProviderContainer buildContainer(TransactionType type) {
+      final ProviderContainer container = ProviderContainer(
+        overrides: <Override>[
+          appClockProvider.overrideWithValue(() => fixedNow),
+          initialTransactionTypeProvider.overrideWithValue(type),
+          recentPaymentMethodsProvider.overrideWith(
+            (Ref ref, TransactionType type) =>
+                const AsyncValue<List<PaymentMethod>>.data(<PaymentMethod>[]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    final ProviderContainer expenseContainer = buildContainer(
+      TransactionType.expense,
+    );
+    final ProviderContainer incomeContainer = buildContainer(
+      TransactionType.income,
+    );
+
+    expect(
+      expenseContainer.read(addTransactionControllerProvider).paymentMethod,
+      PaymentMethod.cash,
+    );
+    expect(
+      incomeContainer.read(addTransactionControllerProvider).paymentMethod,
+      PaymentMethod.bankAccount,
+    );
+  });
+
+  test('new Income uses its own most recent persisted method', () {
     final ProviderContainer container = ProviderContainer(
       overrides: <Override>[
         appClockProvider.overrideWithValue(() => fixedNow),
         initialTransactionTypeProvider.overrideWithValue(
           TransactionType.income,
         ),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              AsyncValue<List<PaymentMethod>>.data(
+                type == TransactionType.expense
+                    ? const <PaymentMethod>[PaymentMethod.eSewa]
+                    : const <PaymentMethod>[PaymentMethod.khalti],
+              ),
+        ),
       ],
     );
     addTearDown(container.dispose);
-    container
-        .read(sessionPaymentMethodProvider.notifier)
-        .remember(TransactionType.expense, PaymentMethod.eSewa);
-    container
-        .read(sessionPaymentMethodProvider.notifier)
-        .remember(TransactionType.income, PaymentMethod.bankAccount);
     final ProviderSubscription<AddTransactionState> subscription = container
         .listen(addTransactionControllerProvider, (_, _) {});
     addTearDown(subscription.close);
@@ -127,6 +165,100 @@ void main() {
       addTransactionControllerProvider,
     );
     expect(state.type, TransactionType.income);
-    expect(state.paymentMethod, PaymentMethod.bankAccount);
+    expect(state.paymentMethod, PaymentMethod.khalti);
+  });
+
+  test('Add Income persists the selected payment method', () async {
+    final _MockTransactionRepository repository = _MockTransactionRepository();
+    when(() => repository.createTransaction(any())).thenAnswer((_) async {});
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        transactionRepositoryProvider.overrideWithValue(repository),
+        initialTransactionTypeProvider.overrideWithValue(
+          TransactionType.income,
+        ),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              const AsyncValue<List<PaymentMethod>>.data(<PaymentMethod>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+
+    controller.updateAmount('45000');
+    controller.selectCategory(TransactionCategory.salary);
+    controller.updatePaymentMethod(PaymentMethod.imePay);
+    await controller.submit();
+
+    final VerificationResult verification = verify(
+      () => repository.createTransaction(captureAny()),
+    );
+    verification.called(1);
+    final FinancialTransaction saved =
+        verification.captured.single as FinancialTransaction;
+    expect(saved.type, TransactionType.income);
+    expect(saved.paymentMethod, PaymentMethod.imePay);
+  });
+
+  test('other form changes do not reset the selected payment method', () {
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              const AsyncValue<List<PaymentMethod>>.data(<PaymentMethod>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+
+    controller.updatePaymentMethod(PaymentMethod.otherDigitalWallet);
+    controller.selectCategory(TransactionCategory.food);
+    controller.updateOccurredDate(DateTime(2026, 8, 3));
+    controller.updateMerchant('Local merchant');
+    controller.updateNote('Manual record');
+
+    expect(
+      container.read(addTransactionControllerProvider).paymentMethod,
+      PaymentMethod.otherDigitalWallet,
+    );
+  });
+
+  test('new draft type changes use that type persisted history', () {
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              AsyncValue<List<PaymentMethod>>.data(
+                type == TransactionType.expense
+                    ? const <PaymentMethod>[PaymentMethod.eSewa]
+                    : const <PaymentMethod>[PaymentMethod.imePay],
+              ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+    expect(
+      container.read(addTransactionControllerProvider).paymentMethod,
+      PaymentMethod.eSewa,
+    );
+
+    controller.updateType(TransactionType.income);
+
+    expect(
+      container.read(addTransactionControllerProvider).paymentMethod,
+      PaymentMethod.imePay,
+    );
   });
 }

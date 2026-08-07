@@ -4,10 +4,10 @@ import 'package:budgeting_app/core/errors/app_exception.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/services/transaction_date_service.dart';
-import 'package:budgeting_app/features/transactions/presentation/controllers/session_payment_method_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -199,10 +199,13 @@ final class AddTransactionController
     final TransactionType initialType = ref.watch(
       initialTransactionTypeProvider,
     );
+    final List<PaymentMethod> recentMethods =
+        ref.read(recentPaymentMethodsProvider(initialType)).valueOrNull ??
+        const <PaymentMethod>[];
     return AddTransactionState.initial(
       currentDate: ref.watch(currentDateProvider),
       type: initialType,
-      paymentMethod: _initialPaymentMethod(initialType),
+      paymentMethod: _initialPaymentMethod(initialType, recentMethods),
     );
   }
 
@@ -220,7 +223,11 @@ final class AddTransactionController
       submissionPhase: AddTransactionSubmissionPhase.editing,
       paymentMethod: state.isEditing
           ? state.paymentMethod
-          : _initialPaymentMethod(type),
+          : _initialPaymentMethod(
+              type,
+              ref.read(recentPaymentMethodsProvider(type)).valueOrNull ??
+                  const <PaymentMethod>[],
+            ),
     );
   }
 
@@ -262,9 +269,13 @@ final class AddTransactionController
 
   void updatePaymentMethod(PaymentMethod paymentMethod) {
     state = state.copyWith(paymentMethod: paymentMethod);
+  }
+
+  void selectRecentPaymentMethod(PaymentMethod paymentMethod) {
     ref
-        .read(sessionPaymentMethodProvider.notifier)
-        .remember(state.type, paymentMethod);
+        .read(appAnalyticsProvider)
+        .recordEvent(AnalyticsEventNames.paymentMethodReused);
+    updatePaymentMethod(paymentMethod);
   }
 
   void updateOccurredDate(DateTime occurredDate) {
@@ -373,9 +384,6 @@ final class AddTransactionController
         submissionPhase: AddTransactionSubmissionPhase.success,
         savedTransaction: transaction,
       );
-      ref
-          .read(sessionPaymentMethodProvider.notifier)
-          .remember(state.type, state.paymentMethod);
       if (!state.isEditing) {
         ref
             .read(appAnalyticsProvider)
@@ -430,16 +438,10 @@ final class AddTransactionController
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  PaymentMethod _initialPaymentMethod(TransactionType type) {
-    final PaymentMethod? remembered = ref
-        .read(sessionPaymentMethodProvider)
-        .forType(type);
-    if (remembered != null) {
-      ref
-          .read(appAnalyticsProvider)
-          .recordEvent(AnalyticsEventNames.paymentMethodReused);
-      return remembered;
-    }
-    return PaymentMethod.cash;
+  PaymentMethod _initialPaymentMethod(
+    TransactionType type,
+    List<PaymentMethod> recentMethods,
+  ) {
+    return recentMethods.firstOrNull ?? type.defaultPaymentMethod;
   }
 }

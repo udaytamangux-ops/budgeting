@@ -210,6 +210,26 @@ void main() {
     );
   });
 
+  test('unknown stored payment method falls back to Other', () async {
+    await database.insertStoredTransaction(
+      StoredTransactionsCompanion.insert(
+        id: 'unknown-payment',
+        typeKey: 'expense',
+        amountMinorUnits: 100,
+        currencyCode: 'NPR',
+        categoryKey: 'food',
+        paymentMethodKey: 'future_or_malformed_method',
+        occurredAtUtcMicros: fixedNow.microsecondsSinceEpoch,
+        createdAtUtcMicros: fixedNow.microsecondsSinceEpoch,
+        updatedAtUtcMicros: fixedNow.microsecondsSinceEpoch,
+      ),
+    );
+
+    final FinancialTransaction restored =
+        (await repository.watchTransactions().first).single;
+    expect(restored.paymentMethod, PaymentMethod.other);
+  });
+
   test('new rows are scoped to guest and reads remain owner-scoped', () async {
     final DriftTransactionRepository futureUserRepository =
         DriftTransactionRepository(database, ownerScope: 'user:future-id');

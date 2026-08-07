@@ -1,6 +1,7 @@
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:drift/drift.dart';
 
@@ -71,28 +72,11 @@ abstract final class TransactionDatabaseMapper {
     _ => throw const FormatException('Unsupported stored transaction type.'),
   };
 
-  static String _paymentMethodToKey(PaymentMethod method) => switch (method) {
-    PaymentMethod.cash => 'cash',
-    PaymentMethod.bankAccount => 'bank_account',
-    PaymentMethod.card => 'card',
-    PaymentMethod.eSewa => 'esewa',
-    PaymentMethod.khalti => 'khalti',
-    PaymentMethod.imePay => 'ime_pay',
-    PaymentMethod.otherDigitalWallet => 'other_digital_wallet',
-    PaymentMethod.other => 'other',
-  };
+  static String _paymentMethodToKey(PaymentMethod method) =>
+      method.stableIdentifier;
 
-  static PaymentMethod _paymentMethodFromKey(String key) => switch (key) {
-    'cash' => PaymentMethod.cash,
-    'bank_account' => PaymentMethod.bankAccount,
-    'card' => PaymentMethod.card,
-    'esewa' => PaymentMethod.eSewa,
-    'khalti' => PaymentMethod.khalti,
-    'ime_pay' => PaymentMethod.imePay,
-    'other_digital_wallet' => PaymentMethod.otherDigitalWallet,
-    'other' => PaymentMethod.other,
-    _ => throw const FormatException('Unsupported stored payment method.'),
-  };
+  static PaymentMethod _paymentMethodFromKey(String key) =>
+      PaymentMethodCodec.decode(key);
 
   static String _categoryToKey(TransactionCategory category) =>
       switch (category) {

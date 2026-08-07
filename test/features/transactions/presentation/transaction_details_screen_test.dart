@@ -29,6 +29,7 @@ void main() {
     expect(find.text('Food'), findsOneWidget);
     expect(find.text('Lunch at Thamel'), findsOneWidget);
     expect(find.text('Cash'), findsOneWidget);
+    expect(find.text('Paid via'), findsOneWidget);
     expect(find.text('Team lunch'), findsOneWidget);
     expect(find.text('4 August 2026'), findsOneWidget);
     final Finder createdRow = find.byKey(
@@ -126,6 +127,7 @@ void main() {
       find.byKey(const ValueKey<String>('transaction_details_amount')),
     );
     expect(incomeAmount.style?.color, AppColors.incomeAccent);
+    expect(find.text('Received via'), findsOneWidget);
 
     final Finder typePill = find.byKey(
       const ValueKey<String>('transaction_type_pill'),
@@ -318,6 +320,19 @@ void main() {
     );
     expect(find.text('Save income'), findsOneWidget);
     expect(find.text('Update transaction'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('payment_method_field')),
+      280,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.bankAccount,
+    );
   });
 
   testWidgets(
@@ -395,17 +410,22 @@ void main() {
         (FinancialTransaction value) => value.id == transaction.id,
       );
       expect(original.amount, same(transaction.amount));
+      expect(
+        records.map((FinancialTransaction value) => value.paymentMethod),
+        everyElement(PaymentMethod.cash),
+      );
       expect(find.text('Expense added · NPR 1,250 · Food'), findsOneWidget);
     },
   );
 
-  testWidgets('Edit preserves the saved transaction date', (
+  testWidgets('Edit loads and can change only the stored payment method', (
     WidgetTester tester,
   ) async {
     final FinancialTransaction transaction = buildTestTransaction(
       occurredAt: DateTime.utc(2026, 8, 2, 6, 15),
+      paymentMethod: PaymentMethod.eSewa,
     );
-    await pumpBudgetingApp(
+    final repository = await pumpBudgetingApp(
       tester,
       seedTransactions: <FinancialTransaction>[transaction],
     );
@@ -429,13 +449,44 @@ void main() {
     );
 
     expect(find.text('2 August 2026'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('payment_method_field')),
+      280,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.eSewa,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('payment_method_field')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Khalti').last);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('save_transaction_button')),
+    );
+    await tester.pumpAndSettle();
+
+    final FinancialTransaction saved =
+        (await repository.watchTransactions().first).single;
+    expect(saved.paymentMethod, PaymentMethod.khalti);
+    expect(saved.occurredAt, transaction.occurredAt);
+    expect(saved.id, transaction.id);
   });
 
   testWidgets('editing an existing transaction does not offer create Undo', (
     WidgetTester tester,
   ) async {
-    final FinancialTransaction transaction = buildTestTransaction();
-    await pumpBudgetingApp(
+    final FinancialTransaction transaction = buildTestTransaction(
+      paymentMethod: PaymentMethod.imePay,
+    );
+    final repository = await pumpBudgetingApp(
       tester,
       seedTransactions: <FinancialTransaction>[transaction],
     );
@@ -459,5 +510,9 @@ void main() {
 
     expect(find.text('Transaction details'), findsOneWidget);
     expect(find.text('Undo'), findsNothing);
+    expect(
+      (await repository.watchTransactions().first).single.paymentMethod,
+      PaymentMethod.imePay,
+    );
   });
 }

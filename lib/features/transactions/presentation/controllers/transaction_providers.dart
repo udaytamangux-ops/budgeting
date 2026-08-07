@@ -12,6 +12,7 @@ import 'package:budgeting_app/features/transactions/domain/entities/monthly_fina
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/services/financial_summary_service.dart';
+import 'package:budgeting_app/features/transactions/domain/services/recent_payment_methods_service.dart';
 import 'package:budgeting_app/features/transactions/domain/services/recent_transaction_categories_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,6 +43,23 @@ recentTransactionCategoriesProvider =
           .whenData(
             (List<FinancialTransaction> transactions) =>
                 const RecentTransactionCategoriesService().findForType(
+                  transactions: transactions,
+                  type: type,
+                ),
+          );
+    });
+
+final ProviderFamily<AsyncValue<List<PaymentMethod>>, TransactionType>
+recentPaymentMethodsProvider =
+    Provider.family<AsyncValue<List<PaymentMethod>>, TransactionType>((
+      Ref ref,
+      TransactionType type,
+    ) {
+      return ref
+          .watch(transactionListProvider)
+          .whenData(
+            (List<FinancialTransaction> transactions) =>
+                const RecentPaymentMethodsService().findForType(
                   transactions: transactions,
                   type: type,
                 ),

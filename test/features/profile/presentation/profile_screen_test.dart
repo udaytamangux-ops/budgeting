@@ -96,6 +96,10 @@ void main() {
       findsOneWidget,
     );
     expect(
+      find.textContaining('Payment methods are selected manually'),
+      findsOneWidget,
+    );
+    expect(
       find.textContaining('not backed up or synchronised'),
       findsOneWidget,
     );

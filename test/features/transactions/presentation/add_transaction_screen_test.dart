@@ -2,9 +2,11 @@ import 'dart:ui' show Tristate;
 
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/core/widgets/primary_button.dart';
+import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/spending_donut_chart.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
@@ -259,7 +261,7 @@ void main() {
     }
   });
 
-  testWidgets('payment method is remembered by type for the current session', (
+  testWidgets('unsaved payment selection does not replace persisted defaults', (
     WidgetTester tester,
   ) async {
     await pumpBudgetingApp(tester);
@@ -288,7 +290,7 @@ void main() {
             find.byType(DropdownButtonFormField<PaymentMethod>),
           )
           .initialValue,
-      PaymentMethod.eSewa,
+      PaymentMethod.cash,
     );
 
     await tester.tap(find.byTooltip('Cancel'));
@@ -304,7 +306,156 @@ void main() {
             find.byType(DropdownButtonFormField<PaymentMethod>),
           )
           .initialValue,
-      PaymentMethod.cash,
+      PaymentMethod.bankAccount,
+    );
+  });
+
+  testWidgets('payment methods use contextual labels and exact built-ins', (
+    WidgetTester tester,
+  ) async {
+    await pumpBudgetingApp(tester);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home_add_expense_button')),
+    );
+    await tester.pumpAndSettle();
+    await _scrollToPaymentMethod(tester);
+
+    expect(find.text('Paid via'), findsOneWidget);
+    DropdownButtonFormField<PaymentMethod> dropdown = tester.widget(
+      find.byType(DropdownButtonFormField<PaymentMethod>),
+    );
+    expect(dropdown.initialValue, PaymentMethod.cash);
+    await tester.tap(find.byType(DropdownButtonFormField<PaymentMethod>));
+    await tester.pumpAndSettle();
+    for (final PaymentMethod method in PaymentMethod.values) {
+      expect(find.text(method.label), findsAtLeast(1));
+    }
+    await tester.tap(find.text(PaymentMethod.cash.label).last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home_add_income_button')),
+    );
+    await tester.pumpAndSettle();
+    await _scrollToPaymentMethod(tester);
+    expect(find.text('Received via'), findsOneWidget);
+    dropdown = tester.widget(
+      find.byType(DropdownButtonFormField<PaymentMethod>),
+    );
+    expect(dropdown.initialValue, PaymentMethod.bankAccount);
+  });
+
+  testWidgets('persisted history drives distinct type-specific recents', (
+    WidgetTester tester,
+  ) async {
+    await pumpBudgetingApp(
+      tester,
+      seedTransactions: <FinancialTransaction>[
+        buildTestTransaction(
+          id: 'expense-cash',
+          paymentMethod: PaymentMethod.cash,
+          createdAt: fixedNow.subtract(const Duration(minutes: 3)),
+        ),
+        buildTestTransaction(
+          id: 'expense-esewa',
+          paymentMethod: PaymentMethod.eSewa,
+          createdAt: fixedNow.subtract(const Duration(minutes: 2)),
+        ),
+        buildTestTransaction(
+          id: 'expense-card',
+          paymentMethod: PaymentMethod.card,
+          createdAt: fixedNow.subtract(const Duration(minutes: 1)),
+        ),
+        buildTestTransaction(
+          id: 'income-bank',
+          type: TransactionType.income,
+          category: TransactionCategory.salary,
+          paymentMethod: PaymentMethod.bankAccount,
+          createdAt: fixedNow,
+        ),
+      ],
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home_add_expense_button')),
+    );
+    await tester.pumpAndSettle();
+    await _scrollToPaymentMethod(tester);
+
+    expect(find.text('All methods'), findsOneWidget);
+    for (final String id in <String>['card', 'esewa', 'cash']) {
+      expect(
+        find.byKey(ValueKey<String>('recent_payment_method_$id')),
+        findsOneWidget,
+      );
+    }
+    expect(
+      find.byWidgetPredicate(
+        (Widget widget) =>
+            widget.key is ValueKey<String> &&
+            (widget.key! as ValueKey<String>).value.startsWith(
+              'recent_payment_method_',
+            ),
+      ),
+      findsNWidgets(3),
+    );
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.card,
+    );
+    final Finder selectedRecent = find.byKey(
+      const ValueKey<String>('recent_payment_method_card'),
+    );
+    expect(
+      tester.getSemantics(selectedRecent).flagsCollection.isSelected,
+      Tristate.isTrue,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('recent_payment_method_esewa')),
+    );
+    await tester.pump();
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey<String>('recent_payment_method_esewa')),
+          )
+          .flagsCollection
+          .isSelected,
+      Tristate.isTrue,
+    );
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.eSewa,
+    );
+
+    await tester.tap(find.byTooltip('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home_add_income_button')),
+    );
+    await tester.pumpAndSettle();
+    await _scrollToPaymentMethod(tester);
+    expect(find.text('All methods'), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('recent_payment_method_bank_account')),
+      findsNothing,
+    );
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.bankAccount,
     );
   });
 
@@ -368,6 +519,13 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey<String>('category_food')));
+    await _scrollToPaymentMethod(tester);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('payment_method_field')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Khalti').last);
+    await tester.pumpAndSettle();
     await tester.drag(
       find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
       const Offset(0, -1000),
@@ -396,7 +554,7 @@ void main() {
         .first;
     expect(transactions.first.amount.minorUnits, 125000);
     expect(transactions.first.category, TransactionCategory.food);
-    expect(transactions.first.paymentMethod, PaymentMethod.cash);
+    expect(transactions.first.paymentMethod, PaymentMethod.khalti);
     expect(find.text('Expense added · NPR 1,250 · Food'), findsOneWidget);
     expect(find.text('NPR 36,000'), findsOneWidget);
     expect(find.text('NPR 24,000'), findsOneWidget);
@@ -414,6 +572,26 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Lunch at Thamel'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey<String>('central_add_button')));
+    await tester.pumpAndSettle();
+    await _scrollToPaymentMethod(tester);
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.khalti,
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.byKey(const ValueKey<String>('recent_payment_method_khalti')),
+          )
+          .flagsCollection
+          .isSelected,
+      Tristate.isTrue,
+    );
   });
 
   testWidgets('Undo restores Home and Summary values after a create', (
@@ -503,6 +681,13 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey<String>('category_food')));
+    await _scrollToPaymentMethod(tester);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('payment_method_field')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Khalti').last);
+    await tester.pumpAndSettle();
     await tester.drag(
       find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
       const Offset(0, -1000),
@@ -558,6 +743,21 @@ void main() {
           .onPressed,
       isNotNull,
     );
+    await tester.tap(find.byTooltip('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home_add_expense_button')),
+    );
+    await tester.pumpAndSettle();
+    await _scrollToPaymentMethod(tester);
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          )
+          .initialValue,
+      PaymentMethod.cash,
+    );
   });
 
   testWidgets('save action remains reachable with the keyboard inset', (
@@ -580,6 +780,52 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  for (final double width in <double>[320, 768]) {
+    testWidgets('payment selector fits ${width.toInt()} px at 2x text', (
+      WidgetTester tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = Size(width, 1400);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await pumpBudgetingApp(
+        tester,
+        themePreference: AppThemePreference.dark,
+        seedTransactions: <FinancialTransaction>[
+          buildTestTransaction(
+            id: 'responsive-cash',
+            paymentMethod: PaymentMethod.cash,
+            createdAt: fixedNow.subtract(const Duration(minutes: 2)),
+          ),
+          buildTestTransaction(
+            id: 'responsive-ime',
+            paymentMethod: PaymentMethod.imePay,
+            createdAt: fixedNow.subtract(const Duration(minutes: 1)),
+          ),
+          buildTestTransaction(
+            id: 'responsive-wallet',
+            paymentMethod: PaymentMethod.otherDigitalWallet,
+            createdAt: fixedNow,
+          ),
+        ],
+      );
+      await tester.tap(
+        find.byKey(const ValueKey<String>('home_add_expense_button')),
+      );
+      await tester.pumpAndSettle();
+      await _scrollToPaymentMethod(tester);
+
+      final Finder longMethod = find.byKey(
+        const ValueKey<String>('recent_payment_method_other_digital_wallet'),
+      );
+      expect(longMethod, findsOneWidget);
+      expect(tester.getSize(longMethod).height, greaterThanOrEqualTo(48));
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
 
 Future<void> _scrollToPaymentMethod(WidgetTester tester) async {

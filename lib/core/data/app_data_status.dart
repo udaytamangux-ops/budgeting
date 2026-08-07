@@ -24,8 +24,8 @@ final class AppDataStatus {
 
   static const String bankAccessTitle = 'No bank connection';
   static const String bankAccessDescription =
-      'This app does not connect to your bank account, card, digital wallet, '
-      'or payment provider.';
+      'Payment methods are selected manually. This app does not connect to '
+      'your bank account, card, digital wallet, or payment provider.';
 
   static const String cloudAccessTitle = 'No cloud sync';
   static const String cloudAccessDescription =

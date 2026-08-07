@@ -124,18 +124,3 @@ extension TransactionCategoryPresentation on TransactionCategory {
     };
   }
 }
-
-extension PaymentMethodPresentation on PaymentMethod {
-  String get label {
-    return switch (this) {
-      PaymentMethod.cash => 'Cash',
-      PaymentMethod.bankAccount => 'Bank account',
-      PaymentMethod.card => 'Card',
-      PaymentMethod.eSewa => 'eSewa',
-      PaymentMethod.khalti => 'Khalti',
-      PaymentMethod.imePay => 'IME Pay',
-      PaymentMethod.otherDigitalWallet => 'Other digital wallet',
-      PaymentMethod.other => 'Other',
-    };
-  }
-}

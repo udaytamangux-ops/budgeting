@@ -73,6 +73,12 @@ final class _AddTransactionScreenState
           data: (List<TransactionCategory> categories) => categories,
           orElse: () => const <TransactionCategory>[],
         );
+    final List<PaymentMethod> recentPaymentMethods = ref
+        .watch(recentPaymentMethodsProvider(state.type))
+        .maybeWhen(
+          data: (List<PaymentMethod> methods) => methods,
+          orElse: () => const <PaymentMethod>[],
+        );
     final bool isExpense = state.type == TransactionType.expense;
     final String optionalActionLabel = isExpense
         ? 'Add merchant or note'
@@ -161,8 +167,10 @@ final class _AddTransactionScreenState
                 PaymentMethodSelector(
                   type: state.type,
                   value: state.paymentMethod,
+                  recentMethods: recentPaymentMethods,
                   isEnabled: !state.isSubmitting,
                   onChanged: controller.updatePaymentMethod,
+                  onRecentChanged: controller.selectRecentPaymentMethod,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 QuickDateSelector(
