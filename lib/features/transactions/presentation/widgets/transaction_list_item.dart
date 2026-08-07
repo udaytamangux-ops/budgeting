@@ -2,7 +2,10 @@ import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
@@ -27,9 +30,16 @@ final class TransactionListItem extends ConsumerWidget {
     final String formattedAmount = ref
         .watch(currencyFormatterProvider)
         .format(transaction.amount);
+    final AppCalendarSystem primaryCalendar =
+        ref.watch(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
     final String formattedDate = ref
-        .watch(dateFormatterProvider)
-        .relativeDate(transaction.occurredAt);
+        .watch(appCalendarServiceProvider)
+        .formatDayGroup(
+          transaction.occurredAt,
+          primaryCalendar,
+          relativeTo: ref.watch(currentDateProvider),
+        );
     final bool isIncome = transaction.type == TransactionType.income;
     final String transactionKind = isIncome ? 'Income' : 'Expense';
     final String amountPrefix = isIncome ? '+' : '−';
@@ -50,7 +60,8 @@ final class TransactionListItem extends ConsumerWidget {
       button: true,
       label:
           '$transactionKind, $formattedAmount, ${visual.label}, '
-          '${transaction.paymentMethod.label}, $formattedDate',
+          '${transaction.paymentMethod.label}, $formattedDate, '
+          '${primaryCalendar.semanticName}',
       excludeSemantics: true,
       onTap: onTap,
       child: InkWell(

@@ -1,3 +1,5 @@
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
@@ -14,10 +16,24 @@ final class TransactionListFilter {
 
   List<TransactionDateGroup> apply({
     required List<FinancialTransaction> transactions,
-    required DateTime month,
+    DateTime? month,
+    CalendarPeriod? period,
     String query = '',
     TransactionType? type,
   }) {
+    if (month == null && period == null) {
+      throw ArgumentError('A month or calendar period is required.');
+    }
+    final CalendarPeriod effectivePeriod =
+        period ??
+        CalendarPeriod(
+          calendarSystem: AppCalendarSystem.gregorianAd,
+          year: month!.year,
+          month: month.month,
+          startAdInclusive: DateTime.utc(month.year, month.month),
+          endAdExclusive: DateTime.utc(month.year, month.month + 1),
+          displayLabel: '',
+        );
     final String normalizedQuery = query.trim().toLowerCase();
     final Map<DateTime, List<FinancialTransaction>> grouped =
         <DateTime, List<FinancialTransaction>>{};
@@ -33,8 +49,7 @@ final class TransactionListFilter {
           });
 
     for (final FinancialTransaction transaction in orderedTransactions) {
-      final DateTime localDate = transaction.occurredAt.toLocal();
-      if (localDate.year != month.year || localDate.month != month.month) {
+      if (!effectivePeriod.contains(transaction.occurredAt)) {
         continue;
       }
       if (type != null && transaction.type != type) {
@@ -44,10 +59,11 @@ final class TransactionListFilter {
           !_matchesQuery(transaction, normalizedQuery)) {
         continue;
       }
-      final DateTime day = DateTime(
-        localDate.year,
-        localDate.month,
-        localDate.day,
+      final DateTime occurredAt = transaction.occurredAt.toUtc();
+      final DateTime day = DateTime.utc(
+        occurredAt.year,
+        occurredAt.month,
+        occurredAt.day,
       );
       grouped.putIfAbsent(day, () => <FinancialTransaction>[]).add(transaction);
     }

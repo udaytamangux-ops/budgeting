@@ -1,7 +1,9 @@
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/features/access/data/repositories/in_memory_access_preference_repository.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:budgeting_app/features/settings/data/repositories/in_memory_calendar_preference_repository.dart';
 import 'package:budgeting_app/features/settings/data/repositories/in_memory_theme_preference_repository.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +35,8 @@ void main() {
     );
     expect(find.text('Currency'), findsOneWidget);
     expect(find.textContaining('Nepalese rupee'), findsOneWidget);
-    expect(find.text('Date format'), findsOneWidget);
+    expect(find.text('Calendar'), findsOneWidget);
+    expect(find.textContaining('AD — Gregorian'), findsOneWidget);
     expect(find.text('Theme'), findsOneWidget);
     expect(find.text('Notifications'), findsOneWidget);
     expect(find.text('Not available in this version'), findsOneWidget);
@@ -109,6 +112,56 @@ void main() {
       scrollable: _profileScrollable,
     );
     expect(find.text('Using without an account'), findsOneWidget);
+  });
+
+  testWidgets('Profile calendar preference applies immediately', (
+    WidgetTester tester,
+  ) async {
+    final InMemoryCalendarPreferenceRepository repository =
+        InMemoryCalendarPreferenceRepository(
+          initialCalendar: AppCalendarSystem.gregorianAd,
+          initialSetupComplete: true,
+        );
+    addTearDown(repository.dispose);
+    await pumpBudgetingApp(tester, calendarRepository: repository);
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+
+    final Finder setting = find.byKey(
+      const ValueKey<String>('calendar_preference_setting'),
+    );
+    await tester.scrollUntilVisible(
+      setting,
+      260,
+      scrollable: _profileScrollable,
+    );
+    await tester.tap(setting);
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar preference'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('AD — Gregorian.*Selected')),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('calendar_preference_option_bikramSambatBs'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      await repository.getPrimaryCalendar(),
+      AppCalendarSystem.bikramSambatBs,
+    );
+    expect(find.textContaining('BS — Bikram Sambat'), findsOneWidget);
+
+    await tester.tap(find.text('Home').last);
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining("Here's your Shrawan activity."),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Developer information can be omitted outside debug mode', (

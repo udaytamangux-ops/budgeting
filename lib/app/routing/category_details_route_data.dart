@@ -1,12 +1,16 @@
+import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 
 final class CategoryDetailsRouteData {
   CategoryDetailsRouteData({
     required this.type,
     required List<TransactionCategory> categories,
-    required DateTime month,
+    DateTime? month,
+    CalendarPeriod? period,
   }) : categories = List<TransactionCategory>.unmodifiable(categories),
-       month = DateTime(month.year, month.month) {
+       period = period ?? _periodForGregorianMonth(month) {
     if (categories.isEmpty) {
       throw ArgumentError.value(
         categories,
@@ -27,7 +31,10 @@ final class CategoryDetailsRouteData {
 
   final TransactionType type;
   final List<TransactionCategory> categories;
-  final DateTime month;
+  final CalendarPeriod period;
+
+  DateTime get month =>
+      DateTime(period.startAdInclusive.year, period.startAdInclusive.month);
 
   String get categoryIdentifiers =>
       categories.map((TransactionCategory category) => category.name).join(',');
@@ -37,6 +44,7 @@ final class CategoryDetailsRouteData {
     required String? categoryIdentifiers,
     required String? year,
     required String? month,
+    String? calendarSystem,
   }) {
     final TransactionType? type = _transactionType(typeIdentifier);
     final int? parsedYear = int.tryParse(year ?? '');
@@ -64,11 +72,22 @@ final class CategoryDetailsRouteData {
     if (categories.isEmpty) {
       return null;
     }
-    return CategoryDetailsRouteData(
-      type: type,
-      categories: categories,
-      month: DateTime(parsedYear, parsedMonth),
+    final AppCalendarSystem system = AppCalendarSystemLabels.fromStoredValue(
+      calendarSystem,
     );
+    try {
+      return CategoryDetailsRouteData(
+        type: type,
+        categories: categories,
+        period: BikramSambatCalendarService().periodFor(
+          calendarSystem: system,
+          year: parsedYear,
+          month: parsedMonth,
+        ),
+      );
+    } on RangeError {
+      return null;
+    }
   }
 
   static TransactionType? _transactionType(String? identifier) {
@@ -87,5 +106,16 @@ final class CategoryDetailsRouteData {
       }
     }
     return null;
+  }
+
+  static CalendarPeriod _periodForGregorianMonth(DateTime? month) {
+    if (month == null) {
+      throw ArgumentError('A calendar period or Gregorian month is required.');
+    }
+    return BikramSambatCalendarService().periodFor(
+      calendarSystem: AppCalendarSystem.gregorianAd,
+      year: month.year,
+      month: month.month,
+    );
   }
 }

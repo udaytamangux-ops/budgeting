@@ -1,4 +1,5 @@
-import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/domain/services/category_activity_service.dart';
@@ -12,6 +13,42 @@ typedef MonthlyCategoryActivityRequest = ({
   DateTime month,
   TransactionType type,
 });
+
+typedef MonthlyCategoryActivityPeriodRequest = ({
+  CalendarPeriod period,
+  TransactionType type,
+});
+
+final class CategoryActivityPeriodDetailsRequest {
+  CategoryActivityPeriodDetailsRequest({
+    required this.period,
+    required this.type,
+    required List<TransactionCategory> categories,
+  }) : categories = List<TransactionCategory>.unmodifiable(categories);
+
+  final CalendarPeriod period;
+  final TransactionType type;
+  final List<TransactionCategory> categories;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! CategoryActivityPeriodDetailsRequest ||
+        period != other.period ||
+        type != other.type ||
+        categories.length != other.categories.length) {
+      return false;
+    }
+    for (int index = 0; index < categories.length; index += 1) {
+      if (categories[index] != other.categories[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(period, type, Object.hashAll(categories));
+}
 
 final class CategoryActivityDetailsRequest {
   CategoryActivityDetailsRequest({
@@ -67,6 +104,27 @@ monthlyCategoryActivityProvider =
     });
 
 final ProviderFamily<
+  AsyncValue<MonthlyCategoryActivity>,
+  MonthlyCategoryActivityPeriodRequest
+>
+monthlyCategoryActivityForPeriodProvider =
+    Provider.family<
+      AsyncValue<MonthlyCategoryActivity>,
+      MonthlyCategoryActivityPeriodRequest
+    >((Ref ref, request) {
+      return ref
+          .watch(transactionListProvider)
+          .whenData(
+            (List<FinancialTransaction> transactions) =>
+                const CategoryActivityService().calculateForPeriod(
+                  transactions: transactions,
+                  period: request.period,
+                  type: request.type,
+                ),
+          );
+    });
+
+final ProviderFamily<
   AsyncValue<CategoryActivityDetails>,
   CategoryActivityDetailsRequest
 >
@@ -88,6 +146,28 @@ categoryActivityDetailsProvider =
           );
     });
 
+final ProviderFamily<
+  AsyncValue<CategoryActivityDetails>,
+  CategoryActivityPeriodDetailsRequest
+>
+categoryActivityDetailsForPeriodProvider =
+    Provider.family<
+      AsyncValue<CategoryActivityDetails>,
+      CategoryActivityPeriodDetailsRequest
+    >((Ref ref, CategoryActivityPeriodDetailsRequest request) {
+      return ref
+          .watch(transactionListProvider)
+          .whenData(
+            (List<FinancialTransaction> transactions) =>
+                const CategoryActivityService().calculateForCategoriesInPeriod(
+                  transactions: transactions,
+                  period: request.period,
+                  type: request.type,
+                  categories: request.categories,
+                ),
+          );
+    });
+
 final ProviderFamily<AsyncValue<MonthlyTransactionSummary>, DateTime>
 monthlyTransactionSummaryForMonthProvider =
     Provider.family<AsyncValue<MonthlyTransactionSummary>, DateTime>((
@@ -103,13 +183,30 @@ monthlyTransactionSummaryForMonthProvider =
       );
     });
 
+final ProviderFamily<AsyncValue<MonthlyTransactionSummary>, CalendarPeriod>
+monthlyTransactionSummaryForPeriodProvider =
+    Provider.family<AsyncValue<MonthlyTransactionSummary>, CalendarPeriod>((
+      Ref ref,
+      CalendarPeriod period,
+    ) {
+      return ref
+          .watch(transactionListProvider)
+          .whenData(
+            (List<FinancialTransaction> value) =>
+                const TransactionSummaryService().calculateForPeriod(
+                  transactions: value,
+                  period: period,
+                ),
+          );
+    });
+
 final Provider<AsyncValue<MonthlyTransactionSummary>>
 currentMonthlyTransactionSummaryProvider =
     Provider<AsyncValue<MonthlyTransactionSummary>>((Ref ref) {
-      final DateTime currentDate = ref.watch(currentDateProvider);
+      final CalendarPeriod currentPeriod = ref.watch(
+        currentCalendarPeriodProvider,
+      );
       return ref.watch(
-        monthlyTransactionSummaryForMonthProvider(
-          DateTime(currentDate.year, currentDate.month),
-        ),
+        monthlyTransactionSummaryForPeriodProvider(currentPeriod),
       );
     });

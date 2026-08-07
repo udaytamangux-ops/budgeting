@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/features/access/data/repositories/drift_access_preference_repository.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
+import 'package:budgeting_app/features/settings/data/repositories/drift_calendar_preference_repository.dart';
 import 'package:budgeting_app/features/settings/data/repositories/drift_theme_preference_repository.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
 import 'package:drift/drift.dart';
@@ -14,11 +16,13 @@ void main() {
   late AppDatabase database;
   late DriftAccessPreferenceRepository accessRepository;
   late DriftThemePreferenceRepository themeRepository;
+  late DriftCalendarPreferenceRepository calendarRepository;
 
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
     accessRepository = DriftAccessPreferenceRepository(database);
     themeRepository = DriftThemePreferenceRepository(database);
+    calendarRepository = DriftCalendarPreferenceRepository(database);
   });
 
   tearDown(() => database.close());
@@ -70,6 +74,54 @@ void main() {
     expect(await themeRepository.getThemeMode(), AppThemePreference.system);
   });
 
+  test('calendar defaults to AD while setup remains incomplete', () async {
+    expect(
+      await calendarRepository.getPrimaryCalendar(),
+      AppCalendarSystem.gregorianAd,
+    );
+    expect(await calendarRepository.isCalendarSetupComplete(), isFalse);
+
+    await calendarRepository.setPrimaryCalendar(
+      AppCalendarSystem.bikramSambatBs,
+    );
+    expect(
+      await calendarRepository.getPrimaryCalendar(),
+      AppCalendarSystem.bikramSambatBs,
+    );
+    expect(await calendarRepository.isCalendarSetupComplete(), isFalse);
+  });
+
+  test('calendar setup and selected value persist separately', () async {
+    await calendarRepository.markCalendarSetupComplete(
+      AppCalendarSystem.bikramSambatBs,
+    );
+
+    expect(await calendarRepository.isCalendarSetupComplete(), isTrue);
+    expect(
+      await calendarRepository.watchPrimaryCalendar().first,
+      AppCalendarSystem.bikramSambatBs,
+    );
+
+    await calendarRepository.resetCalendarSetup();
+    expect(await calendarRepository.isCalendarSetupComplete(), isFalse);
+    expect(
+      await calendarRepository.getPrimaryCalendar(),
+      AppCalendarSystem.bikramSambatBs,
+    );
+  });
+
+  test('invalid stored calendar value safely falls back to AD', () async {
+    await database.writePreference(
+      DriftCalendarPreferenceRepository.primaryCalendarKey,
+      'unsupported',
+    );
+
+    expect(
+      await calendarRepository.getPrimaryCalendar(),
+      AppCalendarSystem.gregorianAd,
+    );
+  });
+
   test('guest and Dark preferences survive database reopening', () async {
     final Directory directory = await Directory.systemTemp.createTemp(
       'budgeting-preferences-reopen-',
@@ -88,6 +140,9 @@ void main() {
     await DriftThemePreferenceRepository(
       databaseA,
     ).setThemeMode(AppThemePreference.dark);
+    await DriftCalendarPreferenceRepository(
+      databaseA,
+    ).markCalendarSetupComplete(AppCalendarSystem.bikramSambatBs);
     await databaseA.close();
 
     final AppDatabase databaseB = AppDatabase(NativeDatabase(databaseFile));
@@ -98,6 +153,16 @@ void main() {
     expect(
       await DriftThemePreferenceRepository(databaseB).getThemeMode(),
       AppThemePreference.dark,
+    );
+    expect(
+      await DriftCalendarPreferenceRepository(databaseB).getPrimaryCalendar(),
+      AppCalendarSystem.bikramSambatBs,
+    );
+    expect(
+      await DriftCalendarPreferenceRepository(
+        databaseB,
+      ).isCalendarSetupComplete(),
+      isTrue,
     );
     await databaseB.close();
   });

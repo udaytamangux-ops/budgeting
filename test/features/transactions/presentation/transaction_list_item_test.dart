@@ -1,5 +1,8 @@
 import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/app/theme/app_theme.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/features/settings/data/repositories/in_memory_calendar_preference_repository.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +15,19 @@ void main() {
   testWidgets('transaction amounts retain signs without visual type labels', (
     WidgetTester tester,
   ) async {
+    final InMemoryCalendarPreferenceRepository calendarRepository =
+        InMemoryCalendarPreferenceRepository(
+          initialCalendar: AppCalendarSystem.gregorianAd,
+          initialSetupComplete: true,
+        );
+    addTearDown(calendarRepository.dispose);
     await tester.pumpWidget(
       ProviderScope(
+        overrides: <Override>[
+          calendarPreferenceRepositoryProvider.overrideWithValue(
+            calendarRepository,
+          ),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(),
           home: Scaffold(
@@ -38,6 +52,7 @@ void main() {
         ),
       ),
     );
+    await tester.pump();
 
     expect(find.text('−NPR 1,250'), findsOneWidget);
     expect(find.text('+NPR 1,250'), findsOneWidget);

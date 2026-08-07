@@ -7,9 +7,12 @@ import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_details_controller.dart';
@@ -68,12 +71,28 @@ final class _TransactionDetailsContent extends ConsumerWidget {
     final String amount = ref
         .watch(currencyFormatterProvider)
         .format(transaction.amount);
-    final String transactionDate = ref
-        .watch(dateFormatterProvider)
-        .longDate(transaction.occurredAt);
-    final String createdDate = ref
-        .watch(dateFormatterProvider)
-        .dateAndTime(transaction.createdAt);
+    final AppCalendarSystem primaryCalendar =
+        ref.watch(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
+    final AppCalendarSystem secondaryCalendar =
+        primaryCalendar == AppCalendarSystem.gregorianAd
+        ? AppCalendarSystem.bikramSambatBs
+        : AppCalendarSystem.gregorianAd;
+    final AppCalendarService calendarService = ref.watch(
+      appCalendarServiceProvider,
+    );
+    final String transactionDate = calendarService.formatDate(
+      transaction.occurredAt,
+      primaryCalendar,
+    );
+    final String secondaryTransactionDate = calendarService.formatDate(
+      transaction.occurredAt,
+      secondaryCalendar,
+    );
+    final String createdDate = calendarService.formatDateAndTime(
+      transaction.createdAt,
+      primaryCalendar,
+    );
     final TransactionCategoryVisual category = transaction.category.visual;
     final bool isIncome = transaction.type == TransactionType.income;
     final Color amountColor = isIncome
@@ -176,8 +195,22 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                 label: isIncome ? 'Received via' : 'Payment method',
                 value: transaction.paymentMethod.label,
               ),
-              _DetailRow(label: 'Transaction date', value: transactionDate),
-              _DetailRow(label: 'Created', value: createdDate),
+              _DetailRow(
+                label: 'Transaction date',
+                value: transactionDate,
+                secondaryValue:
+                    '${secondaryCalendar.shortLabel} · '
+                    '$secondaryTransactionDate',
+                semanticValue:
+                    '$transactionDate, ${primaryCalendar.semanticName}. '
+                    '$secondaryTransactionDate, '
+                    '${secondaryCalendar.semanticName}',
+              ),
+              _DetailRow(
+                key: const ValueKey<String>('transaction_created_row'),
+                label: 'Created',
+                value: createdDate,
+              ),
               if (transaction.note != null)
                 _DetailRow(label: 'Note', value: transaction.note!),
               const Divider(),
@@ -260,9 +293,12 @@ final class _TransactionDetailsContent extends ConsumerWidget {
     WidgetRef ref,
     String amount,
   ) async {
+    final AppCalendarSystem primaryCalendar =
+        ref.read(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
     final String date = ref
-        .read(dateFormatterProvider)
-        .longDate(transaction.occurredAt);
+        .read(appCalendarServiceProvider)
+        .formatDate(transaction.occurredAt, primaryCalendar);
     final bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -327,10 +363,18 @@ final class _TransactionDetailsContent extends ConsumerWidget {
 }
 
 final class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    super.key,
+    required this.label,
+    required this.value,
+    this.secondaryValue,
+    this.semanticValue,
+  });
 
   final String label;
   final String value;
+  final String? secondaryValue;
+  final String? semanticValue;
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +389,26 @@ final class _DetailRow extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
+            child: Semantics(
+              label: semanticValue,
+              excludeSemantics: semanticValue != null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(value, style: Theme.of(context).textTheme.bodyLarge),
+                  if (secondaryValue != null) ...<Widget>[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      secondaryValue!,
+                      key: const ValueKey<String>('transaction_date_secondary'),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.appColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ],
       ),

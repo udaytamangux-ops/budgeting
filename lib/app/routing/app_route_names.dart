@@ -2,6 +2,7 @@ abstract final class AppRouteNames {
   static const String access = 'access';
   static const String signIn = 'sign-in';
   static const String signUp = 'sign-up';
+  static const String calendarSetup = 'calendar-setup';
   static const String welcome = access;
   static const String login = signIn;
   static const String signup = signUp;

@@ -11,7 +11,9 @@ void main() {
   testWidgets('Transaction Details displays the complete record', (
     WidgetTester tester,
   ) async {
-    final FinancialTransaction transaction = buildTestTransaction();
+    final FinancialTransaction transaction = buildTestTransaction(
+      createdAt: DateTime.utc(2026, 8, 4, 6, 15),
+    );
     await pumpBudgetingApp(
       tester,
       seedTransactions: <FinancialTransaction>[transaction],
@@ -29,6 +31,29 @@ void main() {
     expect(find.text('Cash'), findsOneWidget);
     expect(find.text('Team lunch'), findsOneWidget);
     expect(find.text('4 August 2026'), findsOneWidget);
+    final Finder createdRow = find.byKey(
+      const ValueKey<String>('transaction_created_row'),
+    );
+    expect(
+      find.descendant(
+        of: createdRow,
+        matching: find.textContaining('August 2026'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: createdRow, matching: find.textContaining('Shrawan')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: createdRow,
+        matching: find.byKey(
+          const ValueKey<String>('transaction_date_secondary'),
+        ),
+      ),
+      findsNothing,
+    );
 
     final Text expenseAmount = tester.widget<Text>(
       find.byKey(const ValueKey<String>('transaction_details_amount')),

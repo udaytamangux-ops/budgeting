@@ -1,3 +1,5 @@
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/monthly_budget_summary.dart';
 import 'package:budgeting_app/features/budgets/domain/services/budget_policy.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -14,13 +16,35 @@ final class BudgetSummaryService {
     Map<TransactionCategory, Money> categoryLimits =
         BudgetPolicy.categoryLimits,
   }) {
+    return calculateForPeriod(
+      transactions: transactions,
+      period: CalendarPeriod(
+        calendarSystem: AppCalendarSystem.gregorianAd,
+        year: month.year,
+        month: month.month,
+        startAdInclusive: DateTime.utc(month.year, month.month),
+        endAdExclusive: DateTime.utc(month.year, month.month + 1),
+        displayLabel: '',
+      ),
+      monthlyLimit: monthlyLimit,
+      categoryLimits: categoryLimits,
+    );
+  }
+
+  MonthlyBudgetSummary calculateForPeriod({
+    required List<FinancialTransaction> transactions,
+    required CalendarPeriod period,
+    Money monthlyLimit = BudgetPolicy.monthlyLimit,
+    Map<TransactionCategory, Money> categoryLimits =
+        BudgetPolicy.categoryLimits,
+  }) {
     Money spent = const Money.zero();
     final Map<TransactionCategory, Money> categorySpending =
         <TransactionCategory, Money>{};
 
     for (final FinancialTransaction transaction in transactions) {
       if (transaction.type != TransactionType.expense ||
-          !_isInLocalMonth(transaction.occurredAt, month)) {
+          !period.contains(transaction.occurredAt)) {
         continue;
       }
       spent += transaction.amount;
@@ -43,16 +67,10 @@ final class BudgetSummaryService {
         .toList(growable: false);
 
     return MonthlyBudgetSummary(
-      month: DateTime(month.year, month.month),
+      month: period.startAdInclusive,
       limit: monthlyLimit,
       spent: spent,
       categories: List<CategoryBudgetProgress>.unmodifiable(categories),
     );
-  }
-
-  bool _isInLocalMonth(DateTime timestamp, DateTime month) {
-    final DateTime localTimestamp = timestamp.toLocal();
-    return localTimestamp.year == month.year &&
-        localTimestamp.month == month.month;
   }
 }

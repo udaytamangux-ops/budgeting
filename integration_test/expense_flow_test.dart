@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:budgeting_app/app/app.dart';
 import 'package:budgeting_app/app/bootstrap/app_bootstrap.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/features/access/data/repositories/drift_access_preference_repository.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
+import 'package:budgeting_app/features/settings/data/repositories/drift_calendar_preference_repository.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -204,6 +206,13 @@ Future<_PersistentAppSession> _openSession(
       DriftAccessPreferenceRepository(database);
   if (await accessRepository.getAccessMode() == AccessMode.undecided) {
     await accessRepository.setGuestMode();
+  }
+  final DriftCalendarPreferenceRepository calendarRepository =
+      DriftCalendarPreferenceRepository(database);
+  if (!await calendarRepository.isCalendarSetupComplete()) {
+    await calendarRepository.markCalendarSetupComplete(
+      AppCalendarSystem.gregorianAd,
+    );
   }
   final ProviderContainer container = await AppBootstrap.createContainer(
     database: database,

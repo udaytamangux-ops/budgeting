@@ -1,3 +1,5 @@
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/domain/services/category_activity_service.dart';
@@ -13,22 +15,39 @@ final class TransactionSummaryService {
     required List<FinancialTransaction> transactions,
     required DateTime month,
   }) {
+    return calculateForPeriod(
+      transactions: transactions,
+      period: CalendarPeriod(
+        calendarSystem: AppCalendarSystem.gregorianAd,
+        year: month.year,
+        month: month.month,
+        startAdInclusive: DateTime.utc(month.year, month.month),
+        endAdExclusive: DateTime.utc(month.year, month.month + 1),
+        displayLabel: '',
+      ),
+    );
+  }
+
+  MonthlyTransactionSummary calculateForPeriod({
+    required List<FinancialTransaction> transactions,
+    required CalendarPeriod period,
+  }) {
     final MonthlyFinancialSummary financialSummary =
-        const FinancialSummaryService().calculateForMonth(
+        const FinancialSummaryService().calculateForPeriod(
           transactions: transactions,
-          month: month,
+          period: period,
         );
     final MonthlyCategoryActivity expenseActivity =
-        const CategoryActivityService().calculateForMonth(
+        const CategoryActivityService().calculateForPeriod(
           transactions: transactions,
-          month: month,
+          period: period,
           type: TransactionType.expense,
         );
     final Map<PaymentMethod, int> paymentMethodCounts = <PaymentMethod, int>{};
     int transactionCount = 0;
 
     for (final FinancialTransaction transaction in transactions) {
-      if (!_isInLocalMonth(transaction.occurredAt, month)) {
+      if (!period.contains(transaction.occurredAt)) {
         continue;
       }
       transactionCount += 1;
@@ -101,11 +120,5 @@ final class TransactionSummaryService {
       return 0;
     }
     return (part * 100 + total ~/ 2) ~/ total;
-  }
-
-  bool _isInLocalMonth(DateTime timestamp, DateTime month) {
-    final DateTime localTimestamp = timestamp.toLocal();
-    return localTimestamp.year == month.year &&
-        localTimestamp.month == month.month;
   }
 }

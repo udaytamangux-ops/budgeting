@@ -1,8 +1,11 @@
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
-import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/presentation/app_calendar_date_picker.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/services/transaction_date_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,18 +30,39 @@ final class QuickDateSelector extends ConsumerWidget {
       selectedDate: date,
       currentDate: currentDate,
     );
-    final dateFormatter = ref.watch(dateFormatterProvider);
-    final String formattedDate = dateFormatter.longDate(date);
-    final String formattedToday = dateFormatter.longDate(
-      dateService.today(currentDate),
+    final AppCalendarSystem primaryCalendar =
+        ref.watch(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
+    final AppCalendarSystem secondaryCalendar =
+        primaryCalendar == AppCalendarSystem.gregorianAd
+        ? AppCalendarSystem.bikramSambatBs
+        : AppCalendarSystem.gregorianAd;
+    final AppCalendarService calendarService = ref.watch(
+      appCalendarServiceProvider,
     );
-    final String formattedYesterday = dateFormatter.longDate(
+    final String formattedDate = calendarService.formatDate(
+      date,
+      primaryCalendar,
+    );
+    final String secondaryDate = calendarService.formatDate(
+      date,
+      secondaryCalendar,
+    );
+    final String formattedToday = calendarService.formatDate(
+      dateService.today(currentDate),
+      primaryCalendar,
+    );
+    final String formattedYesterday = calendarService.formatDate(
       dateService.yesterday(currentDate),
+      primaryCalendar,
     );
 
     return Semantics(
       container: true,
-      label: 'Transaction date, $formattedDate',
+      label:
+          'Transaction date, $formattedDate, '
+          '${primaryCalendar.semanticName}. Secondary date, $secondaryDate, '
+          '${secondaryCalendar.semanticName}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -70,7 +94,12 @@ final class QuickDateSelector extends ConsumerWidget {
                 semanticLabel: 'Choose date, currently $formattedDate',
                 isSelected: selection == QuickDateSelection.chosenDate,
                 isEnabled: isEnabled,
-                onTap: () => _selectDate(context, currentDate),
+                onTap: () => _selectDate(
+                  context,
+                  currentDate,
+                  primaryCalendar,
+                  calendarService,
+                ),
               ),
             ],
           ),
@@ -82,19 +111,32 @@ final class QuickDateSelector extends ConsumerWidget {
               color: context.appColors.textSecondary,
             ),
           ),
+          Text(
+            '${secondaryCalendar.shortLabel} · $secondaryDate',
+            key: const ValueKey<String>('secondary_transaction_date'),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.appColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _selectDate(BuildContext context, DateTime currentDate) async {
+  Future<void> _selectDate(
+    BuildContext context,
+    DateTime currentDate,
+    AppCalendarSystem primaryCalendar,
+    AppCalendarService calendarService,
+  ) async {
     final DateTime localCurrent = currentDate.toLocal();
-    final DateTime? selected = await showDatePicker(
+    final DateTime? selected = await AppCalendarDatePicker.show(
       context: context,
+      calendarSystem: primaryCalendar,
+      calendarService: calendarService,
       initialDate: date,
       firstDate: DateTime(localCurrent.year - 5),
       lastDate: DateTime(localCurrent.year + 1),
-      helpText: 'Select transaction date',
     );
     if (selected != null) {
       onChanged(selected);

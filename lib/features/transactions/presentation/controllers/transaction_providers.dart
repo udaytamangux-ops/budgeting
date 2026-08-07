@@ -1,10 +1,11 @@
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/core/data/owner_scope.dart';
 import 'package:budgeting_app/core/database/database_providers.dart';
-import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/budget_configuration.dart';
 import 'package:budgeting_app/features/budgets/domain/entities/monthly_budget_summary.dart';
 import 'package:budgeting_app/features/budgets/domain/services/budget_summary_service.dart';
 import 'package:budgeting_app/features/budgets/presentation/controllers/budget_configuration_controller.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/monthly_financial_summary.dart';
@@ -53,10 +54,12 @@ monthlyFinancialSummaryProvider = Provider<AsyncValue<MonthlyFinancialSummary>>(
     final AsyncValue<List<FinancialTransaction>> transactions = ref.watch(
       transactionListProvider,
     );
-    final DateTime currentDate = ref.watch(currentDateProvider);
+    final CalendarPeriod currentPeriod = ref.watch(
+      currentCalendarPeriodProvider,
+    );
     return transactions.whenData(
       (List<FinancialTransaction> value) => const FinancialSummaryService()
-          .calculateForMonth(transactions: value, month: currentDate),
+          .calculateForPeriod(transactions: value, period: currentPeriod),
     );
   },
 );
@@ -84,12 +87,34 @@ monthlyBudgetSummaryForMonthProvider =
       );
     });
 
+final ProviderFamily<AsyncValue<MonthlyBudgetSummary>, CalendarPeriod>
+monthlyBudgetSummaryForPeriodProvider =
+    Provider.family<AsyncValue<MonthlyBudgetSummary>, CalendarPeriod>((
+      Ref ref,
+      CalendarPeriod period,
+    ) {
+      final AsyncValue<List<FinancialTransaction>> transactions = ref.watch(
+        transactionListProvider,
+      );
+      final BudgetConfiguration configuration = ref.watch(
+        budgetConfigurationProvider,
+      );
+      return transactions.whenData(
+        (List<FinancialTransaction> value) =>
+            const BudgetSummaryService().calculateForPeriod(
+              transactions: value,
+              period: period,
+              monthlyLimit: configuration.monthlyLimit,
+              categoryLimits: configuration.categoryLimits,
+            ),
+      );
+    });
+
 final Provider<AsyncValue<MonthlyBudgetSummary>> monthlyBudgetSummaryProvider =
     Provider<AsyncValue<MonthlyBudgetSummary>>((Ref ref) {
-      final DateTime currentDate = ref.watch(currentDateProvider);
       return ref.watch(
-        monthlyBudgetSummaryForMonthProvider(
-          DateTime(currentDate.year, currentDate.month),
+        monthlyBudgetSummaryForPeriodProvider(
+          ref.watch(currentCalendarPeriodProvider),
         ),
       );
     });

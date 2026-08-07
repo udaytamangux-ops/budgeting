@@ -1,8 +1,10 @@
 import 'package:budgeting_app/app/bootstrap/app_bootstrap.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
@@ -74,6 +76,14 @@ void main() {
       expect(
         await container.read(themePreferenceProvider.future),
         AppThemePreference.system,
+      );
+      expect(
+        await container.read(primaryCalendarProvider.future),
+        AppCalendarSystem.gregorianAd,
+      );
+      expect(
+        await container.read(calendarSetupCompleteProvider.future),
+        isFalse,
       );
     },
   );

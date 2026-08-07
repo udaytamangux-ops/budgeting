@@ -4,7 +4,10 @@ import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +24,9 @@ final class ProfileScreen extends ConsumerWidget {
     final AppThemePreference themePreference =
         ref.watch(themePreferenceProvider).valueOrNull ??
         AppThemePreference.system;
+    final AppCalendarSystem calendarSystem =
+        ref.watch(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: SafeArea(
@@ -49,21 +55,17 @@ final class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xxl),
                 const _SectionTitle(title: 'Preferences'),
                 const SizedBox(height: AppSpacing.sm),
-                const _SettingsRegion(
+                _SettingsRegion(
                   children: <Widget>[
-                    _SettingsValueTile(
+                    const _SettingsValueTile(
                       icon: Icons.payments_outlined,
                       title: 'Currency',
                       value: 'NPR · Nepalese rupee',
                     ),
-                    Divider(),
-                    _SettingsValueTile(
-                      icon: Icons.calendar_today_outlined,
-                      title: 'Date format',
-                      value: '4 August 2026',
-                    ),
-                    Divider(),
-                    SwitchListTile(
+                    const Divider(),
+                    _CalendarSetting(currentCalendar: calendarSystem),
+                    const Divider(),
+                    const SwitchListTile(
                       key: ValueKey<String>('notifications_setting'),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
@@ -121,6 +123,114 @@ final class ProfileScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+final class _CalendarSetting extends ConsumerWidget {
+  const _CalendarSetting({required this.currentCalendar});
+
+  final AppCalendarSystem currentCalendar;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      key: const ValueKey<String>('calendar_preference_setting'),
+      minTileHeight: 56,
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      leading: const Icon(Icons.calendar_today_outlined),
+      title: const Text('Calendar'),
+      subtitle: Text('${currentCalendar.title} · Primary calendar'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => unawaited(_showCalendarSheet(context, ref)),
+    );
+  }
+
+  Future<void> _showCalendarSheet(BuildContext context, WidgetRef ref) async {
+    final AppCalendarService calendarService = ref.read(
+      appCalendarServiceProvider,
+    );
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          top: false,
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Calendar preference',
+                      style: Theme.of(sheetContext).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'The selected calendar controls monthly periods. The '
+                      'other remains available as secondary date context.',
+                      style: Theme.of(sheetContext).textTheme.bodyMedium
+                          ?.copyWith(
+                            color: sheetContext.appColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              for (final AppCalendarSystem calendar in AppCalendarSystem.values)
+                Semantics(
+                  button: true,
+                  selected: calendar == currentCalendar,
+                  label:
+                      '${calendar.title}. ${calendar.description}. '
+                      '${calendar == currentCalendar ? 'Selected' : 'Not selected'}',
+                  excludeSemantics: true,
+                  child: ListTile(
+                    key: ValueKey<String>(
+                      'calendar_preference_option_${calendar.name}',
+                    ),
+                    minTileHeight: 64,
+                    title: Text(calendar.title),
+                    subtitle: Text(
+                      calendar == AppCalendarSystem.bikramSambatBs
+                          ? calendarService.formatDate(
+                              DateTime.utc(2026, 8, 7),
+                              calendar,
+                            )
+                          : calendar.description,
+                    ),
+                    trailing: Icon(
+                      calendar == currentCalendar
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: calendar == currentCalendar
+                          ? sheetContext.appColors.primaryAction
+                          : sheetContext.appColors.textSecondary,
+                    ),
+                    selected: calendar == currentCalendar,
+                    onTap: () async {
+                      await ref
+                          .read(calendarPreferenceRepositoryProvider)
+                          .setPrimaryCalendar(calendar);
+                      if (sheetContext.mounted) {
+                        Navigator.of(sheetContext).pop();
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

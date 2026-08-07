@@ -4,11 +4,14 @@ import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
-import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_list_filter.dart';
@@ -29,7 +32,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TransactionListFilter _filter = const TransactionListFilter();
   Timer? _searchDebounce;
-  late DateTime _selectedMonth;
+  late DateTime _periodAnchorAd;
   String _query = '';
   TransactionType? _selectedType;
 
@@ -37,7 +40,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void initState() {
     super.initState();
     final DateTime current = ref.read(currentDateProvider);
-    _selectedMonth = DateTime(current.year, current.month);
+    _periodAnchorAd = current;
   }
 
   @override
@@ -53,6 +56,16 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       transactionListProvider,
     );
     final DateTime currentDate = ref.watch(currentDateProvider);
+    final AppCalendarSystem primaryCalendar =
+        ref.watch(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
+    final AppCalendarService calendarService = ref.watch(
+      appCalendarServiceProvider,
+    );
+    final CalendarPeriod selectedPeriod = calendarService.periodForDate(
+      _periodAnchorAd,
+      primaryCalendar,
+    );
     return Scaffold(
       appBar: AppBar(title: const Text('Transactions')),
       body: SafeArea(
@@ -88,7 +101,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 }
                 final List<TransactionDateGroup> groups = _filter.apply(
                   transactions: values,
-                  month: _selectedMonth,
+                  period: selectedPeriod,
                   query: _query,
                   type: _selectedType,
                 );
@@ -111,14 +124,22 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       sliver: SliverToBoxAdapter(
                         child: _TransactionFilters(
                           searchController: _searchController,
-                          selectedMonthLabel: ref
-                              .watch(dateFormatterProvider)
-                              .shortMonthYear(_selectedMonth),
+                          selectedMonthLabel: calendarService.formatMonthYear(
+                            selectedPeriod,
+                          ),
                           selectedType: _selectedType,
                           onSearchChanged: _scheduleSearch,
                           onClearSearch: _clearSearch,
                           onSelectMonth: () {
-                            unawaited(_selectMonth(context, currentDate));
+                            unawaited(
+                              _selectMonth(
+                                context,
+                                currentDate,
+                                selectedPeriod,
+                                calendarService,
+                                primaryCalendar,
+                              ),
+                            );
                           },
                           onSelectType: (TransactionType? value) {
                             setState(() => _selectedType = value);
@@ -156,12 +177,11 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             return switch (entry) {
                               _TransactionDateHeader(:final DateTime date) =>
                                 _DateGroupHeader(
-                                  label: ref
-                                      .watch(dateFormatterProvider)
-                                      .transactionGroupLabel(
-                                        date,
-                                        relativeTo: currentDate,
-                                      ),
+                                  label: calendarService.formatDayGroup(
+                                    date,
+                                    primaryCalendar,
+                                    relativeTo: currentDate,
+                                  ),
                                 ),
                               _TransactionRow(
                                 :final FinancialTransaction value,
@@ -222,17 +242,24 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     setState(() {
       _query = '';
       _selectedType = null;
-      _selectedMonth = DateTime(currentDate.year, currentDate.month);
+      _periodAnchorAd = currentDate;
     });
   }
 
-  Future<void> _selectMonth(BuildContext context, DateTime currentDate) async {
-    final List<DateTime> months = List<DateTime>.generate(
-      6,
-      (int index) => DateTime(currentDate.year, currentDate.month - index),
-      growable: false,
-    );
-    final DateTime? selected = await showModalBottomSheet<DateTime>(
+  Future<void> _selectMonth(
+    BuildContext context,
+    DateTime currentDate,
+    CalendarPeriod selectedPeriod,
+    AppCalendarService calendarService,
+    AppCalendarSystem calendarSystem,
+  ) async {
+    final List<CalendarPeriod> periods = <CalendarPeriod>[
+      calendarService.periodForDate(currentDate, calendarSystem),
+    ];
+    for (int index = 1; index < 6; index += 1) {
+      periods.add(calendarService.previousPeriod(periods.last));
+    }
+    final CalendarPeriod? selected = await showModalBottomSheet<CalendarPeriod>(
       context: context,
       showDragHandle: true,
       builder: (BuildContext sheetContext) {
@@ -253,17 +280,25 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   style: Theme.of(sheetContext).textTheme.titleLarge,
                 ),
               ),
-              ...months.map(
-                (DateTime month) => ListTile(
-                  title: Text(ref.read(dateFormatterProvider).monthYear(month)),
-                  trailing: _isSameMonth(month, _selectedMonth)
-                      ? Icon(
-                          Icons.check,
-                          color: context.appColors.primaryAction,
-                        )
-                      : null,
-                  selected: _isSameMonth(month, _selectedMonth),
-                  onTap: () => sheetContext.pop(month),
+              ...periods.map(
+                (CalendarPeriod period) => Semantics(
+                  selected: period == selectedPeriod,
+                  button: true,
+                  label:
+                      '${calendarService.formatMonthYear(period)}, '
+                      '${calendarSystem.semanticName}',
+                  child: ListTile(
+                    minTileHeight: 56,
+                    title: Text(calendarService.formatMonthYear(period)),
+                    trailing: period == selectedPeriod
+                        ? Icon(
+                            Icons.check,
+                            color: context.appColors.primaryAction,
+                          )
+                        : null,
+                    selected: period == selectedPeriod,
+                    onTap: () => sheetContext.pop(period),
+                  ),
                 ),
               ),
             ],
@@ -272,7 +307,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       },
     );
     if (selected != null && mounted) {
-      setState(() => _selectedMonth = selected);
+      setState(() => _periodAnchorAd = selected.startAdInclusive);
     }
   }
 
@@ -283,10 +318,6 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       entries.addAll(group.transactions.map(_TransactionRow.new));
     }
     return entries;
-  }
-
-  bool _isSameMonth(DateTime first, DateTime second) {
-    return first.year == second.year && first.month == second.month;
   }
 }
 

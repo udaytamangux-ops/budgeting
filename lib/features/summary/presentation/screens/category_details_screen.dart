@@ -8,10 +8,12 @@ import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -30,14 +32,14 @@ final class CategoryDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final CategoryActivityDetailsRequest request =
-        CategoryActivityDetailsRequest(
-          month: routeData.month,
+    final CategoryActivityPeriodDetailsRequest request =
+        CategoryActivityPeriodDetailsRequest(
+          period: routeData.period,
           type: routeData.type,
           categories: routeData.categories,
         );
     final AsyncValue<CategoryActivityDetails> details = ref.watch(
-      categoryActivityDetailsProvider(request),
+      categoryActivityDetailsForPeriodProvider(request),
     );
 
     return Scaffold(
@@ -82,12 +84,11 @@ final class _CategoryDetailsContent extends ConsumerWidget {
     final TransactionCategoryVisual visual =
         (category ?? TransactionCategory.other).visual;
     final String categoryLabel = category?.visual.label ?? 'Other';
-    final String monthYear = ref
-        .watch(dateFormatterProvider)
-        .monthYear(routeData.month);
-    final String monthName = ref
-        .watch(dateFormatterProvider)
-        .monthName(routeData.month);
+    final AppCalendarService calendarService = ref.watch(
+      appCalendarServiceProvider,
+    );
+    final String monthYear = calendarService.formatMonthYear(routeData.period);
+    final String monthName = calendarService.formatMonthName(routeData.period);
     final String formattedTotal = ref
         .watch(currencyFormatterProvider)
         .format(details.total);

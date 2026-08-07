@@ -11,6 +11,8 @@ import 'package:budgeting_app/features/access/presentation/screens/account_unava
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/privacy_and_data_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
+import 'package:budgeting_app/features/settings/presentation/screens/calendar_setup_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/category_details_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/summary_screen.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -26,9 +28,7 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
 );
 
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
-  final ChangeNotifier refreshNotifier = ref.watch(
-    _accessRouterRefreshProvider,
-  );
+  final ChangeNotifier refreshNotifier = ref.watch(_routerRefreshProvider);
   final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.home,
@@ -36,13 +36,17 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
     redirect: (BuildContext context, GoRouterState state) {
       final AccessMode accessMode =
           ref.read(accessModeProvider).valueOrNull ?? AccessMode.undecided;
+      final bool calendarSetupComplete =
+          ref.read(calendarSetupCompleteProvider).valueOrNull ?? false;
       final String location = state.matchedLocation;
       final bool isAccessEntry =
           location == AppRoutes.access ||
           location == AppRoutes.signIn ||
           location == AppRoutes.signUp;
+      final bool isCalendarSetup = location == AppRoutes.calendarSetup;
+      final bool hasAccess = accessMode != AccessMode.undecided;
 
-      if (accessMode != AccessMode.guest && !isAccessEntry) {
+      if (!hasAccess && !isAccessEntry) {
         final String requestedLocation = state.uri.toString();
         final Map<String, String> query = requestedLocation.startsWith('/app/')
             ? <String, String>{'from': requestedLocation}
@@ -50,7 +54,26 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         return Uri(path: AppRoutes.access, queryParameters: query).toString();
       }
 
-      if (accessMode == AccessMode.guest && location == AppRoutes.access) {
+      if (hasAccess && location == AppRoutes.access) {
+        final String? intended = _safeIntendedLocation(
+          state.uri.queryParameters['from'],
+        );
+        if (!calendarSetupComplete) {
+          return _calendarSetupLocation(intended);
+        }
+        return intended ?? AppRoutes.home;
+      }
+
+      if (hasAccess &&
+          !calendarSetupComplete &&
+          !isCalendarSetup &&
+          !isAccessEntry) {
+        return _calendarSetupLocation(
+          _safeIntendedLocation(state.uri.toString()),
+        );
+      }
+
+      if (hasAccess && calendarSetupComplete && isCalendarSetup) {
         return _safeIntendedLocation(state.uri.queryParameters['from']) ??
             AppRoutes.home;
       }
@@ -62,6 +85,17 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: AppRouteNames.access,
         builder: (BuildContext context, GoRouterState state) {
           return AccessChoiceScreen(
+            intendedLocation: _safeIntendedLocation(
+              state.uri.queryParameters['from'],
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.calendarSetup,
+        name: AppRouteNames.calendarSetup,
+        builder: (BuildContext context, GoRouterState state) {
+          return CalendarSetupScreen(
             intendedLocation: _safeIntendedLocation(
               state.uri.queryParameters['from'],
             ),
@@ -159,15 +193,15 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                     path: 'category/:transactionType/:categoryIds',
                     name: AppRouteNames.categoryDetails,
                     builder: (BuildContext context, GoRouterState state) {
-                      final CategoryDetailsRouteData? routeData =
-                          CategoryDetailsRouteData.tryParse(
-                            typeIdentifier:
-                                state.pathParameters['transactionType'],
-                            categoryIdentifiers:
-                                state.pathParameters['categoryIds'],
-                            year: state.uri.queryParameters['year'],
-                            month: state.uri.queryParameters['month'],
-                          );
+                      final CategoryDetailsRouteData?
+                      routeData = CategoryDetailsRouteData.tryParse(
+                        typeIdentifier: state.pathParameters['transactionType'],
+                        categoryIdentifiers:
+                            state.pathParameters['categoryIds'],
+                        year: state.uri.queryParameters['year'],
+                        month: state.uri.queryParameters['month'],
+                        calendarSystem: state.uri.queryParameters['calendar'],
+                      );
                       if (routeData == null) {
                         return Scaffold(
                           appBar: AppBar(title: const Text('Category details')),
@@ -221,10 +255,13 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
   return router;
 });
 
-final Provider<ChangeNotifier> _accessRouterRefreshProvider =
+final Provider<ChangeNotifier> _routerRefreshProvider =
     Provider<ChangeNotifier>((Ref ref) {
       final _RouterRefreshNotifier notifier = _RouterRefreshNotifier();
       ref.listen<AsyncValue<AccessMode>>(accessModeProvider, (_, _) {
+        notifier.refresh();
+      });
+      ref.listen<AsyncValue<bool>>(calendarSetupCompleteProvider, (_, _) {
         notifier.refresh();
       });
       ref.onDispose(notifier.dispose);
@@ -237,4 +274,13 @@ final class _RouterRefreshNotifier extends ChangeNotifier {
 
 String? _safeIntendedLocation(String? value) {
   return value != null && value.startsWith('/app/') ? value : null;
+}
+
+String _calendarSetupLocation(String? intendedLocation) {
+  return Uri(
+    path: AppRoutes.calendarSetup,
+    queryParameters: intendedLocation == null
+        ? null
+        : <String, String>{'from': intendedLocation},
+  ).toString();
 }

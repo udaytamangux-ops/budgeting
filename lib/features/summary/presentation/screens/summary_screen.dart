@@ -7,11 +7,15 @@ import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
@@ -31,25 +35,34 @@ final class SummaryScreen extends ConsumerStatefulWidget {
 }
 
 final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
-  late DateTime _selectedMonth;
+  late DateTime _periodAnchorAd;
   TransactionType _activityType = TransactionType.expense;
   String? _selectedGroupKey;
 
   @override
   void initState() {
     super.initState();
-    final DateTime current = ref.read(currentDateProvider);
-    _selectedMonth = DateTime(current.year, current.month);
+    _periodAnchorAd = ref.read(currentDateProvider);
   }
 
   @override
   Widget build(BuildContext context) {
+    final AppCalendarSystem primaryCalendar =
+        ref.watch(primaryCalendarProvider).valueOrNull ??
+        AppCalendarSystem.gregorianAd;
+    final AppCalendarService calendarService = ref.watch(
+      appCalendarServiceProvider,
+    );
+    final CalendarPeriod selectedPeriod = calendarService.periodForDate(
+      _periodAnchorAd,
+      primaryCalendar,
+    );
     final AsyncValue<MonthlyTransactionSummary> summary = ref.watch(
-      monthlyTransactionSummaryForMonthProvider(_selectedMonth),
+      monthlyTransactionSummaryForPeriodProvider(selectedPeriod),
     );
     final AsyncValue<MonthlyCategoryActivity> categoryActivity = ref.watch(
-      monthlyCategoryActivityProvider((
-        month: _selectedMonth,
+      monthlyCategoryActivityForPeriodProvider((
+        period: selectedPeriod,
         type: _activityType,
       )),
     );
@@ -91,13 +104,23 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                   ),
                   children: <Widget>[
                     _MonthSelector(
-                      label: ref
-                          .watch(dateFormatterProvider)
-                          .monthYear(_selectedMonth),
-                      onPrevious: () => _changeMonth(-1),
-                      onNext: _isCurrentMonth(currentDate)
+                      label: calendarService.formatMonthYear(selectedPeriod),
+                      calendarSystem: primaryCalendar,
+                      onPrevious: () => _changePeriod(
+                        calendarService.previousPeriod(selectedPeriod),
+                      ),
+                      onNext:
+                          _isCurrentPeriod(
+                            selectedPeriod,
+                            calendarService.periodForDate(
+                              currentDate,
+                              primaryCalendar,
+                            ),
+                          )
                           ? null
-                          : () => _changeMonth(1),
+                          : () => _changePeriod(
+                              calendarService.nextPeriod(selectedPeriod),
+                            ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     _MonthlyRecords(
@@ -107,16 +130,18 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                     const SizedBox(height: AppSpacing.xxl),
                     CategoryExplorationSection(
                       activity: activity,
-                      monthName: ref
-                          .watch(dateFormatterProvider)
-                          .monthName(_selectedMonth),
+                      monthName: calendarService.formatMonthName(
+                        selectedPeriod,
+                      ),
                       selectedGroupKey: _selectedGroupKey,
                       currencyFormatter: currencyFormatter,
                       onTypeChanged: _changeActivityType,
                       onGroupSelected: _selectGroup,
                       onAllCategoriesSelected: _showAllCategories,
                       onViewTransactions: (CategoryActivityGroup group) {
-                        unawaited(_openCategoryDetails(context, group));
+                        unawaited(
+                          _openCategoryDetails(context, group, selectedPeriod),
+                        );
                       },
                       onAddTransaction: (TransactionType type) {
                         unawaited(
@@ -138,12 +163,9 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     );
   }
 
-  void _changeMonth(int offset) {
+  void _changePeriod(CalendarPeriod period) {
     setState(() {
-      _selectedMonth = DateTime(
-        _selectedMonth.year,
-        _selectedMonth.month + offset,
-      );
+      _periodAnchorAd = period.startAdInclusive;
       _selectedGroupKey = null;
     });
   }
@@ -175,6 +197,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   Future<void> _openCategoryDetails(
     BuildContext context,
     CategoryActivityGroup group,
+    CalendarPeriod period,
   ) async {
     ref
         .read(appAnalyticsProvider)
@@ -182,14 +205,13 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     final CategoryDetailsRouteData routeData = CategoryDetailsRouteData(
       type: _activityType,
       categories: group.includedCategories,
-      month: _selectedMonth,
+      period: period,
     );
     await context.push<void>(AppRoutes.categoryDetails(routeData));
   }
 
-  bool _isCurrentMonth(DateTime currentDate) {
-    return _selectedMonth.year == currentDate.year &&
-        _selectedMonth.month == currentDate.month;
+  bool _isCurrentPeriod(CalendarPeriod selected, CalendarPeriod current) {
+    return selected == current;
   }
 }
 
@@ -250,11 +272,13 @@ final class _MonthlyRecords extends StatelessWidget {
 final class _MonthSelector extends StatelessWidget {
   const _MonthSelector({
     required this.label,
+    required this.calendarSystem,
     required this.onPrevious,
     required this.onNext,
   });
 
   final String label;
+  final AppCalendarSystem calendarSystem;
   final VoidCallback onPrevious;
   final VoidCallback? onNext;
 
@@ -271,14 +295,16 @@ final class _MonthSelector extends StatelessWidget {
         children: <Widget>[
           IconButton(
             key: const ValueKey<String>('previous_month_button'),
-            tooltip: 'Previous month',
+            tooltip: 'Previous ${calendarSystem.shortLabel} month',
             onPressed: onPrevious,
             icon: const Icon(Icons.chevron_left),
           ),
           Expanded(
             child: Semantics(
               selected: true,
-              label: 'Selected month, $label',
+              label: calendarSystem == AppCalendarSystem.gregorianAd
+                  ? 'Selected month, $label'
+                  : 'Selected month, $label, ${calendarSystem.semanticName}',
               excludeSemantics: true,
               child: Text(
                 label,
@@ -290,7 +316,7 @@ final class _MonthSelector extends StatelessWidget {
           ),
           IconButton(
             key: const ValueKey<String>('next_month_button'),
-            tooltip: 'Next month',
+            tooltip: 'Next ${calendarSystem.shortLabel} month',
             onPressed: onNext,
             icon: const Icon(Icons.chevron_right),
           ),

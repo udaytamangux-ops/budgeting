@@ -1,3 +1,5 @@
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
@@ -11,12 +13,30 @@ final class CategoryActivityService {
     required DateTime month,
     required TransactionType type,
   }) {
-    final DateTime normalizedMonth = DateTime(month.year, month.month);
+    return calculateForPeriod(
+      transactions: transactions,
+      period: CalendarPeriod(
+        calendarSystem: AppCalendarSystem.gregorianAd,
+        year: month.year,
+        month: month.month,
+        startAdInclusive: DateTime.utc(month.year, month.month),
+        endAdExclusive: DateTime.utc(month.year, month.month + 1),
+        displayLabel: '',
+      ),
+      type: type,
+    );
+  }
+
+  MonthlyCategoryActivity calculateForPeriod({
+    required List<FinancialTransaction> transactions,
+    required CalendarPeriod period,
+    required TransactionType type,
+  }) {
     final List<FinancialTransaction> matchingTransactions = transactions
         .where(
           (FinancialTransaction transaction) =>
               transaction.type == type &&
-              _isInLocalMonth(transaction.occurredAt, normalizedMonth),
+              period.contains(transaction.occurredAt),
         )
         .toList(growable: false);
     final Map<TransactionCategory, Money> amounts =
@@ -66,7 +86,7 @@ final class CategoryActivityService {
     );
 
     return MonthlyCategoryActivity(
-      month: normalizedMonth,
+      month: period.startAdInclusive,
       type: type,
       total: total,
       transactionCount: matchingTransactions.length,
@@ -81,6 +101,27 @@ final class CategoryActivityService {
     required TransactionType type,
     required List<TransactionCategory> categories,
   }) {
+    return calculateForCategoriesInPeriod(
+      transactions: transactions,
+      period: CalendarPeriod(
+        calendarSystem: AppCalendarSystem.gregorianAd,
+        year: month.year,
+        month: month.month,
+        startAdInclusive: DateTime.utc(month.year, month.month),
+        endAdExclusive: DateTime.utc(month.year, month.month + 1),
+        displayLabel: '',
+      ),
+      type: type,
+      categories: categories,
+    );
+  }
+
+  CategoryActivityDetails calculateForCategoriesInPeriod({
+    required List<FinancialTransaction> transactions,
+    required CalendarPeriod period,
+    required TransactionType type,
+    required List<TransactionCategory> categories,
+  }) {
     if (categories.isEmpty) {
       throw ArgumentError.value(
         categories,
@@ -89,9 +130,9 @@ final class CategoryActivityService {
       );
     }
     final Set<TransactionCategory> selectedCategories = categories.toSet();
-    final MonthlyCategoryActivity monthlyActivity = calculateForMonth(
+    final MonthlyCategoryActivity monthlyActivity = calculateForPeriod(
       transactions: transactions,
-      month: month,
+      period: period,
       type: type,
     );
     final List<FinancialTransaction> matchingTransactions =
@@ -100,10 +141,7 @@ final class CategoryActivityService {
               (FinancialTransaction transaction) =>
                   transaction.type == type &&
                   selectedCategories.contains(transaction.category) &&
-                  _isInLocalMonth(
-                    transaction.occurredAt,
-                    monthlyActivity.month,
-                  ),
+                  period.contains(transaction.occurredAt),
             )
             .toList()
           ..sort(_compareTransactionsNewestFirst);
@@ -253,11 +291,5 @@ final class CategoryActivityService {
     return createdAtComparison != 0
         ? createdAtComparison
         : second.id.compareTo(first.id);
-  }
-
-  bool _isInLocalMonth(DateTime timestamp, DateTime month) {
-    final DateTime localTimestamp = timestamp.toLocal();
-    return localTimestamp.year == month.year &&
-        localTimestamp.month == month.month;
   }
 }
