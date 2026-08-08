@@ -235,6 +235,16 @@ final class _TransactionDetailsContent extends ConsumerWidget {
                 icon: const Icon(Icons.replay_outlined),
                 label: const Text('Repeat transaction'),
               ),
+              const SizedBox(height: AppSpacing.xs),
+              TextButton.icon(
+                key: const ValueKey<String>('make_recurring_button'),
+                onPressed: actionState.isDeleting
+                    ? null
+                    : () =>
+                          context.push(AppRoutes.makeRecurring(transaction.id)),
+                icon: const Icon(Icons.event_repeat_outlined),
+                label: const Text('Make recurring'),
+              ),
               const SizedBox(height: AppSpacing.xl),
               const Divider(),
               const SizedBox(height: AppSpacing.sm),

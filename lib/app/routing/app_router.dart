@@ -11,6 +11,8 @@ import 'package:budgeting_app/features/access/presentation/screens/account_unava
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/privacy_and_data_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:budgeting_app/features/recurring/presentation/screens/recurring_rule_form_route.dart';
+import 'package:budgeting_app/features/recurring/presentation/screens/recurring_transactions_screen.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/screens/calendar_setup_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/category_details_screen.dart';
@@ -127,7 +129,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
               state.uri.queryParameters['transactionId'];
           final String? repeatTransactionId =
               state.uri.queryParameters['repeatTransactionId'];
-          final TransactionFormIntent intent = repeatTransactionId != null
+          final String? occurrenceId =
+              state.uri.queryParameters['occurrenceId'];
+          final TransactionFormIntent intent = occurrenceId != null
+              ? TransactionFormIntent.recurringOccurrence
+              : repeatTransactionId != null
               ? TransactionFormIntent.repeat
               : editTransactionId != null
               ? TransactionFormIntent.edit
@@ -138,10 +144,46 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
             child: TransactionFormRoute(
               initialType: initialType,
               transactionId: repeatTransactionId ?? editTransactionId,
+              recurringOccurrenceId: occurrenceId,
               intent: intent,
             ),
           );
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.recurring,
+        name: AppRouteNames.recurring,
+        builder: (_, _) => const RecurringTransactionsScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'new',
+            name: AppRouteNames.createRecurring,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return MaterialPage<void>(
+                key: state.pageKey,
+                fullscreenDialog: true,
+                child: RecurringRuleFormRoute(
+                  sourceTransactionId:
+                      state.uri.queryParameters['sourceTransactionId'],
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: ':ruleId/edit',
+            name: AppRouteNames.editRecurring,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return MaterialPage<void>(
+                key: state.pageKey,
+                fullscreenDialog: true,
+                child: RecurringRuleFormRoute(
+                  ruleId: state.pathParameters['ruleId']!,
+                ),
+              );
+            },
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder:

@@ -8,6 +8,7 @@ import 'package:budgeting_app/features/home/presentation/widgets/home_header.dar
 import 'package:budgeting_app/features/home/presentation/widgets/home_loading_skeleton.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/home_quick_actions.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/recent_transactions_section.dart';
+import 'package:budgeting_app/features/home/presentation/widgets/scheduled_transactions_due_surface.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/this_month_summary.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
@@ -69,6 +70,7 @@ final class HomeScreen extends ConsumerWidget {
                             _openTransactionForm(context, AppRoutes.addIncome),
                           ),
                         ),
+                        const ScheduledTransactionsDueSurface(),
                         const SizedBox(
                           key: ValueKey<String>(
                             'home_quick_actions_to_month_spacing',

@@ -12,12 +12,12 @@ abstract final class TransactionDatabaseMapper {
   }) {
     return StoredTransactionsCompanion(
       id: Value<String>(transaction.id),
-      typeKey: Value<String>(_typeToKey(transaction.type)),
+      typeKey: Value<String>(typeToKey(transaction.type)),
       amountMinorUnits: Value<int>(transaction.amount.minorUnits),
       currencyCode: Value<String>(transaction.amount.currencyCode),
-      categoryKey: Value<String>(_categoryToKey(transaction.category)),
+      categoryKey: Value<String>(categoryToKey(transaction.category)),
       paymentMethodKey: Value<String>(
-        _paymentMethodToKey(transaction.paymentMethod),
+        paymentMethodToKey(transaction.paymentMethod),
       ),
       occurredAtUtcMicros: Value<int>(
         transaction.occurredAt.toUtc().microsecondsSinceEpoch,
@@ -37,13 +37,13 @@ abstract final class TransactionDatabaseMapper {
   static FinancialTransaction fromRow(StoredTransaction row) {
     return FinancialTransaction(
       id: row.id,
-      type: _typeFromKey(row.typeKey),
+      type: typeFromKey(row.typeKey),
       amount: Money(
         minorUnits: row.amountMinorUnits,
         currencyCode: row.currencyCode,
       ),
-      category: _categoryFromKey(row.categoryKey),
-      paymentMethod: _paymentMethodFromKey(row.paymentMethodKey),
+      category: categoryFromKey(row.categoryKey),
+      paymentMethod: paymentMethodFromKey(row.paymentMethodKey),
       occurredAt: DateTime.fromMicrosecondsSinceEpoch(
         row.occurredAtUtcMicros,
         isUtc: true,
@@ -61,24 +61,24 @@ abstract final class TransactionDatabaseMapper {
     );
   }
 
-  static String _typeToKey(TransactionType type) => switch (type) {
+  static String typeToKey(TransactionType type) => switch (type) {
     TransactionType.expense => 'expense',
     TransactionType.income => 'income',
   };
 
-  static TransactionType _typeFromKey(String key) => switch (key) {
+  static TransactionType typeFromKey(String key) => switch (key) {
     'expense' => TransactionType.expense,
     'income' => TransactionType.income,
     _ => throw const FormatException('Unsupported stored transaction type.'),
   };
 
-  static String _paymentMethodToKey(PaymentMethod method) =>
+  static String paymentMethodToKey(PaymentMethod method) =>
       method.stableIdentifier;
 
-  static PaymentMethod _paymentMethodFromKey(String key) =>
+  static PaymentMethod paymentMethodFromKey(String key) =>
       PaymentMethodCodec.decode(key);
 
-  static String _categoryToKey(TransactionCategory category) =>
+  static String categoryToKey(TransactionCategory category) =>
       switch (category) {
         TransactionCategory.food => 'food',
         TransactionCategory.transport => 'transport',
@@ -99,7 +99,7 @@ abstract final class TransactionDatabaseMapper {
         TransactionCategory.other => 'other',
       };
 
-  static TransactionCategory _categoryFromKey(String key) => switch (key) {
+  static TransactionCategory categoryFromKey(String key) => switch (key) {
     'food' => TransactionCategory.food,
     'transport' => TransactionCategory.transport,
     'rent_and_housing' => TransactionCategory.rentAndHousing,

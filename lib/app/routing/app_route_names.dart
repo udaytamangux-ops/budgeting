@@ -17,4 +17,7 @@ abstract final class AppRouteNames {
   static const String profile = 'profile';
   static const String privacyAndData = 'privacy-and-data';
   static const String addTransaction = 'add-transaction';
+  static const String recurring = 'recurring-transactions';
+  static const String createRecurring = 'create-recurring-transaction';
+  static const String editRecurring = 'edit-recurring-transaction';
 }

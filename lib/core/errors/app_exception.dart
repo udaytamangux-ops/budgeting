@@ -16,3 +16,7 @@ final class TransactionNotFoundException extends AppException {
   const TransactionNotFoundException(String transactionId)
     : super('Transaction $transactionId was not found.');
 }
+
+final class RecurringRepositoryException extends AppException {
+  const RecurringRepositoryException(super.message, {super.cause});
+}

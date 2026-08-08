@@ -2,6 +2,8 @@ import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/errors/app_exception.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
+import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
@@ -14,7 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum AddTransactionSubmissionPhase { editing, saving, success, failure }
 
-enum TransactionFormIntent { create, edit, repeat }
+enum TransactionFormIntent { create, edit, repeat, recurringOccurrence }
 
 final class AddTransactionState {
   const AddTransactionState({
@@ -32,6 +34,7 @@ final class AddTransactionState {
     this.savedTransaction,
     this.isEditing = false,
     this.isRepeatDraft = false,
+    this.isRecurringOccurrenceDraft = false,
   });
 
   factory AddTransactionState.initial({
@@ -74,6 +77,22 @@ final class AddTransactionState {
     );
   }
 
+  factory AddTransactionState.fromRecurringOccurrence(
+    RecurringTransactionOccurrence occurrence,
+  ) {
+    return AddTransactionState(
+      type: occurrence.type,
+      amountInput: _editableAmount(occurrence.amount),
+      paymentMethod: occurrence.paymentMethod,
+      occurredDate: occurrence.dueDateAd.toLocal(),
+      merchant: occurrence.merchant ?? '',
+      note: occurrence.note ?? '',
+      selectedCategory: occurrence.category,
+      submissionPhase: AddTransactionSubmissionPhase.editing,
+      isRecurringOccurrenceDraft: true,
+    );
+  }
+
   final TransactionType type;
   final String amountInput;
   final TransactionCategory? selectedCategory;
@@ -88,6 +107,7 @@ final class AddTransactionState {
   final FinancialTransaction? savedTransaction;
   final bool isEditing;
   final bool isRepeatDraft;
+  final bool isRecurringOccurrenceDraft;
 
   bool get isSubmitting =>
       submissionPhase == AddTransactionSubmissionPhase.saving;
@@ -140,6 +160,7 @@ final class AddTransactionState {
       savedTransaction: savedTransaction ?? this.savedTransaction,
       isEditing: isEditing,
       isRepeatDraft: isRepeatDraft,
+      isRecurringOccurrenceDraft: isRecurringOccurrenceDraft,
     );
   }
 
@@ -167,6 +188,12 @@ final Provider<TransactionFormIntent> transactionFormIntentProvider =
       dependencies: const [],
     );
 
+final Provider<RecurringTransactionOccurrence?>
+initialRecurringOccurrenceProvider = Provider<RecurringTransactionOccurrence?>(
+  (Ref ref) => null,
+  dependencies: const [],
+);
+
 final AutoDisposeNotifierProvider<AddTransactionController, AddTransactionState>
 addTransactionControllerProvider =
     NotifierProvider.autoDispose<AddTransactionController, AddTransactionState>(
@@ -175,6 +202,7 @@ addTransactionControllerProvider =
         initialTransactionProvider,
         initialTransactionTypeProvider,
         transactionFormIntentProvider,
+        initialRecurringOccurrenceProvider,
       ],
     );
 
@@ -182,6 +210,12 @@ final class AddTransactionController
     extends AutoDisposeNotifier<AddTransactionState> {
   @override
   AddTransactionState build() {
+    final RecurringTransactionOccurrence? recurringOccurrence = ref.watch(
+      initialRecurringOccurrenceProvider,
+    );
+    if (recurringOccurrence != null) {
+      return AddTransactionState.fromRecurringOccurrence(recurringOccurrence);
+    }
     final FinancialTransaction? existing = ref.watch(
       initialTransactionProvider,
     );
@@ -337,6 +371,9 @@ final class AddTransactionController
     final FinancialTransaction? existing = state.isEditing
         ? ref.read(initialTransactionProvider)
         : null;
+    final RecurringTransactionOccurrence? recurringOccurrence = ref.read(
+      initialRecurringOccurrenceProvider,
+    );
     final DateTime now = ref.read(appClockProvider)().toUtc();
     final DateTime localDate = state.occurredDate.toLocal();
     final DateTime occurredAt = DateTime(
@@ -375,7 +412,14 @@ final class AddTransactionController
       final TransactionRepository repository = ref.read(
         transactionRepositoryProvider,
       );
-      if (existing == null) {
+      if (recurringOccurrence != null) {
+        await ref
+            .read(recurringTransactionRepositoryProvider)
+            .recordOccurrence(
+              occurrenceId: recurringOccurrence.id,
+              transaction: transaction,
+            );
+      } else if (existing == null) {
         await repository.createTransaction(transaction);
       } else {
         await repository.updateTransaction(transaction);

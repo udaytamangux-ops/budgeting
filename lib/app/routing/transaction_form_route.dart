@@ -1,5 +1,7 @@
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
+import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
+import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
@@ -13,15 +15,51 @@ final class TransactionFormRoute extends ConsumerWidget {
     required this.initialType,
     required this.intent,
     this.transactionId,
+    this.recurringOccurrenceId,
     super.key,
   });
 
   final TransactionType initialType;
   final TransactionFormIntent intent;
   final String? transactionId;
+  final String? recurringOccurrenceId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final String? occurrenceId = recurringOccurrenceId;
+    if (occurrenceId != null) {
+      final AsyncValue<RecurringTransactionOccurrence?> occurrence = ref.watch(
+        recurringOccurrenceByIdProvider(occurrenceId),
+      );
+      return occurrence.when(
+        loading: () => const Scaffold(
+          body: AppLoadingIndicator(label: 'Loading scheduled transaction'),
+        ),
+        error: (_, _) => const Scaffold(
+          body: AppErrorState(
+            message: 'The scheduled transaction could not be loaded.',
+          ),
+        ),
+        data: (RecurringTransactionOccurrence? value) {
+          if (value == null) {
+            return const Scaffold(
+              body: AppErrorState(
+                title: 'Scheduled occurrence not found',
+                message: 'This scheduled occurrence is no longer waiting.',
+              ),
+            );
+          }
+          return ProviderScope(
+            overrides: <Override>[
+              initialRecurringOccurrenceProvider.overrideWithValue(value),
+              initialTransactionTypeProvider.overrideWithValue(value.type),
+              transactionFormIntentProvider.overrideWithValue(intent),
+            ],
+            child: const AddTransactionScreen(),
+          );
+        },
+      );
+    }
     final String? id = transactionId;
     if (id == null) {
       return ProviderScope(

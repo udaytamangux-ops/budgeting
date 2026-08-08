@@ -42,7 +42,67 @@ class StoredPreferences extends Table {
   Set<Column<Object>> get primaryKey => <Column<Object>>{key};
 }
 
-@DriftDatabase(tables: <Type>[StoredTransactions, StoredPreferences])
+class RecurringTransactionRules extends Table {
+  TextColumn get id => text()();
+  TextColumn get ownerScope => text()();
+  TextColumn get typeKey => text()();
+  IntColumn get amountMinorUnits => integer()();
+  TextColumn get currencyCode => text()();
+  TextColumn get categoryKey => text()();
+  TextColumn get paymentMethodKey => text()();
+  TextColumn get merchant => text().nullable()();
+  TextColumn get note => text().nullable()();
+  TextColumn get frequencyKey => text()();
+  TextColumn get recurrenceCalendarKey => text()();
+  IntColumn get anchorDay => integer()();
+  IntColumn get anchorMonth => integer()();
+  IntColumn get anchorWeekday => integer()();
+  IntColumn get firstDueDateAdUtcMicros => integer()();
+  IntColumn get nextDueDateAdUtcMicros => integer()();
+  TextColumn get statusKey => text()();
+  IntColumn get createdAtUtcMicros => integer()();
+  IntColumn get updatedAtUtcMicros => integer()();
+  IntColumn get pausedAtUtcMicros => integer().nullable()();
+  IntColumn get deletedAtUtcMicros => integer().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
+class RecurringTransactionOccurrences extends Table {
+  TextColumn get id => text()();
+  TextColumn get ruleId => text()();
+  TextColumn get ownerScope => text()();
+  IntColumn get dueDateAdUtcMicros => integer()();
+  TextColumn get statusKey => text()();
+  TextColumn get typeKey => text()();
+  IntColumn get amountMinorUnits => integer()();
+  TextColumn get currencyCode => text()();
+  TextColumn get categoryKey => text()();
+  TextColumn get paymentMethodKey => text()();
+  TextColumn get merchant => text().nullable()();
+  TextColumn get note => text().nullable()();
+  TextColumn get recordedTransactionId => text().nullable()();
+  IntColumn get handledAtUtcMicros => integer().nullable()();
+  IntColumn get createdAtUtcMicros => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => <Set<Column<Object>>>[
+    <Column<Object>>{ownerScope, ruleId, dueDateAdUtcMicros},
+  ];
+}
+
+@DriftDatabase(
+  tables: <Type>[
+    StoredTransactions,
+    StoredPreferences,
+    RecurringTransactionRules,
+    RecurringTransactionOccurrences,
+  ],
+)
 final class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
@@ -55,7 +115,7 @@ final class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,6 +127,10 @@ final class AppDatabase extends _$AppDatabase {
           schema.storedTransactions.ownerScope,
         );
         await migrator.createTable(schema.storedPreferences);
+      },
+      from2To3: (Migrator migrator, Schema3 schema) async {
+        await migrator.createTable(schema.recurringTransactionRules);
+        await migrator.createTable(schema.recurringTransactionOccurrences);
       },
     ),
   );
@@ -115,12 +179,71 @@ final class AppDatabase extends _$AppDatabase {
     String transactionId, {
     String ownerScope = 'guest',
   }) {
-    return (delete(storedTransactions)..where(
-          (StoredTransactions table) =>
-              table.id.equals(transactionId) &
+    return transaction(() async {
+      await (update(recurringTransactionOccurrences)..where(
+            (RecurringTransactionOccurrences table) =>
+                table.ownerScope.equals(ownerScope) &
+                table.recordedTransactionId.equals(transactionId),
+          ))
+          .write(
+            const RecurringTransactionOccurrencesCompanion(
+              recordedTransactionId: Value<String?>(null),
+            ),
+          );
+      return (delete(storedTransactions)..where(
+            (StoredTransactions table) =>
+                table.id.equals(transactionId) &
+                table.ownerScope.equals(ownerScope),
+          ))
+          .go();
+    });
+  }
+
+  Stream<List<RecurringTransactionRule>> watchRecurringRulesForOwner(
+    String ownerScope,
+  ) {
+    return (select(recurringTransactionRules)..where(
+          (RecurringTransactionRules table) =>
               table.ownerScope.equals(ownerScope),
         ))
-        .go();
+        .watch();
+  }
+
+  Stream<List<RecurringTransactionOccurrence>>
+  watchRecurringOccurrencesForOwner(String ownerScope) {
+    return (select(recurringTransactionOccurrences)
+          ..where(
+            (RecurringTransactionOccurrences table) =>
+                table.ownerScope.equals(ownerScope),
+          )
+          ..orderBy(<OrderingTerm Function(RecurringTransactionOccurrences)>[
+            (RecurringTransactionOccurrences table) =>
+                OrderingTerm.asc(table.dueDateAdUtcMicros),
+          ]))
+        .watch();
+  }
+
+  Future<RecurringTransactionRule?> findRecurringRule(
+    String ruleId, {
+    required String ownerScope,
+  }) {
+    return (select(recurringTransactionRules)..where(
+          (RecurringTransactionRules table) =>
+              table.id.equals(ruleId) & table.ownerScope.equals(ownerScope),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<RecurringTransactionOccurrence?> findRecurringOccurrence(
+    String occurrenceId, {
+    required String ownerScope,
+  }) {
+    return (select(recurringTransactionOccurrences)..where(
+          (RecurringTransactionOccurrences table) =>
+              table.id.equals(occurrenceId) &
+              table.ownerScope.equals(ownerScope),
+        ))
+        .getSingleOrNull();
   }
 
   Stream<String?> watchPreference(String preferenceKey) {

@@ -13,6 +13,7 @@ import 'package:budgeting_app/features/transactions/presentation/widgets/payment
 import 'package:budgeting_app/features/transactions/presentation/widgets/quick_date_selector.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_amount_field.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -67,6 +68,7 @@ final class _AddTransactionScreenState
     final AddTransactionController controller = ref.read(
       addTransactionControllerProvider.notifier,
     );
+    final recurringOccurrence = ref.watch(initialRecurringOccurrenceProvider);
     final List<TransactionCategory> recentCategories = ref
         .watch(recentTransactionCategoriesProvider(state.type))
         .maybeWhen(
@@ -105,6 +107,8 @@ final class _AddTransactionScreenState
               ? 'Edit transaction'
               : state.isRepeatDraft
               ? 'Repeat transaction'
+              : state.isRecurringOccurrenceDraft
+              ? 'Record scheduled transaction'
               : 'Add transaction',
         ),
       ),
@@ -133,6 +137,21 @@ final class _AddTransactionScreenState
                     child: Text(
                       'A new transaction will be created using details from '
                       'the original.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.appColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                if (state.isRecurringOccurrenceDraft &&
+                    recurringOccurrence != null) ...<Widget>[
+                  Semantics(
+                    label:
+                        'Scheduled from ${recurringOccurrence.merchant ?? recurringOccurrence.category.visual.label}',
+                    child: Text(
+                      'Scheduled from '
+                      '${recurringOccurrence.merchant ?? recurringOccurrence.category.visual.label}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: context.appColors.textSecondary,
                       ),

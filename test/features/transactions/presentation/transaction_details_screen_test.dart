@@ -283,6 +283,65 @@ void main() {
     expect(find.text('4 August 2026'), findsOneWidget);
   });
 
+  testWidgets(
+    'Make recurring prefills metadata and starts at next occurrence',
+    (WidgetTester tester) async {
+      final FinancialTransaction transaction = buildTestTransaction(
+        occurredAt: DateTime.utc(2026, 8, 2, 6, 15),
+      );
+      await pumpBudgetingApp(
+        tester,
+        seedTransactions: <FinancialTransaction>[transaction],
+      );
+      await tester.tap(find.text('Transactions'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Lunch at Thamel'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey<String>('make_recurring_button')),
+        280,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey<String>('make_recurring_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Create recurring transaction'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey<String>('amount_input')),
+            )
+            .controller
+            ?.text,
+        '1250',
+      );
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey<String>('recurring_merchant_input')),
+        220,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey<String>('recurring_merchant_input')),
+            )
+            .controller
+            ?.text,
+        'Lunch at Thamel',
+      );
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey<String>('recurring_schedule_summary')),
+        280,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Monthly · AD'), findsOneWidget);
+      expect(find.text('Every month on day 2'), findsOneWidget);
+      expect(find.text('Next: 2 September 2026'), findsOneWidget);
+    },
+  );
+
   testWidgets('Income Repeat remains a new Save income draft', (
     WidgetTester tester,
   ) async {

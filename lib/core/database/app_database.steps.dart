@@ -199,8 +199,320 @@ i1.GeneratedColumn<String> _column_13(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NOT NULL',
     );
+
+final class Schema3 extends i0.VersionedSchema {
+  Schema3({required super.database}) : super(version: 3);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    storedTransactions,
+    storedPreferences,
+    recurringTransactionRules,
+    recurringTransactionOccurrences,
+  ];
+  late final Shape0 storedTransactions = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'stored_transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 storedPreferences = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'stored_preferences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY("key")'],
+      columns: [_column_12, _column_13],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 recurringTransactionRules = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'recurring_transaction_rules',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_14,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_7,
+        _column_8,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_9,
+        _column_10,
+        _column_23,
+        _column_24,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 recurringTransactionOccurrences = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'recurring_transaction_occurrences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(owner_scope, rule_id, due_date_ad_utc_micros)',
+      ],
+      columns: [
+        _column_0,
+        _column_25,
+        _column_14,
+        _column_26,
+        _column_22,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_7,
+        _column_8,
+        _column_27,
+        _column_28,
+        _column_9,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape2 extends i0.VersionedTable {
+  Shape2({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get ownerScope =>
+      columnsByName['owner_scope']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get typeKey =>
+      columnsByName['type_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get amountMinorUnits =>
+      columnsByName['amount_minor_units']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get currencyCode =>
+      columnsByName['currency_code']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get categoryKey =>
+      columnsByName['category_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get paymentMethodKey =>
+      columnsByName['payment_method_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get merchant =>
+      columnsByName['merchant']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get note =>
+      columnsByName['note']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get frequencyKey =>
+      columnsByName['frequency_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get recurrenceCalendarKey =>
+      columnsByName['recurrence_calendar_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get anchorDay =>
+      columnsByName['anchor_day']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get anchorMonth =>
+      columnsByName['anchor_month']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get anchorWeekday =>
+      columnsByName['anchor_weekday']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get firstDueDateAdUtcMicros =>
+      columnsByName['first_due_date_ad_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get nextDueDateAdUtcMicros =>
+      columnsByName['next_due_date_ad_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get statusKey =>
+      columnsByName['status_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get createdAtUtcMicros =>
+      columnsByName['created_at_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAtUtcMicros =>
+      columnsByName['updated_at_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get pausedAtUtcMicros =>
+      columnsByName['paused_at_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get deletedAtUtcMicros =>
+      columnsByName['deleted_at_utc_micros']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_14(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'owner_scope',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_15(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'frequency_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_16(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'recurrence_calendar_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_17(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'anchor_day',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_18(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'anchor_month',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_19(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'anchor_weekday',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_20(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'first_due_date_ad_utc_micros',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_21(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'next_due_date_ad_utc_micros',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_22(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'status_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_23(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'paused_at_utc_micros',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_24(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'deleted_at_utc_micros',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+
+class Shape3 extends i0.VersionedTable {
+  Shape3({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get ruleId =>
+      columnsByName['rule_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get ownerScope =>
+      columnsByName['owner_scope']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get dueDateAdUtcMicros =>
+      columnsByName['due_date_ad_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get statusKey =>
+      columnsByName['status_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get typeKey =>
+      columnsByName['type_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get amountMinorUnits =>
+      columnsByName['amount_minor_units']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get currencyCode =>
+      columnsByName['currency_code']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get categoryKey =>
+      columnsByName['category_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get paymentMethodKey =>
+      columnsByName['payment_method_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get merchant =>
+      columnsByName['merchant']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get note =>
+      columnsByName['note']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get recordedTransactionId =>
+      columnsByName['recorded_transaction_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get handledAtUtcMicros =>
+      columnsByName['handled_at_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAtUtcMicros =>
+      columnsByName['created_at_utc_micros']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_25(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'rule_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_26(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'due_date_ad_utc_micros',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_27(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'recorded_transaction_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_28(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'handled_at_utc_micros',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -209,6 +521,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from1To2(migrator, schema);
         return 2;
+      case 2:
+        final schema = Schema3(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from2To3(migrator, schema);
+        return 3;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -217,6 +534,7 @@ i0.MigrationStepWithVersion migrationSteps({
 
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2),
+  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
 );

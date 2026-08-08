@@ -1,9 +1,16 @@
 import 'package:budgeting_app/app/app.dart';
+import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/access/data/repositories/in_memory_access_preference_repository.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/recurring/data/repositories/in_memory_recurring_transaction_repository.dart';
+import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
+import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
+import 'package:budgeting_app/features/recurring/domain/repositories/recurring_transaction_repository.dart';
+import 'package:budgeting_app/features/recurring/domain/services/recurrence_service.dart';
+import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/settings/data/repositories/in_memory_calendar_preference_repository.dart';
 import 'package:budgeting_app/features/settings/data/repositories/in_memory_theme_preference_repository.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
@@ -31,6 +38,11 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
   AppCalendarSystem calendarSystem = AppCalendarSystem.gregorianAd,
   bool calendarSetupComplete = true,
   InMemoryCalendarPreferenceRepository? calendarRepository,
+  RecurringTransactionRepository? recurringRepository,
+  List<RecurringTransactionRule> seedRecurringRules =
+      const <RecurringTransactionRule>[],
+  List<RecurringTransactionOccurrence> seedRecurringOccurrences =
+      const <RecurringTransactionOccurrence>[],
 }) async {
   assert(
     seedTransactions == null || !useMockTransactions,
@@ -58,6 +70,17 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
         initialCalendar: calendarSystem,
         initialSetupComplete: calendarSetupComplete,
       );
+  final InMemoryRecurringTransactionRepository? ownedRecurringRepository =
+      recurringRepository == null
+      ? InMemoryRecurringTransactionRepository(
+          RecurrenceService(BikramSambatCalendarService()),
+          repository,
+          rules: seedRecurringRules,
+          occurrences: seedRecurringOccurrences,
+        )
+      : null;
+  final RecurringTransactionRepository resolvedRecurringRepository =
+      recurringRepository ?? ownedRecurringRepository!;
   if (accessRepository == null) {
     addTearDown(resolvedAccessRepository.dispose);
   }
@@ -66,6 +89,9 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
   }
   if (calendarRepository == null) {
     addTearDown(resolvedCalendarRepository.dispose);
+  }
+  if (ownedRecurringRepository != null) {
+    addTearDown(ownedRecurringRepository.dispose);
   }
   final List<Override> overrides = <Override>[
     appClockProvider.overrideWithValue(() => fixedNow),
@@ -79,6 +105,9 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
       resolvedCalendarRepository,
     ),
     transactionRepositoryProvider.overrideWithValue(repository),
+    recurringTransactionRepositoryProvider.overrideWithValue(
+      resolvedRecurringRepository,
+    ),
   ];
   if (transactionStream != null) {
     overrides.add(

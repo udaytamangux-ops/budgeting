@@ -16,6 +16,8 @@ abstract final class AppRoutes {
   static const String summary = budgets;
   static const String profile = '/app/profile';
   static const String privacyAndData = '/app/profile/privacy-and-data';
+  static const String recurring = '/app/recurring';
+  static const String createRecurring = '/app/recurring/new';
   static const String addExpense = '/app/add-transaction';
   static const String addIncome = '/app/add-transaction?type=income';
 
@@ -42,6 +44,19 @@ abstract final class AppRoutes {
   static String repeatTransaction(String transactionId) {
     return '$addExpense?repeatTransactionId='
         '${Uri.encodeComponent(transactionId)}';
+  }
+
+  static String recordRecurringOccurrence(String occurrenceId) {
+    return '$addExpense?occurrenceId=${Uri.encodeComponent(occurrenceId)}';
+  }
+
+  static String makeRecurring(String transactionId) {
+    return '$createRecurring?sourceTransactionId='
+        '${Uri.encodeComponent(transactionId)}';
+  }
+
+  static String editRecurring(String ruleId) {
+    return '$recurring/${Uri.encodeComponent(ruleId)}/edit';
   }
 
   static String _categoryDetailsPath(CategoryDetailsRouteData data) {

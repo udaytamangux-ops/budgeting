@@ -1,6 +1,7 @@
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/core/database/database_providers.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ abstract final class AppBootstrap {
       container.read(primaryCalendarProvider.future),
       container.read(calendarSetupCompleteProvider.future),
       container.read(themePreferenceProvider.future),
+      container.read(recurringReconciliationProvider.future),
     ]);
     return container;
   }

@@ -67,7 +67,17 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       primaryCalendar,
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Transactions')),
+      appBar: AppBar(
+        title: const Text('Transactions'),
+        actions: <Widget>[
+          IconButton(
+            key: const ValueKey<String>('open_recurring_transactions'),
+            tooltip: 'Recurring transactions',
+            onPressed: () => context.push(AppRoutes.recurring),
+            icon: const Icon(Icons.event_repeat_outlined),
+          ),
+        ],
+      ),
       body: SafeArea(
         top: false,
         child: Align(
