@@ -83,6 +83,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Privacy and data'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('Stored on this device'),
+      300,
+      scrollable: _privacyScrollable,
+    );
     expect(find.text('Stored on this device'), findsOneWidget);
     expect(find.text('No bank connection'), findsOneWidget);
     expect(find.text('No cloud sync'), findsOneWidget);
@@ -226,6 +231,11 @@ void main() {
       await tester.tap(setting);
       await tester.pumpAndSettle();
 
+      await tester.scrollUntilVisible(
+        find.text('Stored on this device'),
+        300,
+        scrollable: _privacyScrollable,
+      );
       expect(find.text('Stored on this device'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -235,6 +245,13 @@ void main() {
 Finder get _profileScrollable => find
     .descendant(
       of: find.byType(ProfileScreen),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
+Finder get _privacyScrollable => find
+    .descendant(
+      of: find.byKey(const ValueKey<String>('privacy_and_data_content')),
       matching: find.byType(Scrollable),
     )
     .first;

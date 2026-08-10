@@ -10,6 +10,7 @@ dependencies:
   bikram_sambat: 1.2.0
   drift: 2.31.0
   drift_flutter: 0.2.8
+  file_picker: 10.3.10
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
