@@ -11,6 +11,8 @@ final class TransactionAmountField extends StatefulWidget {
     required this.focusNode,
     required this.isEnabled,
     required this.onChanged,
+    this.onTap,
+    this.useCustomPad = false,
     this.errorText,
     super.key,
   });
@@ -19,6 +21,8 @@ final class TransactionAmountField extends StatefulWidget {
   final FocusNode focusNode;
   final bool isEnabled;
   final ValueChanged<String> onChanged;
+  final VoidCallback? onTap;
+  final bool useCustomPad;
   final String? errorText;
 
   @override
@@ -102,14 +106,17 @@ final class _TransactionAmountFieldState extends State<TransactionAmountField> {
                           controller: widget.controller,
                           focusNode: widget.focusNode,
                           enabled: widget.isEnabled,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          keyboardType: widget.useCustomPad
+                              ? TextInputType.none
+                              : const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
                           textInputAction: TextInputAction.done,
                           inputFormatters: <TextInputFormatter>[
                             const TransactionAmountInputFormatter(),
                           ],
                           onChanged: widget.onChanged,
+                          onTap: widget.onTap,
                           scrollPadding: const EdgeInsets.only(
                             bottom: AppSpacing.navigationClearance,
                           ),

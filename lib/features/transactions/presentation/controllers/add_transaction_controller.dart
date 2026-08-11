@@ -18,6 +18,11 @@ enum AddTransactionSubmissionPhase { editing, saving, success, failure }
 
 enum TransactionFormIntent { create, edit, repeat, recurringOccurrence }
 
+final Provider<bool> newTransactionSheetModeProvider = Provider<bool>(
+  (Ref ref) => false,
+  dependencies: const <ProviderOrFamily>[],
+);
+
 final class AddTransactionState {
   const AddTransactionState({
     required this.type,
@@ -29,12 +34,14 @@ final class AddTransactionState {
     required this.submissionPhase,
     this.selectedCategory,
     this.amountError,
+    this.dateError,
     this.categoryError,
     this.submissionError,
     this.savedTransaction,
     this.isEditing = false,
     this.isRepeatDraft = false,
     this.isRecurringOccurrenceDraft = false,
+    this.hasChangedOccurredDate = false,
   });
 
   factory AddTransactionState.initial({
@@ -84,7 +91,9 @@ final class AddTransactionState {
       type: occurrence.type,
       amountInput: _editableAmount(occurrence.amount),
       paymentMethod: occurrence.paymentMethod,
-      occurredDate: occurrence.dueDateAd.toLocal(),
+      occurredDate: const TransactionDateService().localCalendarDate(
+        occurrence.dueDateAd,
+      ),
       merchant: occurrence.merchant ?? '',
       note: occurrence.note ?? '',
       selectedCategory: occurrence.category,
@@ -101,6 +110,7 @@ final class AddTransactionState {
   final String merchant;
   final String note;
   final String? amountError;
+  final String? dateError;
   final String? categoryError;
   final String? submissionError;
   final AddTransactionSubmissionPhase submissionPhase;
@@ -108,6 +118,7 @@ final class AddTransactionState {
   final bool isEditing;
   final bool isRepeatDraft;
   final bool isRecurringOccurrenceDraft;
+  final bool hasChangedOccurredDate;
 
   bool get isSubmitting =>
       submissionPhase == AddTransactionSubmissionPhase.saving;
@@ -119,6 +130,7 @@ final class AddTransactionState {
     return !isSubmitting &&
         parsedAmount != null &&
         parsedAmount.isPositive &&
+        dateError == null &&
         selectedCategory != null;
   }
 
@@ -132,10 +144,12 @@ final class AddTransactionState {
     String? merchant,
     String? note,
     Object? amountError = _notProvided,
+    Object? dateError = _notProvided,
     Object? categoryError = _notProvided,
     Object? submissionError = _notProvided,
     AddTransactionSubmissionPhase? submissionPhase,
     FinancialTransaction? savedTransaction,
+    bool? hasChangedOccurredDate,
   }) {
     return AddTransactionState(
       type: type ?? this.type,
@@ -150,6 +164,9 @@ final class AddTransactionState {
       amountError: identical(amountError, _notProvided)
           ? this.amountError
           : amountError as String?,
+      dateError: identical(dateError, _notProvided)
+          ? this.dateError
+          : dateError as String?,
       categoryError: identical(categoryError, _notProvided)
           ? this.categoryError
           : categoryError as String?,
@@ -161,6 +178,8 @@ final class AddTransactionState {
       isEditing: isEditing,
       isRepeatDraft: isRepeatDraft,
       isRecurringOccurrenceDraft: isRecurringOccurrenceDraft,
+      hasChangedOccurredDate:
+          hasChangedOccurredDate ?? this.hasChangedOccurredDate,
     );
   }
 
@@ -171,6 +190,88 @@ final class AddTransactionState {
     final int minor = money.minorUnits % 100;
     return minor == 0 ? '$whole' : '$whole.${minor.toString().padLeft(2, '0')}';
   }
+}
+
+final class NewTransactionDraft {
+  const NewTransactionDraft({
+    required this.form,
+    required this.calculatorExpression,
+    required this.calculatorInteracted,
+    required this.calculatorShowValidationError,
+  });
+
+  final AddTransactionState form;
+  final String calculatorExpression;
+  final bool calculatorInteracted;
+  final bool calculatorShowValidationError;
+
+  NewTransactionDraft copyWith({
+    AddTransactionState? form,
+    String? calculatorExpression,
+    bool? calculatorInteracted,
+    bool? calculatorShowValidationError,
+  }) {
+    return NewTransactionDraft(
+      form: form ?? this.form,
+      calculatorExpression: calculatorExpression ?? this.calculatorExpression,
+      calculatorInteracted: calculatorInteracted ?? this.calculatorInteracted,
+      calculatorShowValidationError:
+          calculatorShowValidationError ?? this.calculatorShowValidationError,
+    );
+  }
+}
+
+final Provider<NewTransactionDraft?> initialNewTransactionDraftProvider =
+    Provider<NewTransactionDraft?>(
+      (Ref ref) => null,
+      dependencies: const <ProviderOrFamily>[],
+    );
+
+final NotifierProvider<
+  NewTransactionDraftSessionController,
+  NewTransactionDraft?
+>
+newTransactionDraftSessionProvider =
+    NotifierProvider<
+      NewTransactionDraftSessionController,
+      NewTransactionDraft?
+    >(NewTransactionDraftSessionController.new);
+
+final class NewTransactionDraftSessionController
+    extends Notifier<NewTransactionDraft?> {
+  @override
+  NewTransactionDraft? build() => null;
+
+  void updateForm(AddTransactionState form) {
+    if (form.submissionPhase == AddTransactionSubmissionPhase.saving ||
+        form.submissionPhase == AddTransactionSubmissionPhase.success) {
+      return;
+    }
+    state = state == null
+        ? NewTransactionDraft(
+            form: form,
+            calculatorExpression: form.amountInput,
+            calculatorInteracted: false,
+            calculatorShowValidationError: false,
+          )
+        : state!.copyWith(form: form);
+  }
+
+  void updateCalculator({
+    required AddTransactionState form,
+    required String expression,
+    required bool interacted,
+    required bool showValidationError,
+  }) {
+    state = NewTransactionDraft(
+      form: form,
+      calculatorExpression: expression,
+      calculatorInteracted: interacted,
+      calculatorShowValidationError: showValidationError,
+    );
+  }
+
+  void clear() => state = null;
 }
 
 final Provider<FinancialTransaction?> initialTransactionProvider =
@@ -203,6 +304,8 @@ addTransactionControllerProvider =
         initialTransactionTypeProvider,
         transactionFormIntentProvider,
         initialRecurringOccurrenceProvider,
+        newTransactionSheetModeProvider,
+        initialNewTransactionDraftProvider,
       ],
     );
 
@@ -210,6 +313,15 @@ final class AddTransactionController
     extends AutoDisposeNotifier<AddTransactionState> {
   @override
   AddTransactionState build() {
+    final bool isNewTransactionSheet = ref.watch(
+      newTransactionSheetModeProvider,
+    );
+    final NewTransactionDraft? restoredDraft = ref.watch(
+      initialNewTransactionDraftProvider,
+    );
+    if (isNewTransactionSheet && restoredDraft != null) {
+      return restoredDraft.form;
+    }
     final RecurringTransactionOccurrence? recurringOccurrence = ref.watch(
       initialRecurringOccurrenceProvider,
     );
@@ -302,6 +414,9 @@ final class AddTransactionController
   }
 
   void updatePaymentMethod(PaymentMethod paymentMethod) {
+    if (paymentMethod == state.paymentMethod) {
+      return;
+    }
     state = state.copyWith(paymentMethod: paymentMethod);
   }
 
@@ -313,10 +428,25 @@ final class AddTransactionController
   }
 
   void updateOccurredDate(DateTime occurredDate) {
+    final DateTime selected = const TransactionDateService().localCalendarDate(
+      occurredDate,
+    );
+    final DateTime today = const TransactionDateService().today(
+      ref.read(currentDateProvider),
+    );
+    if (selected.isAfter(today)) {
+      state = state.copyWith(
+        dateError: 'Choose Today or an earlier date.',
+        hasChangedOccurredDate: true,
+      );
+      return;
+    }
     state = state.copyWith(
-      occurredDate: const TransactionDateService().localCalendarDate(
-        occurredDate,
-      ),
+      occurredDate: selected,
+      dateError: null,
+      hasChangedOccurredDate: true,
+      submissionError: null,
+      submissionPhase: AddTransactionSubmissionPhase.editing,
     );
   }
 
@@ -351,11 +481,27 @@ final class AddTransactionController
               ? 'Choose a category.'
               : 'Choose an income source.'
         : null;
+    final FinancialTransaction? existing = state.isEditing
+        ? ref.read(initialTransactionProvider)
+        : null;
+    final DateTime today = const TransactionDateService().today(
+      ref.read(currentDateProvider),
+    );
+    final bool isFuture = state.occurredDate.isAfter(today);
+    final bool unchangedLegacyFuture =
+        existing != null &&
+        isFuture &&
+        !state.hasChangedOccurredDate &&
+        _isSameLocalDate(existing.occurredAt, state.occurredDate);
+    final String? dateError = isFuture && !unchangedLegacyFuture
+        ? 'Choose Today or an earlier date.'
+        : state.dateError;
 
-    if (amountError != null || categoryError != null) {
+    if (amountError != null || categoryError != null || dateError != null) {
       state = state.copyWith(
         amountError: amountError,
         categoryError: categoryError,
+        dateError: dateError,
         submissionPhase: AddTransactionSubmissionPhase.editing,
       );
       return null;
@@ -364,24 +510,20 @@ final class AddTransactionController
     state = state.copyWith(
       amountError: null,
       categoryError: null,
+      dateError: null,
       submissionError: null,
       submissionPhase: AddTransactionSubmissionPhase.saving,
     );
 
-    final FinancialTransaction? existing = state.isEditing
-        ? ref.read(initialTransactionProvider)
-        : null;
     final RecurringTransactionOccurrence? recurringOccurrence = ref.read(
       initialRecurringOccurrenceProvider,
     );
     final DateTime now = ref.read(appClockProvider)().toUtc();
     final DateTime localDate = state.occurredDate.toLocal();
-    final DateTime occurredAt = DateTime(
-      localDate.year,
-      localDate.month,
-      localDate.day,
-      12,
-    ).toUtc();
+    final DateTime occurredAt =
+        existing != null && !state.hasChangedOccurredDate
+        ? existing.occurredAt
+        : DateTime(localDate.year, localDate.month, localDate.day, 12).toUtc();
     final String? merchant = _emptyToNull(state.merchant);
     final String? note = _emptyToNull(state.note);
     final FinancialTransaction transaction = existing == null
@@ -480,6 +622,14 @@ final class AddTransactionController
   static String? _emptyToNull(String value) {
     final String trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static bool _isSameLocalDate(DateTime first, DateTime second) {
+    final DateTime firstLocal = first.toLocal();
+    final DateTime secondLocal = second.toLocal();
+    return firstLocal.year == secondLocal.year &&
+        firstLocal.month == secondLocal.month &&
+        firstLocal.day == secondLocal.day;
   }
 
   PaymentMethod _initialPaymentMethod(

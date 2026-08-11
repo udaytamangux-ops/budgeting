@@ -1,6 +1,7 @@
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,7 +28,14 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('quick_date_choose')),
       260,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .descendant(
+            of: find.byKey(
+              const ValueKey<String>('add_transaction_form_scroll'),
+            ),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
 
     expect(
@@ -37,6 +45,11 @@ void main() {
     expect(find.textContaining('Shrawan 2083'), findsWidgets);
     expect(find.text('AD · 4 August 2026'), findsOneWidget);
 
+    await tester.drag(
+      find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey<String>('quick_date_choose')));
     await tester.pumpAndSettle();
     expect(
@@ -109,7 +122,11 @@ void main() {
     await pumpBudgetingApp(
       tester,
       seedTransactions: <FinancialTransaction>[
-        buildTestTransaction(occurredAt: DateTime.utc(2026, 8, 2, 12)),
+        buildTestTransaction(
+          type: TransactionType.income,
+          category: TransactionCategory.salary,
+          occurredAt: DateTime.utc(2026, 7, 2, 12),
+        ),
       ],
       calendarSystem: AppCalendarSystem.bikramSambatBs,
     );
@@ -139,6 +156,11 @@ void main() {
       tester,
       calendarSystem: AppCalendarSystem.bikramSambatBs,
       themePreference: AppThemePreference.dark,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('home_add_expense_button')),
+      220,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_expense_button')),

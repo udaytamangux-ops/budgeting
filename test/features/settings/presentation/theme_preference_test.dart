@@ -3,6 +3,7 @@ import 'package:budgeting_app/features/profile/presentation/screens/profile_scre
 import 'package:budgeting_app/features/settings/data/repositories/in_memory_theme_preference_repository.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_list_item.dart';
+import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -117,11 +118,14 @@ void main() {
     expect(find.text('Add transaction'), findsOneWidget);
     expect(_effectiveBrightness(tester), Brightness.dark);
     await tester.tap(
-      find.byKey(const ValueKey<String>('transaction_type_income')),
+      find.descendant(
+        of: find.byType(TransactionTypeSelector),
+        matching: find.byKey(const ValueKey<String>('transaction_type_income')),
+      ),
     );
     await tester.pumpAndSettle();
     expect(find.text('Income source'), findsOneWidget);
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Summary'));

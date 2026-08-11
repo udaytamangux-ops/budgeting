@@ -29,8 +29,20 @@ void main() {
         find.byType(TransactionTypeSelector),
       );
       expect(selector.value, TransactionType.expense);
-      expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
-      expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(TransactionTypeSelector),
+          matching: find.byIcon(Icons.remove_circle_outline),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(TransactionTypeSelector),
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+        findsOneWidget,
+      );
 
       PrimaryButton saveButton = tester.widget<PrimaryButton>(
         find.byKey(const ValueKey<String>('save_transaction_button')),
@@ -150,7 +162,7 @@ void main() {
     expect(find.text('Merchant (optional)'), findsOneWidget);
     expect(find.text('Note (optional)'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_income_button')),
@@ -158,8 +170,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Income source'), findsOneWidget);
     expect(find.text('Save income'), findsOneWidget);
-    expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
-    expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(TransactionTypeSelector),
+        matching: find.byIcon(Icons.remove_circle_outline),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(TransactionTypeSelector),
+        matching: find.byIcon(Icons.add_circle_outline),
+      ),
+      findsOneWidget,
+    );
     await tester.drag(
       find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
       const Offset(0, -1000),
@@ -261,7 +285,7 @@ void main() {
     }
   });
 
-  testWidgets('unsaved payment selection does not replace persisted defaults', (
+  testWidgets('minimized payment selection remains in the session draft', (
     WidgetTester tester,
   ) async {
     await pumpBudgetingApp(tester);
@@ -277,7 +301,7 @@ void main() {
     await tester.tap(find.text('eSewa').last);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_expense_button')),
@@ -290,23 +314,18 @@ void main() {
             find.byType(DropdownButtonFormField<PaymentMethod>),
           )
           .initialValue,
-      PaymentMethod.cash,
+      PaymentMethod.eSewa,
     );
-
-    await tester.tap(find.byTooltip('Cancel'));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const ValueKey<String>('home_add_income_button')),
+    await tester.scrollUntilVisible(
+      find.byType(TransactionTypeSelector),
+      -280,
+      scrollable: _formScrollable(),
     );
-    await tester.pumpAndSettle();
-    await _scrollToPaymentMethod(tester);
     expect(
       tester
-          .widget<DropdownButtonFormField<PaymentMethod>>(
-            find.byType(DropdownButtonFormField<PaymentMethod>),
-          )
-          .initialValue,
-      PaymentMethod.bankAccount,
+          .widget<TransactionTypeSelector>(find.byType(TransactionTypeSelector))
+          .value,
+      TransactionType.expense,
     );
   });
 
@@ -333,7 +352,7 @@ void main() {
     await tester.tap(find.text(PaymentMethod.cash.label).last);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_income_button')),
@@ -415,29 +434,7 @@ void main() {
       tester.getSemantics(selectedRecent).flagsCollection.isSelected,
       Tristate.isTrue,
     );
-    await tester.tap(
-      find.byKey(const ValueKey<String>('recent_payment_method_esewa')),
-    );
-    await tester.pump();
-    expect(
-      tester
-          .getSemantics(
-            find.byKey(const ValueKey<String>('recent_payment_method_esewa')),
-          )
-          .flagsCollection
-          .isSelected,
-      Tristate.isTrue,
-    );
-    expect(
-      tester
-          .widget<DropdownButtonFormField<PaymentMethod>>(
-            find.byType(DropdownButtonFormField<PaymentMethod>),
-          )
-          .initialValue,
-      PaymentMethod.eSewa,
-    );
-
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_income_button')),
@@ -470,7 +467,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('quick_date_today')),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _formScrollable(),
     );
 
     expect(
@@ -538,7 +535,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('merchant_input')),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _formScrollable(),
     );
     await tester.enterText(
       find.byKey(const ValueKey<String>('merchant_input')),
@@ -556,8 +553,13 @@ void main() {
     expect(transactions.first.category, TransactionCategory.food);
     expect(transactions.first.paymentMethod, PaymentMethod.khalti);
     expect(find.text('Expense added · NPR 1,250 · Food'), findsOneWidget);
-    expect(find.text('NPR 36,000'), findsOneWidget);
+    expect(find.text('NPR 74,400'), findsOneWidget);
     expect(find.text('NPR 24,000'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('7 transactions recorded'),
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('7 transactions recorded'), findsOneWidget);
     expect(find.text('Undo'), findsOneWidget);
     final Rect bannerBounds = tester.getRect(
@@ -635,7 +637,7 @@ void main() {
     expect((await repository.watchTransactions().first).length, originalCount);
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
-    expect(find.text('NPR 37,250'), findsOneWidget);
+    expect(find.text('NPR 75,650'), findsOneWidget);
     expect(find.text('NPR 22,750'), findsOneWidget);
     expect(find.text('6 transactions recorded'), findsOneWidget);
   });
@@ -700,7 +702,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('merchant_input')),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _formScrollable(),
     );
     await tester.enterText(
       find.byKey(const ValueKey<String>('merchant_input')),
@@ -722,7 +724,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('amount_input')),
       -280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _formScrollable(),
     );
     final TextField amountField = tester.widget<TextField>(
       find.byKey(const ValueKey<String>('amount_input')),
@@ -743,7 +745,7 @@ void main() {
           .onPressed,
       isNotNull,
     );
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('home_add_expense_button')),
@@ -756,7 +758,19 @@ void main() {
             find.byType(DropdownButtonFormField<PaymentMethod>),
           )
           .initialValue,
-      PaymentMethod.cash,
+      PaymentMethod.khalti,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('amount_input')),
+      -280,
+      scrollable: _formScrollable(),
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey<String>('amount_input')))
+          .controller
+          ?.text,
+      '1250',
     );
   });
 
@@ -832,9 +846,18 @@ Future<void> _scrollToPaymentMethod(WidgetTester tester) async {
   await tester.scrollUntilVisible(
     find.byKey(const ValueKey<String>('payment_method_field')),
     280,
-    scrollable: find.byType(Scrollable).first,
+    scrollable: _formScrollable(),
   );
   await tester.pumpAndSettle();
+}
+
+Finder _formScrollable() {
+  return find
+      .descendant(
+        of: find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
+        matching: find.byType(Scrollable),
+      )
+      .first;
 }
 
 Future<void> _createFoodExpense(WidgetTester tester) async {

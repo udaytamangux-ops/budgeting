@@ -23,7 +23,7 @@ void main() {
     expect(find.bySemanticsLabel('Open local profile'), findsOneWidget);
     expect(find.text('Recorded balance'), findsOneWidget);
     expect(find.text('Available balance'), findsNothing);
-    expect(find.text('NPR 37,250'), findsOneWidget);
+    expect(find.text('NPR 75,650'), findsOneWidget);
     expect(find.text('NPR 60,000'), findsOneWidget);
     expect(find.text('NPR 22,750'), findsOneWidget);
     expect(find.text('This month'), findsOneWidget);
@@ -32,10 +32,12 @@ void main() {
     expect(find.text('Net change'), findsNothing);
     expect(find.text('6 transactions recorded'), findsOneWidget);
     expect(find.text('Spent across 4 categories'), findsOneWidget);
-    expect(find.byTooltip('Previous month'), findsNothing);
-    expect(find.byTooltip('Next month'), findsNothing);
+    expect(find.byTooltip('Previous month'), findsOneWidget);
+    expect(find.byTooltip('Next month'), findsOneWidget);
     expect(
-      find.bySemanticsLabel(RegExp('Recorded balance, NPR 37,250')),
+      find.bySemanticsLabel(
+        RegExp('Recorded balance through August 2026, NPR 75,650'),
+      ),
       findsOneWidget,
     );
 
@@ -139,7 +141,7 @@ void main() {
       TransactionType.expense,
     );
 
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(incomeButton);
     await tester.pumpAndSettle();
@@ -263,8 +265,8 @@ void main() {
     expect(find.text('About recorded balance'), findsOneWidget);
     expect(
       find.textContaining(
-        'Recorded balance is the difference between the income and expenses '
-        'recorded in this app for the current month.',
+        'Recorded balance is the difference between all income and expenses '
+        'recorded in this app through the end of the selected month.',
       ),
       findsOneWidget,
     );

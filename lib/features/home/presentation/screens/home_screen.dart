@@ -1,7 +1,10 @@
 import 'dart:async';
 
-import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
+import 'package:budgeting_app/core/calendar/presentation/calendar_period_navigator.dart';
+import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/available_balance_summary.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/home_header.dart';
@@ -10,11 +13,13 @@ import 'package:budgeting_app/features/home/presentation/widgets/home_quick_acti
 import 'package:budgeting_app/features/home/presentation/widgets/recent_transactions_section.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/scheduled_transactions_due_surface.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/this_month_summary.dart';
+import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
+import 'package:budgeting_app/features/transactions/presentation/sheets/new_transaction_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 enum _HomeLoadState { loading, loaded, error }
 
@@ -60,14 +65,50 @@ final class HomeScreen extends ConsumerWidget {
                         AppSpacing.navigationClearance,
                       ),
                       children: <Widget>[
+                        Consumer(
+                          builder: (BuildContext context, WidgetRef ref, _) {
+                            final CalendarPeriod selected = ref.watch(
+                              effectiveSelectedCalendarPeriodProvider,
+                            );
+                            final CalendarPeriodBounds bounds =
+                                ref
+                                    .watch(calendarPeriodBoundsProvider)
+                                    .valueOrNull ??
+                                CalendarPeriodBounds(
+                                  earliest: selected,
+                                  current: selected,
+                                  latest: selected,
+                                );
+                            final AppCalendarService service = ref.watch(
+                              appCalendarServiceProvider,
+                            );
+                            return CalendarPeriodNavigator(
+                              period: selected,
+                              bounds: bounds,
+                              calendarService: service,
+                              onSelected: ref
+                                  .read(selectedCalendarPeriodProvider.notifier)
+                                  .select,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                         const AvailableBalanceSummary(),
                         const SizedBox(height: AppSpacing.md),
                         HomeQuickActions(
                           onAddExpense: () => unawaited(
-                            _openTransactionForm(context, AppRoutes.addExpense),
+                            _openTransactionForm(
+                              context,
+                              ref,
+                              TransactionType.expense,
+                            ),
                           ),
                           onAddIncome: () => unawaited(
-                            _openTransactionForm(context, AppRoutes.addIncome),
+                            _openTransactionForm(
+                              context,
+                              ref,
+                              TransactionType.income,
+                            ),
                           ),
                         ),
                         const ScheduledTransactionsDueSurface(),
@@ -92,9 +133,16 @@ final class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openTransactionForm(BuildContext context, String route) async {
-    final FinancialTransaction? saved = await context
-        .push<FinancialTransaction>(route);
+  Future<void> _openTransactionForm(
+    BuildContext context,
+    WidgetRef ref,
+    TransactionType type,
+  ) async {
+    final FinancialTransaction? saved = await showNewTransactionSheet(
+      context: context,
+      ref: ref,
+      requestedType: type,
+    );
     if (saved == null) {
       return;
     }

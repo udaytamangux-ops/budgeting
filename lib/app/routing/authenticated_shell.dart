@@ -1,8 +1,9 @@
-import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transactions/presentation/sheets/new_transaction_sheet.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_created_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,28 +49,7 @@ final class AuthenticatedShell extends ConsumerWidget {
                 onTap: () => _selectBranch(1),
               ),
             ),
-            SizedBox(
-              width: 64,
-              child: Center(
-                child: FloatingActionButton(
-                  key: const ValueKey<String>('central_add_button'),
-                  tooltip: 'Add transaction',
-                  onPressed: () => _openAddTransaction(context),
-                  backgroundColor: context.appColors.primaryAction,
-                  foregroundColor: Colors.white,
-                  elevation: 1,
-                  focusElevation: 1,
-                  hoverElevation: 1,
-                  highlightElevation: 1,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(AppRadius.large),
-                    ),
-                  ),
-                  child: const Icon(Icons.add),
-                ),
-              ),
-            ),
+            _CentralAddAction(onOpen: () => _openAddTransaction(context, ref)),
             Expanded(
               child: _NavigationDestination(
                 label: 'Summary',
@@ -101,12 +81,101 @@ final class AuthenticatedShell extends ConsumerWidget {
     );
   }
 
-  Future<void> _openAddTransaction(BuildContext context) async {
-    final Object? result = await context.push<Object?>(AppRoutes.addExpense);
+  Future<void> _openAddTransaction(BuildContext context, WidgetRef ref) async {
+    final Object? result = await showNewTransactionSheet(
+      context: context,
+      ref: ref,
+      requestedType: TransactionType.expense,
+    );
     if (result == null) {
       return;
     }
     navigationShell.goBranch(0);
+  }
+}
+
+final class _CentralAddAction extends StatefulWidget {
+  const _CentralAddAction({required this.onOpen});
+
+  final VoidCallback onOpen;
+
+  @override
+  State<_CentralAddAction> createState() => _CentralAddActionState();
+}
+
+final class _CentralAddActionState extends State<_CentralAddAction> {
+  static const double _openThreshold = 36;
+  static const double _tapMovementTolerance = 6;
+  Offset? _pointerStart;
+  Offset? _pointerLatest;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 64,
+      child: Center(
+        child: Semantics(
+          button: true,
+          label: 'Add transaction',
+          hint: 'Tap or swipe up to open',
+          onTap: widget.onOpen,
+          excludeSemantics: true,
+          child: Listener(
+            key: const ValueKey<String>('central_add_button'),
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (PointerDownEvent event) {
+              _pointerStart = event.position;
+              _pointerLatest = event.position;
+            },
+            onPointerMove: (PointerMoveEvent event) {
+              _pointerLatest = event.position;
+            },
+            onPointerCancel: (_) => _clearPointer(),
+            onPointerUp: (PointerUpEvent event) {
+              final Offset? start = _pointerStart;
+              final Offset end = _pointerLatest ?? event.position;
+              _clearPointer();
+              if (start == null) {
+                return;
+              }
+              final Offset delta = end - start;
+              final bool isTap = delta.distance <= _tapMovementTolerance;
+              final bool isUpwardSwipe =
+                  delta.dy <= -_openThreshold &&
+                  delta.dy.abs() > delta.dx.abs();
+              if (isTap || isUpwardSwipe) {
+                widget.onOpen();
+              }
+            },
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: FloatingActionButton(
+                  tooltip: 'Add transaction',
+                  onPressed: widget.onOpen,
+                  backgroundColor: context.appColors.primaryAction,
+                  foregroundColor: Colors.white,
+                  elevation: 1,
+                  focusElevation: 1,
+                  hoverElevation: 1,
+                  highlightElevation: 1,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(AppRadius.large),
+                    ),
+                  ),
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _clearPointer() {
+    _pointerStart = null;
+    _pointerLatest = null;
   }
 }
 

@@ -1,6 +1,9 @@
+import 'package:budgeting_app/core/widgets/primary_button.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
+import 'package:budgeting_app/features/recurring/presentation/screens/recurring_transactions_screen.dart';
 import 'package:budgeting_app/features/settings/domain/entities/app_theme_preference.dart';
+import 'package:budgeting_app/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,7 +21,7 @@ void main() {
     await tester.tap(find.byTooltip('Recurring transactions'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Recurring transactions'), findsOneWidget);
+    expect(find.byType(RecurringTransactionsScreen), findsOneWidget);
     expect(find.text('No recurring transactions yet'), findsOneWidget);
     expect(
       find.textContaining('review them when they are due'),
@@ -129,17 +132,43 @@ void main() {
           ?.text,
       '25000',
     );
+    await tester.tap(find.byKey(const ValueKey<String>('amount_input')));
+    await tester.pumpAndSettle();
+    for (final String key in <String>['+', '5', '0', '0']) {
+      final Finder keyFinder = find.byKey(
+        ValueKey<String>('calculator_key_$key'),
+      );
+      tester.widget<OutlinedButton>(keyFinder).onPressed!();
+      await tester.pump();
+    }
+    tester
+        .widget<FilledButton>(
+          find.byKey(const ValueKey<String>('calculator_done')),
+        )
+        .onPressed!();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(
       find.byKey(const ValueKey<String>('save_transaction_button')),
+    );
+    expect(
+      tester
+          .widget<PrimaryButton>(
+            find.byKey(const ValueKey<String>('save_transaction_button')),
+          )
+          .onPressed,
+      isNotNull,
     );
     await tester.tap(
       find.byKey(const ValueKey<String>('save_transaction_button')),
     );
     await tester.pumpAndSettle();
 
-    expect((await repository.watchTransactions().first), hasLength(1));
+    final records = await repository.watchTransactions().first;
+    expect(records, hasLength(1));
+    expect(records.single.amount.minorUnits, 2550000);
     expect(find.text('Record transaction'), findsNothing);
-    expect(find.text('Upcoming'), findsOneWidget);
+    expect(find.byType(AddTransactionScreen), findsNothing);
+    expect(find.text('Recurring transactions'), findsOneWidget);
   });
 
   testWidgets('cancelling record leaves pending and Skip records nothing', (

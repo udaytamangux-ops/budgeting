@@ -16,7 +16,18 @@ void main() {
 
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('Yesterday'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('2 August 2026'),
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('2 August 2026'), findsOneWidget);
+    await tester.fling(
+      find.byType(CustomScrollView),
+      const Offset(0, 1000),
+      1000,
+    );
+    await tester.pumpAndSettle();
 
     await tester.enterText(
       find.byKey(const ValueKey<String>('transaction_search_field')),
@@ -67,7 +78,7 @@ void main() {
       const ValueKey<String>('empty_transactions_add_button'),
     );
     expect(action, findsOneWidget);
-    expect(find.bySemanticsLabel('Add transaction'), findsOneWidget);
+    expect(tester.getSemantics(action).label, 'Add transaction');
 
     await tester.tap(action);
     await tester.pumpAndSettle();
@@ -90,12 +101,12 @@ void main() {
     await tester.tap(find.text('Transactions'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No matching transactions'), findsOneWidget);
+    expect(find.text('No transactions in August 2026'), findsOneWidget);
     expect(
-      find.text('Try another month, transaction type, or search.'),
+      find.text('No recorded financial activity for this month.'),
       findsOneWidget,
     );
     expect(find.text('No transactions recorded yet'), findsNothing);
-    expect(find.text('Clear filters'), findsOneWidget);
+    expect(find.text('Current month'), findsNothing);
   });
 }

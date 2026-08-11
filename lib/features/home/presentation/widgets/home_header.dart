@@ -1,6 +1,7 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +14,7 @@ final class HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final String month = ref
         .watch(appCalendarServiceProvider)
-        .formatMonthName(ref.watch(currentCalendarPeriodProvider));
+        .formatMonthName(ref.watch(effectiveSelectedCalendarPeriodProvider));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(

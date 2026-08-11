@@ -4,6 +4,7 @@ import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/summary_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/spending_donut_chart.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/pump_app.dart';
+import '../../../support/test_data.dart';
 
 void main() {
   testWidgets('Summary presents neutral monthly financial records', (
@@ -21,7 +23,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('August 2026'), findsOneWidget);
-    expect(find.text('This month'), findsOneWidget);
+    expect(find.text('Period activity'), findsOneWidget);
     expect(find.text('Income'), findsWidgets);
     expect(find.text('Expenses'), findsOneWidget);
     expect(find.text('Net change'), findsOneWidget);
@@ -420,7 +422,7 @@ void main() {
     );
     expect(currentMonthNext.onPressed, isNull);
     expect(
-      find.bySemanticsLabel('Selected month, August 2026'),
+      find.bySemanticsLabel(RegExp('Select month, August 2026')),
       findsOneWidget,
     );
 
@@ -469,7 +471,12 @@ void main() {
   testWidgets('empty months retain zero totals and type-specific guidance', (
     WidgetTester tester,
   ) async {
-    await pumpBudgetingApp(tester);
+    await pumpBudgetingApp(
+      tester,
+      seedTransactions: <FinancialTransaction>[
+        buildTestTransaction(occurredAt: DateTime.utc(2026, 6, 12, 6, 15)),
+      ],
+    );
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
 

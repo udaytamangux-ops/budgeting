@@ -15,12 +15,14 @@ final class QuickDateSelector extends ConsumerWidget {
     required this.date,
     required this.isEnabled,
     required this.onChanged,
+    this.errorText,
     super.key,
   });
 
   final DateTime date;
   final bool isEnabled;
   final ValueChanged<DateTime> onChanged;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -118,6 +120,18 @@ final class QuickDateSelector extends ConsumerWidget {
               color: context.appColors.textSecondary,
             ),
           ),
+          if (errorText != null) ...<Widget>[
+            const SizedBox(height: AppSpacing.xs),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                errorText!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.appColors.destructiveAction,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -130,13 +144,19 @@ final class QuickDateSelector extends ConsumerWidget {
     AppCalendarService calendarService,
   ) async {
     final DateTime localCurrent = currentDate.toLocal();
+    final DateTime today = DateTime(
+      localCurrent.year,
+      localCurrent.month,
+      localCurrent.day,
+    );
+    final DateTime initial = date.isAfter(today) ? today : date;
     final DateTime? selected = await AppCalendarDatePicker.show(
       context: context,
       calendarSystem: primaryCalendar,
       calendarService: calendarService,
-      initialDate: date,
+      initialDate: initial,
       firstDate: DateTime(localCurrent.year - 5),
-      lastDate: DateTime(localCurrent.year + 1),
+      lastDate: today,
     );
     if (selected != null) {
       onChanged(selected);

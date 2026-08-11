@@ -260,6 +260,18 @@ void main() {
           ?.text,
       '1250',
     );
+    await tester.tap(find.byKey(const ValueKey<String>('amount_input')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('calculator_expression')),
+          )
+          .data,
+      '1250',
+    );
+    await tester.tap(find.byTooltip('Close calculator'));
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('merchant_input')),
       280,
@@ -500,6 +512,18 @@ void main() {
     await tester.tap(
       find.byKey(const ValueKey<String>('edit_transaction_button')),
     );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey<String>('amount_input')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('calculator_expression')),
+          )
+          .data,
+      '1250',
+    );
+    await tester.tap(find.byTooltip('Close calculator'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey<String>('selected_transaction_date')),

@@ -60,6 +60,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Existing local record'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Existing local record'), findsOneWidget);
   });
 

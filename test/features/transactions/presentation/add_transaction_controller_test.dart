@@ -261,4 +261,130 @@ void main() {
       PaymentMethod.imePay,
     );
   });
+
+  test('new transactions reject a future occurrence date', () async {
+    final _MockTransactionRepository repository = _MockTransactionRepository();
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        transactionRepositoryProvider.overrideWithValue(repository),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              const AsyncValue<List<PaymentMethod>>.data(<PaymentMethod>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+    controller
+      ..updateAmount('100')
+      ..selectCategory(TransactionCategory.food)
+      ..updateOccurredDate(DateTime(2026, 8, 5));
+
+    final AddTransactionState state = container.read(
+      addTransactionControllerProvider,
+    );
+    expect(state.occurredDate.day, 4);
+    expect(state.dateError, 'Choose Today or an earlier date.');
+    expect(state.canSubmit, isFalse);
+    expect(await controller.submit(), isNull);
+    verifyNever(() => repository.createTransaction(any()));
+  });
+
+  test('new income also rejects a future occurrence date', () async {
+    final _MockTransactionRepository repository = _MockTransactionRepository();
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        transactionRepositoryProvider.overrideWithValue(repository),
+        initialTransactionTypeProvider.overrideWithValue(
+          TransactionType.income,
+        ),
+        recentPaymentMethodsProvider.overrideWith(
+          (Ref ref, TransactionType type) =>
+              const AsyncValue<List<PaymentMethod>>.data(<PaymentMethod>[]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+    controller
+      ..updateAmount('45000')
+      ..selectCategory(TransactionCategory.salary)
+      ..updateOccurredDate(DateTime(2026, 8, 5));
+
+    expect(await controller.submit(), isNull);
+    expect(
+      container.read(addTransactionControllerProvider).dateError,
+      'Choose Today or an earlier date.',
+    );
+    verifyNever(() => repository.createTransaction(any()));
+  });
+
+  test('untouched legacy future date is preserved while editing', () async {
+    final FinancialTransaction legacy = buildTestTransaction(
+      id: 'legacy-future',
+      occurredAt: DateTime.utc(2026, 10, 12, 12),
+    );
+    final _MockTransactionRepository repository = _MockTransactionRepository();
+    when(() => repository.updateTransaction(any())).thenAnswer((_) async {});
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        transactionRepositoryProvider.overrideWithValue(repository),
+        initialTransactionProvider.overrideWithValue(legacy),
+        transactionFormIntentProvider.overrideWithValue(
+          TransactionFormIntent.edit,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+    controller.updateMerchant('Updated merchant');
+
+    final FinancialTransaction? saved = await controller.submit();
+
+    expect(saved, isNotNull);
+    expect(saved!.occurredAt, DateTime.utc(2026, 10, 12, 12));
+    verify(() => repository.updateTransaction(any())).called(1);
+  });
+
+  test('changing a legacy future date accepts today but rejects future', () {
+    final FinancialTransaction legacy = buildTestTransaction(
+      id: 'legacy-future',
+      occurredAt: DateTime.utc(2026, 10, 12, 12),
+    );
+    final ProviderContainer container = ProviderContainer(
+      overrides: <Override>[
+        appClockProvider.overrideWithValue(() => fixedNow),
+        initialTransactionProvider.overrideWithValue(legacy),
+        transactionFormIntentProvider.overrideWithValue(
+          TransactionFormIntent.edit,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final AddTransactionController controller = container.read(
+      addTransactionControllerProvider.notifier,
+    );
+
+    controller.updateOccurredDate(DateTime(2026, 9, 1));
+    expect(
+      container.read(addTransactionControllerProvider).dateError,
+      isNotNull,
+    );
+    controller.updateOccurredDate(DateTime(2026, 8, 4));
+    final AddTransactionState state = container.read(
+      addTransactionControllerProvider,
+    );
+    expect(state.dateError, isNull);
+    expect(state.occurredDate.day, 4);
+    expect(state.hasChangedOccurredDate, isTrue);
+  });
 }

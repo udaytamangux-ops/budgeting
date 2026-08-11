@@ -8,11 +8,11 @@ import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
-import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
+import 'package:budgeting_app/core/calendar/presentation/calendar_period_navigator.dart';
+import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
-import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
@@ -35,28 +35,24 @@ final class SummaryScreen extends ConsumerStatefulWidget {
 }
 
 final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
-  late DateTime _periodAnchorAd;
   TransactionType _activityType = TransactionType.expense;
   String? _selectedGroupKey;
 
   @override
-  void initState() {
-    super.initState();
-    _periodAnchorAd = ref.read(currentDateProvider);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final AppCalendarSystem primaryCalendar =
-        ref.watch(primaryCalendarProvider).valueOrNull ??
-        AppCalendarSystem.gregorianAd;
     final AppCalendarService calendarService = ref.watch(
       appCalendarServiceProvider,
     );
-    final CalendarPeriod selectedPeriod = calendarService.periodForDate(
-      _periodAnchorAd,
-      primaryCalendar,
+    final CalendarPeriod selectedPeriod = ref.watch(
+      effectiveSelectedCalendarPeriodProvider,
     );
+    final CalendarPeriodBounds bounds =
+        ref.watch(calendarPeriodBoundsProvider).valueOrNull ??
+        CalendarPeriodBounds(
+          earliest: selectedPeriod,
+          current: selectedPeriod,
+          latest: selectedPeriod,
+        );
     final AsyncValue<MonthlyTransactionSummary> summary = ref.watch(
       monthlyTransactionSummaryForPeriodProvider(selectedPeriod),
     );
@@ -66,7 +62,6 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
         type: _activityType,
       )),
     );
-    final DateTime currentDate = ref.watch(currentDateProvider);
     final CurrencyFormatter currencyFormatter = ref.watch(
       currencyFormatterProvider,
     );
@@ -103,24 +98,14 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                     AppSpacing.navigationClearance,
                   ),
                   children: <Widget>[
-                    _MonthSelector(
-                      label: calendarService.formatMonthYear(selectedPeriod),
-                      calendarSystem: primaryCalendar,
-                      onPrevious: () => _changePeriod(
-                        calendarService.previousPeriod(selectedPeriod),
+                    KeyedSubtree(
+                      key: const ValueKey<String>('summary_month_selector'),
+                      child: CalendarPeriodNavigator(
+                        period: selectedPeriod,
+                        bounds: bounds,
+                        calendarService: calendarService,
+                        onSelected: _changePeriod,
                       ),
-                      onNext:
-                          _isCurrentPeriod(
-                            selectedPeriod,
-                            calendarService.periodForDate(
-                              currentDate,
-                              primaryCalendar,
-                            ),
-                          )
-                          ? null
-                          : () => _changePeriod(
-                              calendarService.nextPeriod(selectedPeriod),
-                            ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     _MonthlyRecords(
@@ -164,8 +149,8 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   }
 
   void _changePeriod(CalendarPeriod period) {
+    ref.read(selectedCalendarPeriodProvider.notifier).select(period);
     setState(() {
-      _periodAnchorAd = period.startAdInclusive;
       _selectedGroupKey = null;
     });
   }
@@ -209,10 +194,6 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     );
     await context.push<void>(AppRoutes.categoryDetails(routeData));
   }
-
-  bool _isCurrentPeriod(CalendarPeriod selected, CalendarPeriod current) {
-    return selected == current;
-  }
 }
 
 final class _MonthlyRecords extends StatelessWidget {
@@ -229,7 +210,7 @@ final class _MonthlyRecords extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('This month', style: Theme.of(context).textTheme.titleLarge),
+        Text('Period activity', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -265,63 +246,6 @@ final class _MonthlyRecords extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-final class _MonthSelector extends StatelessWidget {
-  const _MonthSelector({
-    required this.label,
-    required this.calendarSystem,
-    required this.onPrevious,
-    required this.onNext,
-  });
-
-  final String label;
-  final AppCalendarSystem calendarSystem;
-  final VoidCallback onPrevious;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: const ValueKey<String>('summary_month_selector'),
-      decoration: BoxDecoration(
-        color: context.appColors.surfacePrimary,
-        border: Border.all(color: context.appColors.borderSubtle),
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-      ),
-      child: Row(
-        children: <Widget>[
-          IconButton(
-            key: const ValueKey<String>('previous_month_button'),
-            tooltip: 'Previous ${calendarSystem.shortLabel} month',
-            onPressed: onPrevious,
-            icon: const Icon(Icons.chevron_left),
-          ),
-          Expanded(
-            child: Semantics(
-              selected: true,
-              label: calendarSystem == AppCalendarSystem.gregorianAd
-                  ? 'Selected month, $label'
-                  : 'Selected month, $label, ${calendarSystem.semanticName}',
-              excludeSemantics: true,
-              child: Text(
-                label,
-                key: const ValueKey<String>('summary_selected_month'),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-          ),
-          IconButton(
-            key: const ValueKey<String>('next_month_button'),
-            tooltip: 'Next ${calendarSystem.shortLabel} month',
-            onPressed: onNext,
-            icon: const Icon(Icons.chevron_right),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,9 +1,13 @@
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
+import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,13 +17,36 @@ final class ThisMonthSummary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final CalendarPeriod period = ref.watch(
+      effectiveSelectedCalendarPeriodProvider,
+    );
+    final CalendarPeriod? currentPeriod = ref
+        .watch(calendarPeriodBoundsProvider)
+        .valueOrNull
+        ?.current;
+    final bool isCurrentPeriod =
+        currentPeriod != null &&
+        currentPeriod.startAdInclusive == period.startAdInclusive;
+    final String sectionTitle = isCurrentPeriod
+        ? 'This month'
+        : period.displayLabel;
     final AsyncValue<MonthlyTransactionSummary> summary = ref.watch(
-      currentMonthlyTransactionSummaryProvider,
+      monthlyTransactionSummaryForPeriodProvider(period),
+    );
+    final bool hasAnyTransactions = ref.watch(
+      transactionListProvider.select(
+        (AsyncValue<List<FinancialTransaction>> value) =>
+            value.valueOrNull?.isNotEmpty ?? false,
+      ),
     );
     return summary.maybeWhen(
       data: (MonthlyTransactionSummary value) {
         if (value.transactionCount == 0) {
-          return const _FirstUseMonthlySummary();
+          return _FirstUseMonthlySummary(
+            period: period,
+            isFirstUse: !hasAnyTransactions,
+            sectionTitle: sectionTitle,
+          );
         }
         final String transactionFact = value.transactionCount == 1
             ? '1 transaction recorded'
@@ -29,7 +56,7 @@ final class ThisMonthSummary extends ConsumerWidget {
             : 'Spent across ${value.spendingCategoryCount} categories';
         return Semantics(
           container: true,
-          label: 'This month. $transactionFact. $categoryFact.',
+          label: '${period.displayLabel}. $transactionFact. $categoryFact.',
           explicitChildNodes: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +64,7 @@ final class ThisMonthSummary extends ConsumerWidget {
               LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
                   final Widget title = Text(
-                    'This month',
+                    sectionTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   );
                   final Widget action = TextButton(
@@ -91,20 +118,31 @@ final class ThisMonthSummary extends ConsumerWidget {
 }
 
 final class _FirstUseMonthlySummary extends StatelessWidget {
-  const _FirstUseMonthlySummary();
+  const _FirstUseMonthlySummary({
+    required this.period,
+    required this.isFirstUse,
+    required this.sectionTitle,
+  });
+
+  final CalendarPeriod period;
+  final bool isFirstUse;
+  final String sectionTitle;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('This month', style: Theme.of(context).textTheme.titleLarge),
-        const EmptyState(
-          key: ValueKey<String>('home_first_use_state'),
-          title: 'Start recording your money activity',
-          message:
-              'Add your first income or expense to begin building your '
-              'personal ledger.',
+        Text(sectionTitle, style: Theme.of(context).textTheme.titleLarge),
+        EmptyState(
+          key: const ValueKey<String>('home_first_use_state'),
+          title: isFirstUse
+              ? 'Start recording your money activity'
+              : 'No transactions in ${period.displayLabel}',
+          message: isFirstUse
+              ? 'Add your first income or expense to begin building your '
+                    'personal ledger.'
+              : 'No recorded financial activity for this month.',
           icon: Icons.edit_note_outlined,
         ),
       ],

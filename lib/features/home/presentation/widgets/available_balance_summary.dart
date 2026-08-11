@@ -7,9 +7,8 @@ import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/data/app_data_status.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/features/home/presentation/controllers/home_period_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/monthly_financial_summary.dart';
-import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,20 +17,20 @@ final class AvailableBalanceSummary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<MonthlyFinancialSummary> summary = ref.watch(
-      monthlyFinancialSummaryProvider,
+    final AsyncValue<HomePeriodFinancials> summary = ref.watch(
+      homePeriodFinancialsProvider,
     );
     return summary.maybeWhen(
-      data: (MonthlyFinancialSummary value) {
+      data: (HomePeriodFinancials value) {
         final String recordedBalance = ref
             .watch(currencyFormatterProvider)
-            .format(value.availableBalance);
+            .format(value.closingRecordedBalance);
         final String income = ref
             .watch(currencyFormatterProvider)
-            .format(value.income);
+            .format(value.monthly.income);
         final String expenses = ref
             .watch(currencyFormatterProvider)
-            .format(value.expenses);
+            .format(value.monthly.expenses);
         final AppDataStatus dataStatus = ref.watch(appDataStatusProvider);
         return Container(
           key: const ValueKey<String>('recorded_balance_card'),
@@ -48,9 +47,21 @@ final class AvailableBalanceSummary extends ConsumerWidget {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: Text(
-                      'Recorded balance',
-                      style: Theme.of(context).textTheme.labelMedium,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Recorded balance',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                        Text(
+                          'Through ${value.period.displayLabel}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: context.appColors.textSecondary,
+                              ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
@@ -69,7 +80,8 @@ final class AvailableBalanceSummary extends ConsumerWidget {
               ),
               Semantics(
                 label:
-                    'Recorded balance, $recordedBalance. Monthly income, '
+                    'Recorded balance through ${value.period.displayLabel}, '
+                    '$recordedBalance. Period income, '
                     '$income. Monthly expenses, $expenses.',
                 excludeSemantics: true,
                 child: Column(
@@ -82,7 +94,9 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                       ),
                       child: Text(
                         recordedBalance,
-                        key: ValueKey<int>(value.availableBalance.minorUnits),
+                        key: ValueKey<int>(
+                          value.closingRecordedBalance.minorUnits,
+                        ),
                         style: Theme.of(context).textTheme.displaySmall,
                       ),
                     ),
@@ -95,7 +109,7 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                             iconColor: context.appColors.incomeAccent,
                             label: 'Income',
                             amount: income,
-                            amountKey: value.income,
+                            amountKey: value.monthly.income,
                           ),
                         ),
                         Container(
@@ -109,7 +123,7 @@ final class AvailableBalanceSummary extends ConsumerWidget {
                             iconColor: context.appColors.expenseAccent,
                             label: 'Expenses',
                             amount: expenses,
-                            amountKey: value.expenses,
+                            amountKey: value.monthly.expenses,
                           ),
                         ),
                       ],
@@ -139,9 +153,10 @@ final class AvailableBalanceSummary extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               const Text(
-                'Recorded balance is the difference between the income and '
-                'expenses recorded in this app for the current month. It may '
-                'not match your bank account or wallet balance.',
+                'Recorded balance is the difference between all income and '
+                'expenses recorded in this app through the end of the '
+                'selected month. It may not match your bank account or wallet '
+                'balance.',
               ),
               const SizedBox(height: AppSpacing.md),
               const Text(AppDataStatus.bankAccessDescription),

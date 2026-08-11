@@ -17,6 +17,7 @@ import 'package:budgeting_app/features/settings/presentation/controllers/calenda
 import 'package:budgeting_app/features/settings/presentation/screens/calendar_setup_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/category_details_screen.dart';
 import 'package:budgeting_app/features/summary/presentation/screens/summary_screen.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/screens/transaction_details_screen.dart';
@@ -138,7 +139,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
               : editTransactionId != null
               ? TransactionFormIntent.edit
               : TransactionFormIntent.create;
-          return MaterialPage<void>(
+          return MaterialPage<FinancialTransaction>(
             key: state.pageKey,
             fullscreenDialog: true,
             child: TransactionFormRoute(

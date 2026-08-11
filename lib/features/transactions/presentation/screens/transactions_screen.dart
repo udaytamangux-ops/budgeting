@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/theme/app_motion.dart';
-import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
+import 'package:budgeting_app/core/calendar/presentation/calendar_period_navigator.dart';
+import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
@@ -32,15 +33,12 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TransactionListFilter _filter = const TransactionListFilter();
   Timer? _searchDebounce;
-  late DateTime _periodAnchorAd;
   String _query = '';
   TransactionType? _selectedType;
 
   @override
   void initState() {
     super.initState();
-    final DateTime current = ref.read(currentDateProvider);
-    _periodAnchorAd = current;
   }
 
   @override
@@ -62,10 +60,16 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final AppCalendarService calendarService = ref.watch(
       appCalendarServiceProvider,
     );
-    final CalendarPeriod selectedPeriod = calendarService.periodForDate(
-      _periodAnchorAd,
-      primaryCalendar,
+    final CalendarPeriod selectedPeriod = ref.watch(
+      effectiveSelectedCalendarPeriodProvider,
     );
+    final CalendarPeriodBounds bounds =
+        ref.watch(calendarPeriodBoundsProvider).valueOrNull ??
+        CalendarPeriodBounds(
+          earliest: selectedPeriod,
+          current: selectedPeriod,
+          latest: selectedPeriod,
+        );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transactions'),
@@ -132,25 +136,29 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         AppSpacing.sm,
                       ),
                       sliver: SliverToBoxAdapter(
+                        child: CalendarPeriodNavigator(
+                          period: selectedPeriod,
+                          bounds: bounds,
+                          calendarService: calendarService,
+                          onSelected: ref
+                              .read(selectedCalendarPeriodProvider.notifier)
+                              .select,
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                      ),
+                      sliver: SliverToBoxAdapter(
                         child: _TransactionFilters(
                           searchController: _searchController,
-                          selectedMonthLabel: calendarService.formatMonthYear(
-                            selectedPeriod,
-                          ),
                           selectedType: _selectedType,
                           onSearchChanged: _scheduleSearch,
                           onClearSearch: _clearSearch,
-                          onSelectMonth: () {
-                            unawaited(
-                              _selectMonth(
-                                context,
-                                currentDate,
-                                selectedPeriod,
-                                calendarService,
-                                primaryCalendar,
-                              ),
-                            );
-                          },
                           onSelectType: (TransactionType? value) {
                             setState(() => _selectedType = value);
                           },
@@ -161,17 +169,43 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       SliverFillRemaining(
                         hasScrollBody: false,
                         child: EmptyState(
-                          title: 'No matching transactions',
-                          message:
-                              'Try another month, transaction type, or search.',
+                          title: _query.isEmpty && _selectedType == null
+                              ? 'No transactions in '
+                                    '${selectedPeriod.displayLabel}'
+                              : 'No matching transactions',
+                          message: _query.isEmpty && _selectedType == null
+                              ? 'No recorded financial activity for this month.'
+                              : 'Try another month, transaction type, or '
+                                    'search.',
                           icon: Icons.search_off_outlined,
                           action: OutlinedButton.icon(
                             key: const ValueKey<String>(
                               'clear_transaction_filters',
                             ),
-                            onPressed: () => _clearFilters(currentDate),
-                            icon: const Icon(Icons.filter_alt_off_outlined),
-                            label: const Text('Clear filters'),
+                            onPressed:
+                                _query.isEmpty &&
+                                    _selectedType == null &&
+                                    selectedPeriod != bounds.current
+                                ? () => ref
+                                      .read(
+                                        selectedCalendarPeriodProvider.notifier,
+                                      )
+                                      .showCurrent()
+                                : _clearFilters,
+                            icon: Icon(
+                              _query.isEmpty &&
+                                      _selectedType == null &&
+                                      selectedPeriod != bounds.current
+                                  ? Icons.today_outlined
+                                  : Icons.filter_alt_off_outlined,
+                            ),
+                            label: Text(
+                              _query.isEmpty &&
+                                      _selectedType == null &&
+                                      selectedPeriod != bounds.current
+                                  ? 'Current month'
+                                  : 'Clear filters',
+                            ),
                           ),
                         ),
                       )
@@ -246,79 +280,13 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     setState(() => _query = '');
   }
 
-  void _clearFilters(DateTime currentDate) {
+  void _clearFilters() {
     _searchDebounce?.cancel();
     _searchController.clear();
     setState(() {
       _query = '';
       _selectedType = null;
-      _periodAnchorAd = currentDate;
     });
-  }
-
-  Future<void> _selectMonth(
-    BuildContext context,
-    DateTime currentDate,
-    CalendarPeriod selectedPeriod,
-    AppCalendarService calendarService,
-    AppCalendarSystem calendarSystem,
-  ) async {
-    final List<CalendarPeriod> periods = <CalendarPeriod>[
-      calendarService.periodForDate(currentDate, calendarSystem),
-    ];
-    for (int index = 1; index < 6; index += 1) {
-      periods.add(calendarService.previousPeriod(periods.last));
-    }
-    final CalendarPeriod? selected = await showModalBottomSheet<CalendarPeriod>(
-      context: context,
-      showDragHandle: true,
-      builder: (BuildContext sheetContext) {
-        return SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                ),
-                child: Text(
-                  'Choose month',
-                  style: Theme.of(sheetContext).textTheme.titleLarge,
-                ),
-              ),
-              ...periods.map(
-                (CalendarPeriod period) => Semantics(
-                  selected: period == selectedPeriod,
-                  button: true,
-                  label:
-                      '${calendarService.formatMonthYear(period)}, '
-                      '${calendarSystem.semanticName}',
-                  child: ListTile(
-                    minTileHeight: 56,
-                    title: Text(calendarService.formatMonthYear(period)),
-                    trailing: period == selectedPeriod
-                        ? Icon(
-                            Icons.check,
-                            color: context.appColors.primaryAction,
-                          )
-                        : null,
-                    selected: period == selectedPeriod,
-                    onTap: () => sheetContext.pop(period),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    if (selected != null && mounted) {
-      setState(() => _periodAnchorAd = selected.startAdInclusive);
-    }
   }
 
   List<_TransactionListEntry> _buildEntries(List<TransactionDateGroup> groups) {
@@ -334,20 +302,16 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 final class _TransactionFilters extends StatelessWidget {
   const _TransactionFilters({
     required this.searchController,
-    required this.selectedMonthLabel,
     required this.selectedType,
     required this.onSearchChanged,
     required this.onClearSearch,
-    required this.onSelectMonth,
     required this.onSelectType,
   });
 
   final TextEditingController searchController;
-  final String selectedMonthLabel;
   final TransactionType? selectedType;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onClearSearch;
-  final VoidCallback onSelectMonth;
   final ValueChanged<TransactionType?> onSelectType;
 
   @override
@@ -377,13 +341,6 @@ final class _TransactionFilters extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: <Widget>[
-              OutlinedButton.icon(
-                key: const ValueKey<String>('transaction_month_filter'),
-                onPressed: onSelectMonth,
-                icon: const Icon(Icons.calendar_month_outlined, size: 18),
-                label: Text(selectedMonthLabel),
-              ),
-              const SizedBox(width: AppSpacing.xs),
               FilterChip(
                 key: const ValueKey<String>('transaction_type_all'),
                 selected: selectedType == null,

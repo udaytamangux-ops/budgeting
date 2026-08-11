@@ -59,21 +59,32 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     await pumpBudgetingApp(tester, useMockTransactions: true);
-    expect(find.text('NPR 37,250'), findsOneWidget);
+    expect(find.text('NPR 75,650'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byKey(const ValueKey<String>('central_add_button')));
     await tester.pumpAndSettle();
     expect(find.text('Add transaction'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    final Finder formScrollable = find
+        .descendant(
+          of: find.byKey(const ValueKey<String>('add_transaction_form_scroll')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey<String>('quick_date_today')),
+      find.byKey(const ValueKey<String>('recent_category_food')),
       280,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: formScrollable,
     );
     expect(
       find.byKey(const ValueKey<String>('recent_category_food')),
       findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('quick_date_today')),
+      280,
+      scrollable: formScrollable,
     );
     expect(
       find.byKey(const ValueKey<String>('quick_date_choose')),
@@ -81,11 +92,11 @@ void main() {
     );
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byTooltip('Cancel'));
+    await tester.tap(find.byTooltip('Minimize'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
-    expect(find.text('This month'), findsOneWidget);
+    expect(find.text('Period activity'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
