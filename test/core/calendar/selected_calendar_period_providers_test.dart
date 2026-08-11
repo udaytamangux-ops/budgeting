@@ -6,6 +6,8 @@ import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,6 +26,11 @@ void main() {
         ),
         transactionListProvider.overrideWith(
           (Ref ref) => Stream<List<FinancialTransaction>>.value(transactions),
+        ),
+        transferListProvider.overrideWith(
+          (Ref ref) => Stream<List<FinancialTransfer>>.value(
+            const <FinancialTransfer>[],
+          ),
         ),
       ],
     );
@@ -60,6 +67,7 @@ void main() {
     );
     await container.read(primaryCalendarProvider.future);
     await container.read(transactionListProvider.future);
+    await container.read(transferListProvider.future);
     final CalendarPeriodBounds bounds = container
         .read(calendarPeriodBoundsProvider)
         .requireValue;
@@ -82,6 +90,7 @@ void main() {
       );
       await container.read(primaryCalendarProvider.future);
       await container.read(transactionListProvider.future);
+      await container.read(transferListProvider.future);
       final CalendarPeriodBounds bounds = container
           .read(calendarPeriodBoundsProvider)
           .requireValue;
@@ -106,6 +115,11 @@ void main() {
               <FinancialTransaction>[
                 buildTestTransaction(occurredAt: DateTime.utc(2026, 4, 2, 12)),
               ],
+            ),
+          ),
+          transferListProvider.overrideWith(
+            (Ref ref) => Stream<List<FinancialTransfer>>.value(
+              const <FinancialTransfer>[],
             ),
           ),
         ],

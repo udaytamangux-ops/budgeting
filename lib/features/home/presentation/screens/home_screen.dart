@@ -6,6 +6,8 @@ import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/core/calendar/presentation/calendar_period_navigator.dart';
 import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
+import 'package:budgeting_app/features/financial_activity/presentation/controllers/financial_activity_providers.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/available_balance_summary.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/home_header.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/home_loading_skeleton.dart';
@@ -14,10 +16,10 @@ import 'package:budgeting_app/features/home/presentation/widgets/recent_transact
 import 'package:budgeting_app/features/home/presentation/widgets/scheduled_transactions_due_surface.dart';
 import 'package:budgeting_app/features/home/presentation/widgets/this_month_summary.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:budgeting_app/features/transactions/presentation/sheets/new_transaction_sheet.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,12 +31,11 @@ final class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final _HomeLoadState loadState = ref.watch(
-      transactionListProvider.select(
-        (AsyncValue<List<FinancialTransaction>> value) => value.when(
+      financialActivityListProvider.select(
+        (AsyncValue<List<FinancialActivity>> value) => value.when(
           loading: () => _HomeLoadState.loading,
           error: (Object error, StackTrace stackTrace) => _HomeLoadState.error,
-          data: (List<FinancialTransaction> transactions) =>
-              _HomeLoadState.loaded,
+          data: (_) => _HomeLoadState.loaded,
         ),
       ),
     );
@@ -54,7 +55,10 @@ final class HomeScreen extends ConsumerWidget {
                     _HomeLoadState.error => AppErrorState(
                       message:
                           'Your financial summary is unavailable. Try again.',
-                      onRetry: () => ref.invalidate(transactionListProvider),
+                      onRetry: () {
+                        ref.invalidate(transactionListProvider);
+                        ref.invalidate(transferListProvider);
+                      },
                     ),
                     _HomeLoadState.loaded => ListView(
                       key: const ValueKey<String>('home_content'),
@@ -138,7 +142,7 @@ final class HomeScreen extends ConsumerWidget {
     WidgetRef ref,
     TransactionType type,
   ) async {
-    final FinancialTransaction? saved = await showNewTransactionSheet(
+    final FinancialActivity? saved = await showNewTransactionSheet(
       context: context,
       ref: ref,
       requestedType: type,

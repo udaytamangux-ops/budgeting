@@ -3,6 +3,7 @@ import 'package:budgeting_app/app/routing/app_routes.dart';
 import 'package:budgeting_app/app/routing/authenticated_shell.dart';
 import 'package:budgeting_app/app/routing/category_details_route_data.dart';
 import 'package:budgeting_app/app/routing/transaction_form_route.dart';
+import 'package:budgeting_app/app/routing/transfer_form_route.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
@@ -22,6 +23,10 @@ import 'package:budgeting_app/features/transactions/domain/entities/transaction_
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/screens/transaction_details_screen.dart';
 import 'package:budgeting_app/features/transactions/presentation/screens/transactions_screen.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/add_transfer_controller.dart';
+import 'package:budgeting_app/features/transfers/presentation/screens/add_transfer_screen.dart';
+import 'package:budgeting_app/features/transfers/presentation/screens/transfer_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -122,6 +127,17 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         path: AppRoutes.addExpense,
         name: AppRouteNames.addTransaction,
         pageBuilder: (BuildContext context, GoRouterState state) {
+          final bool isNewTransfer =
+              state.uri.queryParameters['type'] == 'transfer' &&
+              state.uri.queryParameters['transferId'] == null &&
+              state.uri.queryParameters['repeatTransferId'] == null;
+          if (isNewTransfer) {
+            return MaterialPage<FinancialTransfer>(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child: const AddTransferScreen(),
+            );
+          }
           final TransactionType initialType =
               state.uri.queryParameters['type'] == 'income'
               ? TransactionType.income
@@ -132,6 +148,21 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
               state.uri.queryParameters['repeatTransactionId'];
           final String? occurrenceId =
               state.uri.queryParameters['occurrenceId'];
+          final String? transferId = state.uri.queryParameters['transferId'];
+          final String? repeatTransferId =
+              state.uri.queryParameters['repeatTransferId'];
+          if (transferId != null || repeatTransferId != null) {
+            return MaterialPage<Object?>(
+              key: state.pageKey,
+              fullscreenDialog: true,
+              child: TransferFormRoute(
+                transferId: transferId ?? repeatTransferId!,
+                intent: transferId != null
+                    ? TransferFormIntent.edit
+                    : TransferFormIntent.repeat,
+              ),
+            );
+          }
           final TransactionFormIntent intent = occurrenceId != null
               ? TransactionFormIntent.recurringOccurrence
               : repeatTransactionId != null
@@ -212,6 +243,15 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                 name: AppRouteNames.transactions,
                 builder: (_, _) => const TransactionsScreen(),
                 routes: <RouteBase>[
+                  GoRoute(
+                    path: 'transfers/:transferId',
+                    name: AppRouteNames.transferDetails,
+                    builder: (BuildContext context, GoRouterState state) {
+                      return TransferDetailsScreen(
+                        transferId: state.pathParameters['transferId']!,
+                      );
+                    },
+                  ),
                   GoRoute(
                     path: ':transactionId',
                     name: AppRouteNames.transactionDetails,

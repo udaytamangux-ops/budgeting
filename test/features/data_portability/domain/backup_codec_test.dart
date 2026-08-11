@@ -13,6 +13,8 @@ import 'package:budgeting_app/features/recurring/domain/services/recurrence_serv
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -20,7 +22,7 @@ void main() {
     RecurrenceService(BikramSambatCalendarService()),
   );
 
-  test('v1 backup round-trips full financial state exactly', () {
+  test('v2 backup round-trips full financial state exactly', () {
     final PortableBackup original = _backup();
     final Uint8List firstEncoding = codec.encode(original);
     final PortableBackup restored = codec.decode(firstEncoding);
@@ -46,12 +48,12 @@ void main() {
     );
 
     final Map<String, Object?> json = jsonDecode(utf8.decode(firstEncoding));
-    expect(json['backupFormatVersion'], 1);
+    expect(json['backupFormatVersion'], 2);
     expect(json.toString(), isNot(contains('ownerScope')));
     expect(json.toString(), isNot(contains('theme_mode')));
   });
 
-  test('empty financial state is a valid deterministic v1 backup', () {
+  test('empty financial state is a valid deterministic v2 backup', () {
     final PortableBackup backup = PortableBackup(
       createdAtUtc: DateTime.utc(2026, 8, 8, 12),
       sourceDatabaseSchemaVersion: 3,
@@ -67,7 +69,7 @@ void main() {
     expect(decoded.snapshot.recurringOccurrences, isEmpty);
   });
 
-  test('v1 supports all categories, payment methods and recurrence states', () {
+  test('v2 supports all categories, payment methods and recurrence states', () {
     final DateTime now = DateTime.utc(2026, 8, 8, 12);
     final List<FinancialTransaction> transactions = <FinancialTransaction>[];
     for (int index = 0; index < TransactionCategory.values.length; index++) {
@@ -179,6 +181,19 @@ void main() {
     );
   });
 
+  test('v1 remains restorable and does not invent transfers', () {
+    final Map<String, Object?> legacy = _json(codec);
+    legacy['backupFormatVersion'] = 1;
+    _records(legacy).remove('transfers');
+
+    final PortableBackup restored = codec.decode(
+      Uint8List.fromList(utf8.encode(jsonEncode(legacy))),
+    );
+
+    expect(restored.snapshot.transactions, hasLength(1));
+    expect(restored.snapshot.transfers, isEmpty);
+  });
+
   group('validation rejects before producing a snapshot', () {
     test('empty, malformed, missing and unsupported versions', () {
       expect(
@@ -196,7 +211,7 @@ void main() {
         throwsA(isA<BackupValidationException>()),
       );
       final Map<String, Object?> unsupported = _json(codec);
-      unsupported['backupFormatVersion'] = 2;
+      unsupported['backupFormatVersion'] = 3;
       expect(
         () => _decode(codec, unsupported),
         throwsA(
@@ -399,6 +414,22 @@ PortableBackup _backup() {
     sourceDatabaseSchemaVersion: 3,
     snapshot: FinancialDataSnapshot(
       transactions: <FinancialTransaction>[transaction],
+      transfers: <FinancialTransfer>[
+        FinancialTransfer(
+          id: 'transfer-1',
+          amount: const Money(minorUnits: 200000),
+          source: TransferSource.bankAccount,
+          destination: TransferDestination.person,
+          destinationName: 'Mom',
+          countsAsExpense: true,
+          expenseCategory: TransactionCategory.family,
+          fee: const Money(minorUnits: 1000),
+          occurredAt: DateTime.utc(2026, 8, 7, 12),
+          note: 'Family transfer',
+          createdAt: created,
+          updatedAt: created,
+        ),
+      ],
       recurringRules: <RecurringTransactionRule>[rule],
       recurringOccurrences: occurrences,
     ),

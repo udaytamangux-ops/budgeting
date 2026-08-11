@@ -7,6 +7,7 @@ import 'package:budgeting_app/features/summary/domain/services/transaction_summa
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 typedef MonthlyCategoryActivityRequest = ({
@@ -112,16 +113,25 @@ monthlyCategoryActivityForPeriodProvider =
       AsyncValue<MonthlyCategoryActivity>,
       MonthlyCategoryActivityPeriodRequest
     >((Ref ref, request) {
-      return ref
-          .watch(transactionListProvider)
-          .whenData(
-            (List<FinancialTransaction> transactions) =>
-                const CategoryActivityService().calculateForPeriod(
-                  transactions: transactions,
-                  period: request.period,
-                  type: request.type,
-                ),
-          );
+      final transactions = ref.watch(transactionListProvider);
+      final transfers = ref.watch(transferListProvider);
+      if (transactions.hasError) {
+        return AsyncError(transactions.error!, transactions.stackTrace!);
+      }
+      if (transfers.hasError) {
+        return AsyncError(transfers.error!, transfers.stackTrace!);
+      }
+      if (transactions.valueOrNull == null || transfers.valueOrNull == null) {
+        return const AsyncLoading<MonthlyCategoryActivity>();
+      }
+      return AsyncData(
+        const CategoryActivityService().calculateForPeriod(
+          transactions: transactions.valueOrNull!,
+          transfers: transfers.valueOrNull!,
+          period: request.period,
+          type: request.type,
+        ),
+      );
     });
 
 final ProviderFamily<
@@ -155,17 +165,26 @@ categoryActivityDetailsForPeriodProvider =
       AsyncValue<CategoryActivityDetails>,
       CategoryActivityPeriodDetailsRequest
     >((Ref ref, CategoryActivityPeriodDetailsRequest request) {
-      return ref
-          .watch(transactionListProvider)
-          .whenData(
-            (List<FinancialTransaction> transactions) =>
-                const CategoryActivityService().calculateForCategoriesInPeriod(
-                  transactions: transactions,
-                  period: request.period,
-                  type: request.type,
-                  categories: request.categories,
-                ),
-          );
+      final transactions = ref.watch(transactionListProvider);
+      final transfers = ref.watch(transferListProvider);
+      if (transactions.hasError) {
+        return AsyncError(transactions.error!, transactions.stackTrace!);
+      }
+      if (transfers.hasError) {
+        return AsyncError(transfers.error!, transfers.stackTrace!);
+      }
+      if (transactions.valueOrNull == null || transfers.valueOrNull == null) {
+        return const AsyncLoading<CategoryActivityDetails>();
+      }
+      return AsyncData(
+        const CategoryActivityService().calculateForCategoriesInPeriod(
+          transactions: transactions.valueOrNull!,
+          transfers: transfers.valueOrNull!,
+          period: request.period,
+          type: request.type,
+          categories: request.categories,
+        ),
+      );
     });
 
 final ProviderFamily<AsyncValue<MonthlyTransactionSummary>, DateTime>
@@ -189,15 +208,24 @@ monthlyTransactionSummaryForPeriodProvider =
       Ref ref,
       CalendarPeriod period,
     ) {
-      return ref
-          .watch(transactionListProvider)
-          .whenData(
-            (List<FinancialTransaction> value) =>
-                const TransactionSummaryService().calculateForPeriod(
-                  transactions: value,
-                  period: period,
-                ),
-          );
+      final transactions = ref.watch(transactionListProvider);
+      final transfers = ref.watch(transferListProvider);
+      if (transactions.hasError) {
+        return AsyncError(transactions.error!, transactions.stackTrace!);
+      }
+      if (transfers.hasError) {
+        return AsyncError(transfers.error!, transfers.stackTrace!);
+      }
+      if (transactions.valueOrNull == null || transfers.valueOrNull == null) {
+        return const AsyncLoading<MonthlyTransactionSummary>();
+      }
+      return AsyncData(
+        const TransactionSummaryService().calculateForPeriod(
+          transactions: transactions.valueOrNull!,
+          transfers: transfers.valueOrNull!,
+          period: period,
+        ),
+      );
     });
 
 final Provider<AsyncValue<MonthlyTransactionSummary>>

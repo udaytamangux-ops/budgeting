@@ -1,20 +1,50 @@
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:flutter/material.dart';
 
 final class TransactionTypeSelector extends StatelessWidget {
-  const TransactionTypeSelector({
-    required this.value,
+  TransactionTypeSelector({
+    required TransactionType value,
+    required this.isEnabled,
+    required ValueChanged<TransactionType> onChanged,
+    this.showTransfer = false,
+    super.key,
+  }) : value = value,
+       activityValue = value == TransactionType.expense
+           ? FinancialActivityType.expense
+           : FinancialActivityType.income,
+       onChanged = ((FinancialActivityType selected) {
+         if (selected == FinancialActivityType.transfer) return;
+         onChanged(
+           selected == FinancialActivityType.income
+               ? TransactionType.income
+               : TransactionType.expense,
+         );
+       });
+
+  const TransactionTypeSelector.activity({
+    required FinancialActivityType value,
     required this.isEnabled,
     required this.onChanged,
+    this.showTransfer = true,
     super.key,
-  });
+  }) : value = value == FinancialActivityType.expense
+           ? TransactionType.expense
+           : value == FinancialActivityType.income
+           ? TransactionType.income
+           : value,
+       activityValue = value;
 
-  final TransactionType value;
+  /// Retains the legacy [TransactionType] value for the two-mode constructor.
+  /// The activity constructor exposes [FinancialActivityType].
+  final Object value;
+  final FinancialActivityType activityValue;
   final bool isEnabled;
-  final ValueChanged<TransactionType> onChanged;
+  final ValueChanged<FinancialActivityType> onChanged;
+  final bool showTransfer;
 
   @override
   Widget build(BuildContext context) {
@@ -26,26 +56,40 @@ final class TransactionTypeSelector extends StatelessWidget {
           Expanded(
             child: _TransactionTypeOption(
               key: const ValueKey<String>('transaction_type_expense'),
-              type: TransactionType.expense,
+              type: FinancialActivityType.expense,
               label: 'Expense',
               icon: Icons.remove_circle_outline,
-              isSelected: value == TransactionType.expense,
+              isSelected: activityValue == FinancialActivityType.expense,
               isEnabled: isEnabled,
-              onTap: () => onChanged(TransactionType.expense),
+              onTap: () => onChanged(FinancialActivityType.expense),
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: _TransactionTypeOption(
               key: const ValueKey<String>('transaction_type_income'),
-              type: TransactionType.income,
+              type: FinancialActivityType.income,
               label: 'Income',
               icon: Icons.add_circle_outline,
-              isSelected: value == TransactionType.income,
+              isSelected: activityValue == FinancialActivityType.income,
               isEnabled: isEnabled,
-              onTap: () => onChanged(TransactionType.income),
+              onTap: () => onChanged(FinancialActivityType.income),
             ),
           ),
+          if (showTransfer) ...<Widget>[
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: _TransactionTypeOption(
+                key: const ValueKey<String>('transaction_type_transfer'),
+                type: FinancialActivityType.transfer,
+                label: 'Transfer',
+                icon: Icons.swap_horiz,
+                isSelected: activityValue == FinancialActivityType.transfer,
+                isEnabled: isEnabled,
+                onTap: () => onChanged(FinancialActivityType.transfer),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -63,7 +107,7 @@ final class _TransactionTypeOption extends StatelessWidget {
     super.key,
   });
 
-  final TransactionType type;
+  final FinancialActivityType type;
   final String label;
   final IconData icon;
   final bool isSelected;
@@ -72,22 +116,31 @@ final class _TransactionTypeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isExpense = type == TransactionType.expense;
-    final Color selectedSurface = isExpense
-        ? context.appColors.expenseSurface
-        : context.appColors.incomeSurface;
-    final Color selectedPressedSurface = isExpense
-        ? context.appColors.expenseSurfacePressed
-        : context.appColors.incomeSurfacePressed;
-    final Color selectedText = isExpense
-        ? context.appColors.expenseText
-        : context.appColors.incomeAccent;
-    final Color selectedIcon = isExpense
-        ? context.appColors.expenseIconAccent
-        : context.appColors.incomeAccent;
-    final Color selectedBorder = isExpense
-        ? context.appColors.expenseBorder
-        : context.appColors.incomeBorder;
+    final Color selectedSurface = switch (type) {
+      FinancialActivityType.expense => context.appColors.expenseSurface,
+      FinancialActivityType.income => context.appColors.incomeSurface,
+      FinancialActivityType.transfer => context.appColors.primarySubtle,
+    };
+    final Color selectedPressedSurface = switch (type) {
+      FinancialActivityType.expense => context.appColors.expenseSurfacePressed,
+      FinancialActivityType.income => context.appColors.incomeSurfacePressed,
+      FinancialActivityType.transfer => context.appColors.surfaceSecondary,
+    };
+    final Color selectedText = switch (type) {
+      FinancialActivityType.expense => context.appColors.expenseText,
+      FinancialActivityType.income => context.appColors.incomeAccent,
+      FinancialActivityType.transfer => context.appColors.primaryAction,
+    };
+    final Color selectedIcon = switch (type) {
+      FinancialActivityType.expense => context.appColors.expenseIconAccent,
+      FinancialActivityType.income => context.appColors.incomeAccent,
+      FinancialActivityType.transfer => context.appColors.primaryAction,
+    };
+    final Color selectedBorder = switch (type) {
+      FinancialActivityType.expense => context.appColors.expenseBorder,
+      FinancialActivityType.income => context.appColors.incomeBorder,
+      FinancialActivityType.transfer => context.appColors.primaryAction,
+    };
     final Color textColor = !isEnabled
         ? context.appColors.textDisabled
         : isSelected

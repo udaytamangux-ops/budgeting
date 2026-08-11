@@ -12,12 +12,13 @@ import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
+import 'package:budgeting_app/features/financial_activity/presentation/controllers/financial_activity_providers.dart';
+import 'package:budgeting_app/features/financial_activity/presentation/widgets/financial_activity_list_item.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_list_filter.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
-import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_list_item.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,7 +35,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   final TransactionListFilter _filter = const TransactionListFilter();
   Timer? _searchDebounce;
   String _query = '';
-  TransactionType? _selectedType;
+  FinancialActivityType? _selectedType;
 
   @override
   void initState() {
@@ -50,8 +51,8 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final AsyncValue<List<FinancialTransaction>> transactions = ref.watch(
-      transactionListProvider,
+    final AsyncValue<List<FinancialActivity>> transactions = ref.watch(
+      financialActivityListProvider,
     );
     final DateTime currentDate = ref.watch(currentDateProvider);
     final AppCalendarSystem primaryCalendar =
@@ -93,9 +94,12 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   const AppLoadingIndicator(label: 'Loading transactions'),
               error: (Object error, StackTrace stackTrace) => AppErrorState(
                 message: 'Transactions are unavailable. Try again.',
-                onRetry: () => ref.invalidate(transactionListProvider),
+                onRetry: () {
+                  ref.invalidate(transactionListProvider);
+                  ref.invalidate(transferListProvider);
+                },
               ),
-              data: (List<FinancialTransaction> values) {
+              data: (List<FinancialActivity> values) {
                 if (values.isEmpty) {
                   return EmptyState(
                     title: 'No transactions recorded yet',
@@ -114,7 +118,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   );
                 }
                 final List<TransactionDateGroup> groups = _filter.apply(
-                  transactions: values,
+                  activities: values,
                   period: selectedPeriod,
                   query: _query,
                   type: _selectedType,
@@ -159,7 +163,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           selectedType: _selectedType,
                           onSearchChanged: _scheduleSearch,
                           onClearSearch: _clearSearch,
-                          onSelectType: (TransactionType? value) {
+                          onSelectType: (FinancialActivityType? value) {
                             setState(() => _selectedType = value);
                           },
                         ),
@@ -227,20 +231,22 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                     relativeTo: currentDate,
                                   ),
                                 ),
-                              _TransactionRow(
-                                :final FinancialTransaction value,
-                              ) =>
+                              _TransactionRow(:final FinancialActivity value) =>
                                 Column(
                                   children: <Widget>[
-                                    TransactionListItem(
-                                      transaction: value,
+                                    FinancialActivityListItem(
+                                      activity: value,
                                       showDate: false,
                                       onTap: () {
                                         unawaited(
                                           context.push(
-                                            AppRoutes.transactionDetails(
-                                              value.id,
-                                            ),
+                                            value is TransferActivity
+                                                ? AppRoutes.transferDetails(
+                                                    value.id,
+                                                  )
+                                                : AppRoutes.transactionDetails(
+                                                    value.id,
+                                                  ),
                                           ),
                                         );
                                       },
@@ -293,7 +299,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final List<_TransactionListEntry> entries = <_TransactionListEntry>[];
     for (final TransactionDateGroup group in groups) {
       entries.add(_TransactionDateHeader(group.date));
-      entries.addAll(group.transactions.map(_TransactionRow.new));
+      entries.addAll(group.activities.map(_TransactionRow.new));
     }
     return entries;
   }
@@ -309,10 +315,10 @@ final class _TransactionFilters extends StatelessWidget {
   });
 
   final TextEditingController searchController;
-  final TransactionType? selectedType;
+  final FinancialActivityType? selectedType;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onClearSearch;
-  final ValueChanged<TransactionType?> onSelectType;
+  final ValueChanged<FinancialActivityType?> onSelectType;
 
   @override
   Widget build(BuildContext context) {
@@ -350,16 +356,23 @@ final class _TransactionFilters extends StatelessWidget {
               const SizedBox(width: AppSpacing.xs),
               FilterChip(
                 key: const ValueKey<String>('transaction_type_expense'),
-                selected: selectedType == TransactionType.expense,
-                onSelected: (_) => onSelectType(TransactionType.expense),
+                selected: selectedType == FinancialActivityType.expense,
+                onSelected: (_) => onSelectType(FinancialActivityType.expense),
                 label: const Text('Expenses'),
               ),
               const SizedBox(width: AppSpacing.xs),
               FilterChip(
                 key: const ValueKey<String>('transaction_type_income'),
-                selected: selectedType == TransactionType.income,
-                onSelected: (_) => onSelectType(TransactionType.income),
+                selected: selectedType == FinancialActivityType.income,
+                onSelected: (_) => onSelectType(FinancialActivityType.income),
                 label: const Text('Income'),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              FilterChip(
+                key: const ValueKey<String>('transaction_type_transfer'),
+                selected: selectedType == FinancialActivityType.transfer,
+                onSelected: (_) => onSelectType(FinancialActivityType.transfer),
+                label: const Text('Transfer'),
               ),
             ],
           ),
@@ -382,7 +395,7 @@ final class _TransactionDateHeader extends _TransactionListEntry {
 final class _TransactionRow extends _TransactionListEntry {
   const _TransactionRow(this.value);
 
-  final FinancialTransaction value;
+  final FinancialActivity value;
 }
 
 final class _DateGroupHeader extends StatelessWidget {

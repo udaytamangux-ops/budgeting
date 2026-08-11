@@ -42,6 +42,31 @@ class StoredPreferences extends Table {
   Set<Column<Object>> get primaryKey => <Column<Object>>{key};
 }
 
+@TableIndex(
+  name: 'stored_transfers_owner_date',
+  columns: <Symbol>{#ownerScope, #occurredAtUtcMicros},
+)
+class StoredTransfers extends Table {
+  TextColumn get id => text()();
+  TextColumn get ownerScope => text()();
+  IntColumn get amountMinorUnits => integer()();
+  TextColumn get currencyCode => text()();
+  TextColumn get sourceKey => text()();
+  TextColumn get destinationKey => text()();
+  TextColumn get destinationName => text().nullable()();
+  BoolColumn get countsAsExpense =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get expenseCategoryKey => text().nullable()();
+  IntColumn get feeMinorUnits => integer().withDefault(const Constant(0))();
+  IntColumn get occurredAtUtcMicros => integer()();
+  TextColumn get note => text().nullable()();
+  IntColumn get createdAtUtcMicros => integer()();
+  IntColumn get updatedAtUtcMicros => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 class RecurringTransactionRules extends Table {
   TextColumn get id => text()();
   TextColumn get ownerScope => text()();
@@ -99,6 +124,7 @@ class RecurringTransactionOccurrences extends Table {
   tables: <Type>[
     StoredTransactions,
     StoredPreferences,
+    StoredTransfers,
     RecurringTransactionRules,
     RecurringTransactionOccurrences,
   ],
@@ -115,7 +141,7 @@ final class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -131,6 +157,27 @@ final class AppDatabase extends _$AppDatabase {
       from2To3: (Migrator migrator, Schema3 schema) async {
         await migrator.createTable(schema.recurringTransactionRules);
         await migrator.createTable(schema.recurringTransactionOccurrences);
+      },
+      from3To4: (Migrator migrator, Schema4 schema) async {
+        await migrator.createTable(schema.storedTransfers);
+        await migrator.createIndex(schema.storedTransfersOwnerDate);
+      },
+      // A short-lived, abandoned Accounts experiment also used schema v4 on
+      // development devices. Those databases don't contain StoredTransfers.
+      // Version 5 is a compatibility bridge that repairs that collision while
+      // leaving all existing financial rows untouched.
+      from4To5: (Migrator migrator, Schema5 schema) async {
+        final QueryRow? storedTransfersTable = await customSelect(
+          "SELECT 1 FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'stored_transfers' LIMIT 1",
+        ).getSingleOrNull();
+        if (storedTransfersTable == null) {
+          await migrator.createTable(schema.storedTransfers);
+        }
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS stored_transfers_owner_date '
+          'ON stored_transfers (owner_scope, occurred_at_utc_micros)',
+        );
       },
     ),
   );
@@ -271,6 +318,58 @@ final class AppDatabase extends _$AppDatabase {
   Future<void> deletePreference(String preferenceKey) async {
     await (delete(storedPreferences)
           ..where((StoredPreferences table) => table.key.equals(preferenceKey)))
+        .go();
+  }
+
+  Stream<List<StoredTransfer>> watchStoredTransfersForOwner(String ownerScope) {
+    return (select(storedTransfers)
+          ..where(
+            (StoredTransfers table) => table.ownerScope.equals(ownerScope),
+          )
+          ..orderBy(<OrderingTerm Function(StoredTransfers)>[
+            (StoredTransfers table) =>
+                OrderingTerm.desc(table.occurredAtUtcMicros),
+            (StoredTransfers table) =>
+                OrderingTerm.desc(table.createdAtUtcMicros),
+          ]))
+        .watch();
+  }
+
+  Future<StoredTransfer?> findStoredTransfer(
+    String transferId, {
+    required String ownerScope,
+  }) {
+    return (select(storedTransfers)..where(
+          (StoredTransfers table) =>
+              table.id.equals(transferId) & table.ownerScope.equals(ownerScope),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<void> insertStoredTransfer(StoredTransfersCompanion transfer) async {
+    await into(storedTransfers).insert(transfer);
+  }
+
+  Future<int> updateStoredTransfer(
+    String transferId,
+    StoredTransfersCompanion transfer, {
+    required String ownerScope,
+  }) {
+    return (update(storedTransfers)..where(
+          (StoredTransfers table) =>
+              table.id.equals(transferId) & table.ownerScope.equals(ownerScope),
+        ))
+        .write(transfer);
+  }
+
+  Future<int> deleteStoredTransfer(
+    String transferId, {
+    required String ownerScope,
+  }) {
+    return (delete(storedTransfers)..where(
+          (StoredTransfers table) =>
+              table.id.equals(transferId) & table.ownerScope.equals(ownerScope),
+        ))
         .go();
   }
 }

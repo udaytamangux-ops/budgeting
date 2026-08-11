@@ -13,13 +13,13 @@ import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
+import 'package:budgeting_app/features/financial_activity/presentation/widgets/financial_activity_list_item.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/presentation/controllers/summary_providers.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
-import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,7 +107,7 @@ final class _CategoryDetailsContent extends ConsumerWidget {
             AppSpacing.md,
             AppSpacing.xs,
             AppSpacing.md,
-            details.transactions.isEmpty
+            details.items.isEmpty
                 ? AppSpacing.navigationClearance
                 : AppSpacing.xs,
           ),
@@ -135,7 +135,7 @@ final class _CategoryDetailsContent extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.xs),
-              if (details.transactions.isEmpty)
+              if (details.items.isEmpty)
                 EmptyState(
                   title: 'No recorded transactions',
                   message: routeData.type == TransactionType.expense
@@ -152,7 +152,7 @@ final class _CategoryDetailsContent extends ConsumerWidget {
             ]),
           ),
         ),
-        if (details.transactions.isNotEmpty)
+        if (details.items.isNotEmpty)
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -161,17 +161,17 @@ final class _CategoryDetailsContent extends ConsumerWidget {
               AppSpacing.navigationClearance,
             ),
             sliver: SliverList.builder(
-              itemCount: details.transactions.length * 2 - 1,
+              itemCount: details.items.length * 2 - 1,
               itemBuilder: (BuildContext context, int index) {
                 if (index.isOdd) {
                   return const Divider();
                 }
-                final FinancialTransaction transaction =
-                    details.transactions[index ~/ 2];
-                return TransactionListItem(
-                  transaction: transaction,
+                final CategoryActivityItem item = details.items[index ~/ 2];
+                return FinancialActivityListItem(
+                  activity: item.activity,
+                  displayAmount: item.contribution,
                   onTap: () =>
-                      unawaited(_openTransaction(context, ref, transaction.id)),
+                      unawaited(_openActivity(context, ref, item.activity)),
                 );
               },
             ),
@@ -180,16 +180,18 @@ final class _CategoryDetailsContent extends ConsumerWidget {
     );
   }
 
-  Future<void> _openTransaction(
+  Future<void> _openActivity(
     BuildContext context,
     WidgetRef ref,
-    String transactionId,
+    FinancialActivity activity,
   ) async {
     ref
         .read(appAnalyticsProvider)
         .recordEvent(AnalyticsEventNames.categoryTransactionOpened);
     await context.push<void>(
-      AppRoutes.categoryTransactionDetails(routeData, transactionId),
+      activity is TransferActivity
+          ? AppRoutes.transferDetails(activity.id)
+          : AppRoutes.categoryTransactionDetails(routeData, activity.id),
     );
   }
 }

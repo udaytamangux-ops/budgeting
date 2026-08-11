@@ -2,9 +2,9 @@ import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
+import 'package:budgeting_app/features/financial_activity/presentation/controllers/financial_activity_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
-import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final class CalendarPeriodBounds {
@@ -71,22 +71,22 @@ final Provider<AsyncValue<CalendarPeriodBounds>> calendarPeriodBoundsProvider =
         calendar,
         now: ref.watch(currentDateProvider),
       );
-      return ref.watch(transactionListProvider).whenData((transactions) {
-        if (transactions.isEmpty) {
+      return ref.watch(financialActivityListProvider).whenData((activities) {
+        if (activities.isEmpty) {
           return CalendarPeriodBounds(
             earliest: current,
             current: current,
             latest: current,
           );
         }
-        DateTime earliestDate = transactions.first.occurredAt;
-        DateTime latestDate = transactions.first.occurredAt;
-        for (final FinancialTransaction transaction in transactions.skip(1)) {
-          if (transaction.occurredAt.isBefore(earliestDate)) {
-            earliestDate = transaction.occurredAt;
+        DateTime earliestDate = activities.first.occurredAt;
+        DateTime latestDate = activities.first.occurredAt;
+        for (final FinancialActivity activity in activities.skip(1)) {
+          if (activity.occurredAt.isBefore(earliestDate)) {
+            earliestDate = activity.occurredAt;
           }
-          if (transaction.occurredAt.isAfter(latestDate)) {
-            latestDate = transaction.occurredAt;
+          if (activity.occurredAt.isAfter(latestDate)) {
+            latestDate = activity.occurredAt;
           }
         }
         final CalendarPeriod earliestTransaction = service.periodForDate(

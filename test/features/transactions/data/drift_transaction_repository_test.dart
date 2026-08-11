@@ -25,7 +25,7 @@ void main() {
   });
 
   test('database and repository start empty without mock seeding', () async {
-    expect(database.schemaVersion, 3);
+    expect(database.schemaVersion, 5);
     expect(await repository.watchTransactions().first, isEmpty);
   });
 

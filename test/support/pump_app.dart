@@ -20,6 +20,9 @@ import 'package:budgeting_app/features/transactions/data/repositories/in_memory_
 import 'package:budgeting_app/features/transactions/data/sources/mock_transaction_source.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
+import 'package:budgeting_app/features/transfers/data/repositories/in_memory_transfer_repository.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -28,6 +31,7 @@ import 'test_data.dart';
 Future<InMemoryTransactionRepository> pumpBudgetingApp(
   WidgetTester tester, {
   List<FinancialTransaction>? seedTransactions,
+  List<FinancialTransfer> seedTransfers = const <FinancialTransfer>[],
   bool useMockTransactions = false,
   Stream<List<FinancialTransaction>>? transactionStream,
   Duration operationDelay = Duration.zero,
@@ -58,6 +62,8 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
         operationDelay: operationDelay,
         now: () => fixedNow,
       );
+  final InMemoryTransferRepository transferRepository =
+      InMemoryTransferRepository(seedTransfers: seedTransfers);
   final InMemoryAccessPreferenceRepository resolvedAccessRepository =
       accessRepository ??
       InMemoryAccessPreferenceRepository(initialMode: accessMode);
@@ -105,6 +111,7 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
       resolvedCalendarRepository,
     ),
     transactionRepositoryProvider.overrideWithValue(repository),
+    transferRepositoryProvider.overrideWithValue(transferRepository),
     recurringTransactionRepositoryProvider.overrideWithValue(
       resolvedRecurringRepository,
     ),

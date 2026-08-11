@@ -1,9 +1,12 @@
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
+import 'package:budgeting_app/features/financial_activity/domain/services/financial_effect_service.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
 
 final class CategoryActivityService {
   const CategoryActivityService();
@@ -12,84 +15,96 @@ final class CategoryActivityService {
     required List<FinancialTransaction> transactions,
     required DateTime month,
     required TransactionType type,
-  }) {
-    return calculateForPeriod(
-      transactions: transactions,
-      period: CalendarPeriod(
-        calendarSystem: AppCalendarSystem.gregorianAd,
-        year: month.year,
-        month: month.month,
-        startAdInclusive: DateTime.utc(month.year, month.month),
-        endAdExclusive: DateTime.utc(month.year, month.month + 1),
-        displayLabel: '',
-      ),
-      type: type,
-    );
-  }
+    List<FinancialTransfer> transfers = const <FinancialTransfer>[],
+  }) => calculateForPeriod(
+    transactions: transactions,
+    transfers: transfers,
+    period: CalendarPeriod(
+      calendarSystem: AppCalendarSystem.gregorianAd,
+      year: month.year,
+      month: month.month,
+      startAdInclusive: DateTime.utc(month.year, month.month),
+      endAdExclusive: DateTime.utc(month.year, month.month + 1),
+      displayLabel: '',
+    ),
+    type: type,
+  );
 
   MonthlyCategoryActivity calculateForPeriod({
     required List<FinancialTransaction> transactions,
     required CalendarPeriod period,
     required TransactionType type,
+    List<FinancialTransfer> transfers = const <FinancialTransfer>[],
   }) {
-    final List<FinancialTransaction> matchingTransactions = transactions
-        .where(
-          (FinancialTransaction transaction) =>
-              transaction.type == type &&
-              period.contains(transaction.occurredAt),
-        )
-        .toList(growable: false);
+    final List<FinancialActivity> activities = <FinancialActivity>[
+      ...transactions.map(TransactionActivity.new),
+      ...transfers.map(TransferActivity.new),
+    ];
     final Map<TransactionCategory, Money> amounts =
         <TransactionCategory, Money>{};
     final Map<TransactionCategory, int> counts = <TransactionCategory, int>{};
     Money total = const Money.zero();
+    int activityCount = 0;
+    const FinancialEffectService effects = FinancialEffectService();
 
-    for (final FinancialTransaction transaction in matchingTransactions) {
-      total += transaction.amount;
-      amounts.update(
-        transaction.category,
-        (Money amount) => amount + transaction.amount,
-        ifAbsent: () => transaction.amount,
-      );
-      counts.update(
-        transaction.category,
-        (int count) => count + 1,
-        ifAbsent: () => 1,
-      );
+    for (final FinancialActivity activity in activities) {
+      if (!period.contains(activity.occurredAt)) continue;
+      final FinancialEffect effect = effects.forActivity(activity);
+      if (type == TransactionType.income) {
+        if (!effect.incomeImpact.isPositive ||
+            activity is! TransactionActivity) {
+          continue;
+        }
+        total += effect.incomeImpact;
+        final TransactionCategory category = activity.transaction.category;
+        amounts.update(
+          category,
+          (value) => value + effect.incomeImpact,
+          ifAbsent: () => effect.incomeImpact,
+        );
+        counts.update(category, (value) => value + 1, ifAbsent: () => 1);
+        activityCount += 1;
+        continue;
+      }
+      if (!effect.expenseImpact.isPositive) continue;
+      total += effect.expenseImpact;
+      activityCount += 1;
+      for (final MapEntry<TransactionCategory, Money> entry
+          in effect.expenseCategoryContributions.entries) {
+        amounts.update(
+          entry.key,
+          (value) => value + entry.value,
+          ifAbsent: () => entry.value,
+        );
+        counts.update(entry.key, (value) => value + 1, ifAbsent: () => 1);
+      }
     }
 
-    final List<MapEntry<TransactionCategory, Money>> sortedEntries =
-        amounts.entries.toList()..sort((
-          MapEntry<TransactionCategory, Money> first,
-          MapEntry<TransactionCategory, Money> second,
-        ) {
-          final int amountComparison = second.value.compareTo(first.value);
-          return amountComparison != 0
-              ? amountComparison
-              : first.key.index.compareTo(second.key.index);
+    final List<MapEntry<TransactionCategory, Money>> sorted =
+        amounts.entries.toList()..sort((a, b) {
+          final int amount = b.value.compareTo(a.value);
+          return amount != 0 ? amount : a.key.index.compareTo(b.key.index);
         });
     final List<int> percentages = _allocatePercentages(
-      sortedEntries
-          .map((MapEntry<TransactionCategory, Money> entry) => entry.value)
-          .toList(growable: false),
+      sorted.map((entry) => entry.value).toList(growable: false),
       total.minorUnits,
     );
-    final List<CategoryActivityRecord> records = List.generate(
-      sortedEntries.length,
-      (int index) => CategoryActivityRecord(
-        category: sortedEntries[index].key,
-        amount: sortedEntries[index].value,
-        sharePercentage: percentages[index],
-        transactionCount: counts[sortedEntries[index].key]!,
-      ),
-      growable: false,
-    );
-
+    final List<CategoryActivityRecord> records =
+        List<CategoryActivityRecord>.generate(
+          sorted.length,
+          (int index) => CategoryActivityRecord(
+            category: sorted[index].key,
+            amount: sorted[index].value,
+            sharePercentage: percentages[index],
+            transactionCount: counts[sorted[index].key]!,
+          ),
+          growable: false,
+        );
     return MonthlyCategoryActivity(
       month: period.startAdInclusive,
       type: type,
       total: total,
-      transactionCount: matchingTransactions.length,
+      transactionCount: activityCount,
       records: List<CategoryActivityRecord>.unmodifiable(records),
       groups: _groupRecords(records),
     );
@@ -100,27 +115,28 @@ final class CategoryActivityService {
     required DateTime month,
     required TransactionType type,
     required List<TransactionCategory> categories,
-  }) {
-    return calculateForCategoriesInPeriod(
-      transactions: transactions,
-      period: CalendarPeriod(
-        calendarSystem: AppCalendarSystem.gregorianAd,
-        year: month.year,
-        month: month.month,
-        startAdInclusive: DateTime.utc(month.year, month.month),
-        endAdExclusive: DateTime.utc(month.year, month.month + 1),
-        displayLabel: '',
-      ),
-      type: type,
-      categories: categories,
-    );
-  }
+    List<FinancialTransfer> transfers = const <FinancialTransfer>[],
+  }) => calculateForCategoriesInPeriod(
+    transactions: transactions,
+    transfers: transfers,
+    period: CalendarPeriod(
+      calendarSystem: AppCalendarSystem.gregorianAd,
+      year: month.year,
+      month: month.month,
+      startAdInclusive: DateTime.utc(month.year, month.month),
+      endAdExclusive: DateTime.utc(month.year, month.month + 1),
+      displayLabel: '',
+    ),
+    type: type,
+    categories: categories,
+  );
 
   CategoryActivityDetails calculateForCategoriesInPeriod({
     required List<FinancialTransaction> transactions,
     required CalendarPeriod period,
     required TransactionType type,
     required List<TransactionCategory> categories,
+    List<FinancialTransfer> transfers = const <FinancialTransfer>[],
   }) {
     if (categories.isEmpty) {
       throw ArgumentError.value(
@@ -129,54 +145,70 @@ final class CategoryActivityService {
         'At least one category is required.',
       );
     }
-    final Set<TransactionCategory> selectedCategories = categories.toSet();
-    final MonthlyCategoryActivity monthlyActivity = calculateForPeriod(
+    final Set<TransactionCategory> selected = categories.toSet();
+    final MonthlyCategoryActivity monthly = calculateForPeriod(
       transactions: transactions,
+      transfers: transfers,
       period: period,
       type: type,
     );
-    final List<FinancialTransaction> matchingTransactions =
-        transactions
-            .where(
-              (FinancialTransaction transaction) =>
-                  transaction.type == type &&
-                  selectedCategories.contains(transaction.category) &&
-                  period.contains(transaction.occurredAt),
-            )
-            .toList()
-          ..sort(_compareTransactionsNewestFirst);
+    final List<FinancialActivity> activities = <FinancialActivity>[
+      ...transactions.map(TransactionActivity.new),
+      ...transfers.map(TransferActivity.new),
+    ];
+    const FinancialEffectService effects = FinancialEffectService();
+    final List<CategoryActivityItem> items = <CategoryActivityItem>[];
     Money total = const Money.zero();
-    for (final FinancialTransaction transaction in matchingTransactions) {
-      total += transaction.amount;
+    for (final FinancialActivity activity in activities) {
+      if (!period.contains(activity.occurredAt)) continue;
+      final FinancialEffect effect = effects.forActivity(activity);
+      Money contribution = const Money.zero();
+      if (type == TransactionType.income && activity is TransactionActivity) {
+        if (selected.contains(activity.transaction.category)) {
+          contribution = effect.incomeImpact;
+        }
+      } else if (type == TransactionType.expense) {
+        for (final TransactionCategory category in selected) {
+          contribution +=
+              effect.expenseCategoryContributions[category] ??
+              const Money.zero();
+        }
+      }
+      if (!contribution.isPositive) continue;
+      total += contribution;
+      items.add(
+        CategoryActivityItem(activity: activity, contribution: contribution),
+      );
     }
-    int sharePercentage = 0;
-    for (final CategoryActivityRecord record in monthlyActivity.records) {
-      if (selectedCategories.contains(record.category)) {
-        sharePercentage += record.sharePercentage;
+    items.sort((a, b) {
+      final int occurred = b.activity.occurredAt.compareTo(
+        a.activity.occurredAt,
+      );
+      return occurred != 0
+          ? occurred
+          : b.activity.createdAt.compareTo(a.activity.createdAt);
+    });
+    int percentage = 0;
+    for (final CategoryActivityRecord record in monthly.records) {
+      if (selected.contains(record.category)) {
+        percentage += record.sharePercentage;
       }
     }
-    final Money? averageTransaction = matchingTransactions.isEmpty
+    final Money? average = items.isEmpty
         ? null
         : Money(
-            minorUnits:
-                (total.minorUnits + matchingTransactions.length ~/ 2) ~/
-                matchingTransactions.length,
+            minorUnits: (total.minorUnits + items.length ~/ 2) ~/ items.length,
             currencyCode: total.currencyCode,
           );
-
     return CategoryActivityDetails(
-      month: monthlyActivity.month,
+      month: monthly.month,
       type: type,
-      includedCategories: List<TransactionCategory>.unmodifiable(
-        selectedCategories,
-      ),
+      includedCategories: List<TransactionCategory>.unmodifiable(selected),
       total: total,
-      relevantMonthlyTotal: monthlyActivity.total,
-      sharePercentage: sharePercentage,
-      transactions: List<FinancialTransaction>.unmodifiable(
-        matchingTransactions,
-      ),
-      averageTransaction: averageTransaction,
+      relevantMonthlyTotal: monthly.total,
+      sharePercentage: percentage,
+      items: List<CategoryActivityItem>.unmodifiable(items),
+      averageTransaction: average,
     );
   }
 
@@ -184,32 +216,24 @@ final class CategoryActivityService {
     if (amounts.isEmpty || totalMinorUnits <= 0) {
       return List<int>.filled(amounts.length, 0, growable: false);
     }
-
-    final List<int> percentages = List<int>.filled(amounts.length, 0);
+    final List<int> result = List<int>.filled(amounts.length, 0);
     final List<int> remainders = List<int>.filled(amounts.length, 0);
     int allocated = 0;
-    for (int index = 0; index < amounts.length; index += 1) {
-      final int scaledAmount = amounts[index].minorUnits * 100;
-      percentages[index] = scaledAmount ~/ totalMinorUnits;
-      remainders[index] = scaledAmount % totalMinorUnits;
-      allocated += percentages[index];
+    for (int i = 0; i < amounts.length; i += 1) {
+      final int scaled = amounts[i].minorUnits * 100;
+      result[i] = scaled ~/ totalMinorUnits;
+      remainders[i] = scaled % totalMinorUnits;
+      allocated += result[i];
     }
-
-    final List<int> rankedIndexes =
-        List<int>.generate(amounts.length, (int index) => index)
-          ..sort((int first, int second) {
-            final int remainderComparison = remainders[second].compareTo(
-              remainders[first],
-            );
-            return remainderComparison != 0
-                ? remainderComparison
-                : first.compareTo(second);
-          });
-    final int pointsToAllocate = 100 - allocated;
-    for (int index = 0; index < pointsToAllocate; index += 1) {
-      percentages[rankedIndexes[index]] += 1;
+    final List<int> order = List<int>.generate(amounts.length, (i) => i)
+      ..sort((a, b) {
+        final int remainder = remainders[b].compareTo(remainders[a]);
+        return remainder != 0 ? remainder : a.compareTo(b);
+      });
+    for (int i = 0; i < 100 - allocated; i += 1) {
+      result[order[i]] += 1;
     }
-    return List<int>.unmodifiable(percentages);
+    return List<int>.unmodifiable(result);
   }
 
   List<CategoryActivityGroup> _groupRecords(
@@ -219,7 +243,7 @@ final class CategoryActivityService {
     if (records.length <= maximumMajorCategories) {
       return List<CategoryActivityGroup>.unmodifiable(
         records.map(
-          (CategoryActivityRecord record) => CategoryActivityGroup(
+          (record) => CategoryActivityGroup(
             category: record.category,
             includedCategories: <TransactionCategory>[record.category],
             amount: record.amount,
@@ -229,17 +253,13 @@ final class CategoryActivityService {
         ),
       );
     }
-
-    final List<CategoryActivityRecord> majorRecords = records
-        .where(
-          (CategoryActivityRecord record) =>
-              record.category != TransactionCategory.other,
-        )
+    final List<CategoryActivityRecord> major = records
+        .where((record) => record.category != TransactionCategory.other)
         .take(maximumMajorCategories)
         .toList(growable: false);
-    final List<CategoryActivityGroup> groups = majorRecords
+    final List<CategoryActivityGroup> groups = major
         .map(
-          (CategoryActivityRecord record) => CategoryActivityGroup(
+          (record) => CategoryActivityGroup(
             category: record.category,
             includedCategories: <TransactionCategory>[record.category],
             amount: record.amount,
@@ -248,48 +268,28 @@ final class CategoryActivityService {
           ),
         )
         .toList();
-    final List<CategoryActivityRecord> additionalRecords = records
-        .where(
-          (CategoryActivityRecord record) => !majorRecords.contains(record),
-        )
+    final List<CategoryActivityRecord> additional = records
+        .where((record) => !major.contains(record))
         .toList(growable: false);
     Money otherAmount = const Money.zero();
     int otherPercentage = 0;
-    int otherTransactionCount = 0;
-    for (final CategoryActivityRecord record in additionalRecords) {
+    int otherCount = 0;
+    for (final CategoryActivityRecord record in additional) {
       otherAmount += record.amount;
       otherPercentage += record.sharePercentage;
-      otherTransactionCount += record.transactionCount;
+      otherCount += record.transactionCount;
     }
     groups.add(
       CategoryActivityGroup(
         category: null,
         includedCategories: List<TransactionCategory>.unmodifiable(
-          additionalRecords.map(
-            (CategoryActivityRecord record) => record.category,
-          ),
+          additional.map((record) => record.category),
         ),
         amount: otherAmount,
         sharePercentage: otherPercentage,
-        transactionCount: otherTransactionCount,
+        transactionCount: otherCount,
       ),
     );
     return List<CategoryActivityGroup>.unmodifiable(groups);
-  }
-
-  int _compareTransactionsNewestFirst(
-    FinancialTransaction first,
-    FinancialTransaction second,
-  ) {
-    final int occurredAtComparison = second.occurredAt.compareTo(
-      first.occurredAt,
-    );
-    if (occurredAtComparison != 0) {
-      return occurredAtComparison;
-    }
-    final int createdAtComparison = second.createdAt.compareTo(first.createdAt);
-    return createdAtComparison != 0
-        ? createdAtComparison
-        : second.id.compareTo(first.id);
   }
 }

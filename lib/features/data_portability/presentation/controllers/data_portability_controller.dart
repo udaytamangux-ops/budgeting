@@ -113,7 +113,7 @@ final class DataPortabilityController
           .readCurrentOwnerSnapshot();
       final Uint8List bytes = ref
           .read(transactionCsvServiceProvider)
-          .encode(snapshot.transactions);
+          .encode(snapshot.transactions, transfers: snapshot.transfers);
       final DocumentSaveResult result = await ref
           .read(localDocumentServiceProvider)
           .save(

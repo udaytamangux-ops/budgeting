@@ -203,7 +203,7 @@ void main() {
       final PortableBackup recovery = codec.decode(
         documents.savedDocuments.single.bytes,
       );
-      expect(BackupCodec.backupFormatVersion, 1);
+      expect(BackupCodec.backupFormatVersion, 2);
       expect(recovery.snapshot.transactions.single.id, 'current-transaction');
       expect(repository.replaceCalls, 1);
       expect(repository.snapshot.transactions, isEmpty);

@@ -75,7 +75,7 @@ void main() {
   test('database starts with no recurring rules or occurrences', () async {
     expect(await repository.watchRules().first, isEmpty);
     expect(await repository.watchPendingOccurrences().first, isEmpty);
-    expect(database.schemaVersion, 3);
+    expect(database.schemaVersion, 5);
   });
 
   test('create persists every rule field with stable identifiers', () async {

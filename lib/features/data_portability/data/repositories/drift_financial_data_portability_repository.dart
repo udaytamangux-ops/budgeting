@@ -9,6 +9,8 @@ import 'package:budgeting_app/features/recurring/domain/entities/recurring_trans
     as domain;
 import 'package:budgeting_app/features/transactions/data/database/transaction_database_mapper.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transfers/data/database/transfer_database_mapper.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
 import 'package:drift/drift.dart';
 
 final class DriftFinancialDataPortabilityRepository
@@ -43,6 +45,12 @@ final class DriftFinancialDataPortabilityRepository
                       table.ownerScope.equals(ownerScope),
                 ))
               .get();
+      final List<db.StoredTransfer> transferRows =
+          await (_database.select(_database.storedTransfers)..where(
+                (db.StoredTransfers table) =>
+                    table.ownerScope.equals(ownerScope),
+              ))
+              .get();
 
       final List<FinancialTransaction> transactions =
           transactionRows
@@ -73,6 +81,11 @@ final class DriftFinancialDataPortabilityRepository
               })
               .toList(growable: false)
             ..sort((a, b) => a.id.compareTo(b.id));
+      final List<FinancialTransfer> transfers =
+          transferRows
+              .map(TransferDatabaseMapper.fromRow)
+              .toList(growable: false)
+            ..sort((a, b) => a.id.compareTo(b.id));
       return FinancialDataSnapshot(
         transactions: List<FinancialTransaction>.unmodifiable(transactions),
         recurringRules: List<domain.RecurringTransactionRule>.unmodifiable(
@@ -82,6 +95,7 @@ final class DriftFinancialDataPortabilityRepository
             List<domain.RecurringTransactionOccurrence>.unmodifiable(
               occurrences,
             ),
+        transfers: List<FinancialTransfer>.unmodifiable(transfers),
       );
     } catch (error) {
       throw DataPortabilityException(
@@ -115,6 +129,10 @@ final class DriftFinancialDataPortabilityRepository
                   table.ownerScope.equals(ownerScope),
             ))
             .go();
+        await (_database.delete(_database.storedTransfers)..where(
+              (db.StoredTransfers table) => table.ownerScope.equals(ownerScope),
+            ))
+            .go();
 
         for (final FinancialTransaction transaction in snapshot.transactions) {
           final FinancialTransaction restored = _transactionWithId(
@@ -125,6 +143,20 @@ final class DriftFinancialDataPortabilityRepository
               .into(_database.storedTransactions)
               .insert(
                 TransactionDatabaseMapper.toCompanion(
+                  restored,
+                  ownerScope: ownerScope,
+                ),
+              );
+        }
+        for (final FinancialTransfer transfer in snapshot.transfers) {
+          final FinancialTransfer restored = _transferWithId(
+            transfer,
+            ids.transfers[transfer.id]!,
+          );
+          await _database
+              .into(_database.storedTransfers)
+              .insert(
+                TransferDatabaseMapper.toCompanion(
                   restored,
                   ownerScope: ownerScope,
                 ),
@@ -178,6 +210,15 @@ final class DriftFinancialDataPortabilityRepository
   Future<_RestoreIds> _resolveIds(FinancialDataSnapshot snapshot) async {
     final Set<String> used = <String>{};
     used.addAll(
+      await (_database.selectOnly(_database.storedTransfers)
+            ..addColumns(<Expression<Object>>[_database.storedTransfers.id])
+            ..where(
+              _database.storedTransfers.ownerScope.equals(ownerScope).not(),
+            ))
+          .map((row) => row.read(_database.storedTransfers.id)!)
+          .get(),
+    );
+    used.addAll(
       await (_database.selectOnly(_database.storedTransactions)
             ..addColumns(<Expression<Object>>[_database.storedTransactions.id])
             ..where(
@@ -225,10 +266,15 @@ final class DriftFinancialDataPortabilityRepository
       snapshot.recurringOccurrences.map((value) => value.id),
       used,
     );
+    final Map<String, String> transferIds = _allocate(
+      snapshot.transfers.map((value) => value.id),
+      used,
+    );
     return _RestoreIds(
       transactions: transactionIds,
       rules: ruleIds,
       occurrences: occurrenceIds,
+      transfers: transferIds,
     );
   }
 
@@ -264,6 +310,22 @@ final class DriftFinancialDataPortabilityRepository
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
   );
+
+  FinancialTransfer _transferWithId(FinancialTransfer value, String id) =>
+      FinancialTransfer(
+        id: id,
+        amount: value.amount,
+        source: value.source,
+        destination: value.destination,
+        destinationName: value.destinationName,
+        countsAsExpense: value.countsAsExpense,
+        expenseCategory: value.expenseCategory,
+        fee: value.fee,
+        occurredAt: value.occurredAt,
+        note: value.note,
+        createdAt: value.createdAt,
+        updatedAt: value.updatedAt,
+      );
 
   domain.RecurringTransactionRule _ruleWithId(
     domain.RecurringTransactionRule value,
@@ -317,9 +379,11 @@ final class _RestoreIds {
     required this.transactions,
     required this.rules,
     required this.occurrences,
+    required this.transfers,
   });
 
   final Map<String, String> transactions;
   final Map<String, String> rules;
   final Map<String, String> occurrences;
+  final Map<String, String> transfers;
 }

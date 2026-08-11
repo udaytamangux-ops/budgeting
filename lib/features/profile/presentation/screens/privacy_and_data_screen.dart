@@ -298,6 +298,7 @@ final class PrivacyAndDataScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text('${preview.transactionCount} transactions'),
+              Text('${preview.transferCount} transfers'),
               Text('${preview.recurringRuleCount} recurring schedules'),
               Text(
                 '${preview.recurringOccurrenceCount} scheduled-history items',
@@ -309,6 +310,7 @@ final class PrivacyAndDataScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text('${preview.currentTransactionCount} transactions'),
+              Text('${preview.currentTransferCount} transfers'),
               Text('${preview.currentRecurringRuleCount} recurring schedules'),
               Text(
                 '${preview.currentRecurringOccurrenceCount} '

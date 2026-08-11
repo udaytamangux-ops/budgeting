@@ -952,6 +952,865 @@ class StoredPreferencesCompanion extends UpdateCompanion<StoredPreference> {
   }
 }
 
+class $StoredTransfersTable extends StoredTransfers
+    with TableInfo<$StoredTransfersTable, StoredTransfer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StoredTransfersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerScopeMeta = const VerificationMeta(
+    'ownerScope',
+  );
+  @override
+  late final GeneratedColumn<String> ownerScope = GeneratedColumn<String>(
+    'owner_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorUnitsMeta = const VerificationMeta(
+    'amountMinorUnits',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinorUnits = GeneratedColumn<int>(
+    'amount_minor_units',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceKeyMeta = const VerificationMeta(
+    'sourceKey',
+  );
+  @override
+  late final GeneratedColumn<String> sourceKey = GeneratedColumn<String>(
+    'source_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _destinationKeyMeta = const VerificationMeta(
+    'destinationKey',
+  );
+  @override
+  late final GeneratedColumn<String> destinationKey = GeneratedColumn<String>(
+    'destination_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _destinationNameMeta = const VerificationMeta(
+    'destinationName',
+  );
+  @override
+  late final GeneratedColumn<String> destinationName = GeneratedColumn<String>(
+    'destination_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _countsAsExpenseMeta = const VerificationMeta(
+    'countsAsExpense',
+  );
+  @override
+  late final GeneratedColumn<bool> countsAsExpense = GeneratedColumn<bool>(
+    'counts_as_expense',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("counts_as_expense" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _expenseCategoryKeyMeta =
+      const VerificationMeta('expenseCategoryKey');
+  @override
+  late final GeneratedColumn<String> expenseCategoryKey =
+      GeneratedColumn<String>(
+        'expense_category_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _feeMinorUnitsMeta = const VerificationMeta(
+    'feeMinorUnits',
+  );
+  @override
+  late final GeneratedColumn<int> feeMinorUnits = GeneratedColumn<int>(
+    'fee_minor_units',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _occurredAtUtcMicrosMeta =
+      const VerificationMeta('occurredAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> occurredAtUtcMicros = GeneratedColumn<int>(
+    'occurred_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtUtcMicrosMeta =
+      const VerificationMeta('createdAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> createdAtUtcMicros = GeneratedColumn<int>(
+    'created_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMicrosMeta =
+      const VerificationMeta('updatedAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMicros = GeneratedColumn<int>(
+    'updated_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerScope,
+    amountMinorUnits,
+    currencyCode,
+    sourceKey,
+    destinationKey,
+    destinationName,
+    countsAsExpense,
+    expenseCategoryKey,
+    feeMinorUnits,
+    occurredAtUtcMicros,
+    note,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stored_transfers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StoredTransfer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_scope')) {
+      context.handle(
+        _ownerScopeMeta,
+        ownerScope.isAcceptableOrUnknown(data['owner_scope']!, _ownerScopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerScopeMeta);
+    }
+    if (data.containsKey('amount_minor_units')) {
+      context.handle(
+        _amountMinorUnitsMeta,
+        amountMinorUnits.isAcceptableOrUnknown(
+          data['amount_minor_units']!,
+          _amountMinorUnitsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorUnitsMeta);
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('source_key')) {
+      context.handle(
+        _sourceKeyMeta,
+        sourceKey.isAcceptableOrUnknown(data['source_key']!, _sourceKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceKeyMeta);
+    }
+    if (data.containsKey('destination_key')) {
+      context.handle(
+        _destinationKeyMeta,
+        destinationKey.isAcceptableOrUnknown(
+          data['destination_key']!,
+          _destinationKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_destinationKeyMeta);
+    }
+    if (data.containsKey('destination_name')) {
+      context.handle(
+        _destinationNameMeta,
+        destinationName.isAcceptableOrUnknown(
+          data['destination_name']!,
+          _destinationNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('counts_as_expense')) {
+      context.handle(
+        _countsAsExpenseMeta,
+        countsAsExpense.isAcceptableOrUnknown(
+          data['counts_as_expense']!,
+          _countsAsExpenseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expense_category_key')) {
+      context.handle(
+        _expenseCategoryKeyMeta,
+        expenseCategoryKey.isAcceptableOrUnknown(
+          data['expense_category_key']!,
+          _expenseCategoryKeyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fee_minor_units')) {
+      context.handle(
+        _feeMinorUnitsMeta,
+        feeMinorUnits.isAcceptableOrUnknown(
+          data['fee_minor_units']!,
+          _feeMinorUnitsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('occurred_at_utc_micros')) {
+      context.handle(
+        _occurredAtUtcMicrosMeta,
+        occurredAtUtcMicros.isAcceptableOrUnknown(
+          data['occurred_at_utc_micros']!,
+          _occurredAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtUtcMicrosMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at_utc_micros')) {
+      context.handle(
+        _createdAtUtcMicrosMeta,
+        createdAtUtcMicros.isAcceptableOrUnknown(
+          data['created_at_utc_micros']!,
+          _createdAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMicrosMeta);
+    }
+    if (data.containsKey('updated_at_utc_micros')) {
+      context.handle(
+        _updatedAtUtcMicrosMeta,
+        updatedAtUtcMicros.isAcceptableOrUnknown(
+          data['updated_at_utc_micros']!,
+          _updatedAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMicrosMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StoredTransfer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StoredTransfer(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_scope'],
+      )!,
+      amountMinorUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor_units'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      sourceKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_key'],
+      )!,
+      destinationKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}destination_key'],
+      )!,
+      destinationName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}destination_name'],
+      ),
+      countsAsExpense: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}counts_as_expense'],
+      )!,
+      expenseCategoryKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expense_category_key'],
+      ),
+      feeMinorUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fee_minor_units'],
+      )!,
+      occurredAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}occurred_at_utc_micros'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_micros'],
+      )!,
+      updatedAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_micros'],
+      )!,
+    );
+  }
+
+  @override
+  $StoredTransfersTable createAlias(String alias) {
+    return $StoredTransfersTable(attachedDatabase, alias);
+  }
+}
+
+class StoredTransfer extends DataClass implements Insertable<StoredTransfer> {
+  final String id;
+  final String ownerScope;
+  final int amountMinorUnits;
+  final String currencyCode;
+  final String sourceKey;
+  final String destinationKey;
+  final String? destinationName;
+  final bool countsAsExpense;
+  final String? expenseCategoryKey;
+  final int feeMinorUnits;
+  final int occurredAtUtcMicros;
+  final String? note;
+  final int createdAtUtcMicros;
+  final int updatedAtUtcMicros;
+  const StoredTransfer({
+    required this.id,
+    required this.ownerScope,
+    required this.amountMinorUnits,
+    required this.currencyCode,
+    required this.sourceKey,
+    required this.destinationKey,
+    this.destinationName,
+    required this.countsAsExpense,
+    this.expenseCategoryKey,
+    required this.feeMinorUnits,
+    required this.occurredAtUtcMicros,
+    this.note,
+    required this.createdAtUtcMicros,
+    required this.updatedAtUtcMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_scope'] = Variable<String>(ownerScope);
+    map['amount_minor_units'] = Variable<int>(amountMinorUnits);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['source_key'] = Variable<String>(sourceKey);
+    map['destination_key'] = Variable<String>(destinationKey);
+    if (!nullToAbsent || destinationName != null) {
+      map['destination_name'] = Variable<String>(destinationName);
+    }
+    map['counts_as_expense'] = Variable<bool>(countsAsExpense);
+    if (!nullToAbsent || expenseCategoryKey != null) {
+      map['expense_category_key'] = Variable<String>(expenseCategoryKey);
+    }
+    map['fee_minor_units'] = Variable<int>(feeMinorUnits);
+    map['occurred_at_utc_micros'] = Variable<int>(occurredAtUtcMicros);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros);
+    map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros);
+    return map;
+  }
+
+  StoredTransfersCompanion toCompanion(bool nullToAbsent) {
+    return StoredTransfersCompanion(
+      id: Value(id),
+      ownerScope: Value(ownerScope),
+      amountMinorUnits: Value(amountMinorUnits),
+      currencyCode: Value(currencyCode),
+      sourceKey: Value(sourceKey),
+      destinationKey: Value(destinationKey),
+      destinationName: destinationName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destinationName),
+      countsAsExpense: Value(countsAsExpense),
+      expenseCategoryKey: expenseCategoryKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expenseCategoryKey),
+      feeMinorUnits: Value(feeMinorUnits),
+      occurredAtUtcMicros: Value(occurredAtUtcMicros),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAtUtcMicros: Value(createdAtUtcMicros),
+      updatedAtUtcMicros: Value(updatedAtUtcMicros),
+    );
+  }
+
+  factory StoredTransfer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StoredTransfer(
+      id: serializer.fromJson<String>(json['id']),
+      ownerScope: serializer.fromJson<String>(json['ownerScope']),
+      amountMinorUnits: serializer.fromJson<int>(json['amountMinorUnits']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      sourceKey: serializer.fromJson<String>(json['sourceKey']),
+      destinationKey: serializer.fromJson<String>(json['destinationKey']),
+      destinationName: serializer.fromJson<String?>(json['destinationName']),
+      countsAsExpense: serializer.fromJson<bool>(json['countsAsExpense']),
+      expenseCategoryKey: serializer.fromJson<String?>(
+        json['expenseCategoryKey'],
+      ),
+      feeMinorUnits: serializer.fromJson<int>(json['feeMinorUnits']),
+      occurredAtUtcMicros: serializer.fromJson<int>(
+        json['occurredAtUtcMicros'],
+      ),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAtUtcMicros: serializer.fromJson<int>(json['createdAtUtcMicros']),
+      updatedAtUtcMicros: serializer.fromJson<int>(json['updatedAtUtcMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ownerScope': serializer.toJson<String>(ownerScope),
+      'amountMinorUnits': serializer.toJson<int>(amountMinorUnits),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'sourceKey': serializer.toJson<String>(sourceKey),
+      'destinationKey': serializer.toJson<String>(destinationKey),
+      'destinationName': serializer.toJson<String?>(destinationName),
+      'countsAsExpense': serializer.toJson<bool>(countsAsExpense),
+      'expenseCategoryKey': serializer.toJson<String?>(expenseCategoryKey),
+      'feeMinorUnits': serializer.toJson<int>(feeMinorUnits),
+      'occurredAtUtcMicros': serializer.toJson<int>(occurredAtUtcMicros),
+      'note': serializer.toJson<String?>(note),
+      'createdAtUtcMicros': serializer.toJson<int>(createdAtUtcMicros),
+      'updatedAtUtcMicros': serializer.toJson<int>(updatedAtUtcMicros),
+    };
+  }
+
+  StoredTransfer copyWith({
+    String? id,
+    String? ownerScope,
+    int? amountMinorUnits,
+    String? currencyCode,
+    String? sourceKey,
+    String? destinationKey,
+    Value<String?> destinationName = const Value.absent(),
+    bool? countsAsExpense,
+    Value<String?> expenseCategoryKey = const Value.absent(),
+    int? feeMinorUnits,
+    int? occurredAtUtcMicros,
+    Value<String?> note = const Value.absent(),
+    int? createdAtUtcMicros,
+    int? updatedAtUtcMicros,
+  }) => StoredTransfer(
+    id: id ?? this.id,
+    ownerScope: ownerScope ?? this.ownerScope,
+    amountMinorUnits: amountMinorUnits ?? this.amountMinorUnits,
+    currencyCode: currencyCode ?? this.currencyCode,
+    sourceKey: sourceKey ?? this.sourceKey,
+    destinationKey: destinationKey ?? this.destinationKey,
+    destinationName: destinationName.present
+        ? destinationName.value
+        : this.destinationName,
+    countsAsExpense: countsAsExpense ?? this.countsAsExpense,
+    expenseCategoryKey: expenseCategoryKey.present
+        ? expenseCategoryKey.value
+        : this.expenseCategoryKey,
+    feeMinorUnits: feeMinorUnits ?? this.feeMinorUnits,
+    occurredAtUtcMicros: occurredAtUtcMicros ?? this.occurredAtUtcMicros,
+    note: note.present ? note.value : this.note,
+    createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+    updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+  );
+  StoredTransfer copyWithCompanion(StoredTransfersCompanion data) {
+    return StoredTransfer(
+      id: data.id.present ? data.id.value : this.id,
+      ownerScope: data.ownerScope.present
+          ? data.ownerScope.value
+          : this.ownerScope,
+      amountMinorUnits: data.amountMinorUnits.present
+          ? data.amountMinorUnits.value
+          : this.amountMinorUnits,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      sourceKey: data.sourceKey.present ? data.sourceKey.value : this.sourceKey,
+      destinationKey: data.destinationKey.present
+          ? data.destinationKey.value
+          : this.destinationKey,
+      destinationName: data.destinationName.present
+          ? data.destinationName.value
+          : this.destinationName,
+      countsAsExpense: data.countsAsExpense.present
+          ? data.countsAsExpense.value
+          : this.countsAsExpense,
+      expenseCategoryKey: data.expenseCategoryKey.present
+          ? data.expenseCategoryKey.value
+          : this.expenseCategoryKey,
+      feeMinorUnits: data.feeMinorUnits.present
+          ? data.feeMinorUnits.value
+          : this.feeMinorUnits,
+      occurredAtUtcMicros: data.occurredAtUtcMicros.present
+          ? data.occurredAtUtcMicros.value
+          : this.occurredAtUtcMicros,
+      note: data.note.present ? data.note.value : this.note,
+      createdAtUtcMicros: data.createdAtUtcMicros.present
+          ? data.createdAtUtcMicros.value
+          : this.createdAtUtcMicros,
+      updatedAtUtcMicros: data.updatedAtUtcMicros.present
+          ? data.updatedAtUtcMicros.value
+          : this.updatedAtUtcMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredTransfer(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('amountMinorUnits: $amountMinorUnits, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('sourceKey: $sourceKey, ')
+          ..write('destinationKey: $destinationKey, ')
+          ..write('destinationName: $destinationName, ')
+          ..write('countsAsExpense: $countsAsExpense, ')
+          ..write('expenseCategoryKey: $expenseCategoryKey, ')
+          ..write('feeMinorUnits: $feeMinorUnits, ')
+          ..write('occurredAtUtcMicros: $occurredAtUtcMicros, ')
+          ..write('note: $note, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerScope,
+    amountMinorUnits,
+    currencyCode,
+    sourceKey,
+    destinationKey,
+    destinationName,
+    countsAsExpense,
+    expenseCategoryKey,
+    feeMinorUnits,
+    occurredAtUtcMicros,
+    note,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StoredTransfer &&
+          other.id == this.id &&
+          other.ownerScope == this.ownerScope &&
+          other.amountMinorUnits == this.amountMinorUnits &&
+          other.currencyCode == this.currencyCode &&
+          other.sourceKey == this.sourceKey &&
+          other.destinationKey == this.destinationKey &&
+          other.destinationName == this.destinationName &&
+          other.countsAsExpense == this.countsAsExpense &&
+          other.expenseCategoryKey == this.expenseCategoryKey &&
+          other.feeMinorUnits == this.feeMinorUnits &&
+          other.occurredAtUtcMicros == this.occurredAtUtcMicros &&
+          other.note == this.note &&
+          other.createdAtUtcMicros == this.createdAtUtcMicros &&
+          other.updatedAtUtcMicros == this.updatedAtUtcMicros);
+}
+
+class StoredTransfersCompanion extends UpdateCompanion<StoredTransfer> {
+  final Value<String> id;
+  final Value<String> ownerScope;
+  final Value<int> amountMinorUnits;
+  final Value<String> currencyCode;
+  final Value<String> sourceKey;
+  final Value<String> destinationKey;
+  final Value<String?> destinationName;
+  final Value<bool> countsAsExpense;
+  final Value<String?> expenseCategoryKey;
+  final Value<int> feeMinorUnits;
+  final Value<int> occurredAtUtcMicros;
+  final Value<String?> note;
+  final Value<int> createdAtUtcMicros;
+  final Value<int> updatedAtUtcMicros;
+  final Value<int> rowid;
+  const StoredTransfersCompanion({
+    this.id = const Value.absent(),
+    this.ownerScope = const Value.absent(),
+    this.amountMinorUnits = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.sourceKey = const Value.absent(),
+    this.destinationKey = const Value.absent(),
+    this.destinationName = const Value.absent(),
+    this.countsAsExpense = const Value.absent(),
+    this.expenseCategoryKey = const Value.absent(),
+    this.feeMinorUnits = const Value.absent(),
+    this.occurredAtUtcMicros = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAtUtcMicros = const Value.absent(),
+    this.updatedAtUtcMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StoredTransfersCompanion.insert({
+    required String id,
+    required String ownerScope,
+    required int amountMinorUnits,
+    required String currencyCode,
+    required String sourceKey,
+    required String destinationKey,
+    this.destinationName = const Value.absent(),
+    this.countsAsExpense = const Value.absent(),
+    this.expenseCategoryKey = const Value.absent(),
+    this.feeMinorUnits = const Value.absent(),
+    required int occurredAtUtcMicros,
+    this.note = const Value.absent(),
+    required int createdAtUtcMicros,
+    required int updatedAtUtcMicros,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerScope = Value(ownerScope),
+       amountMinorUnits = Value(amountMinorUnits),
+       currencyCode = Value(currencyCode),
+       sourceKey = Value(sourceKey),
+       destinationKey = Value(destinationKey),
+       occurredAtUtcMicros = Value(occurredAtUtcMicros),
+       createdAtUtcMicros = Value(createdAtUtcMicros),
+       updatedAtUtcMicros = Value(updatedAtUtcMicros);
+  static Insertable<StoredTransfer> custom({
+    Expression<String>? id,
+    Expression<String>? ownerScope,
+    Expression<int>? amountMinorUnits,
+    Expression<String>? currencyCode,
+    Expression<String>? sourceKey,
+    Expression<String>? destinationKey,
+    Expression<String>? destinationName,
+    Expression<bool>? countsAsExpense,
+    Expression<String>? expenseCategoryKey,
+    Expression<int>? feeMinorUnits,
+    Expression<int>? occurredAtUtcMicros,
+    Expression<String>? note,
+    Expression<int>? createdAtUtcMicros,
+    Expression<int>? updatedAtUtcMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerScope != null) 'owner_scope': ownerScope,
+      if (amountMinorUnits != null) 'amount_minor_units': amountMinorUnits,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (sourceKey != null) 'source_key': sourceKey,
+      if (destinationKey != null) 'destination_key': destinationKey,
+      if (destinationName != null) 'destination_name': destinationName,
+      if (countsAsExpense != null) 'counts_as_expense': countsAsExpense,
+      if (expenseCategoryKey != null)
+        'expense_category_key': expenseCategoryKey,
+      if (feeMinorUnits != null) 'fee_minor_units': feeMinorUnits,
+      if (occurredAtUtcMicros != null)
+        'occurred_at_utc_micros': occurredAtUtcMicros,
+      if (note != null) 'note': note,
+      if (createdAtUtcMicros != null)
+        'created_at_utc_micros': createdAtUtcMicros,
+      if (updatedAtUtcMicros != null)
+        'updated_at_utc_micros': updatedAtUtcMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StoredTransfersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerScope,
+    Value<int>? amountMinorUnits,
+    Value<String>? currencyCode,
+    Value<String>? sourceKey,
+    Value<String>? destinationKey,
+    Value<String?>? destinationName,
+    Value<bool>? countsAsExpense,
+    Value<String?>? expenseCategoryKey,
+    Value<int>? feeMinorUnits,
+    Value<int>? occurredAtUtcMicros,
+    Value<String?>? note,
+    Value<int>? createdAtUtcMicros,
+    Value<int>? updatedAtUtcMicros,
+    Value<int>? rowid,
+  }) {
+    return StoredTransfersCompanion(
+      id: id ?? this.id,
+      ownerScope: ownerScope ?? this.ownerScope,
+      amountMinorUnits: amountMinorUnits ?? this.amountMinorUnits,
+      currencyCode: currencyCode ?? this.currencyCode,
+      sourceKey: sourceKey ?? this.sourceKey,
+      destinationKey: destinationKey ?? this.destinationKey,
+      destinationName: destinationName ?? this.destinationName,
+      countsAsExpense: countsAsExpense ?? this.countsAsExpense,
+      expenseCategoryKey: expenseCategoryKey ?? this.expenseCategoryKey,
+      feeMinorUnits: feeMinorUnits ?? this.feeMinorUnits,
+      occurredAtUtcMicros: occurredAtUtcMicros ?? this.occurredAtUtcMicros,
+      note: note ?? this.note,
+      createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+      updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerScope.present) {
+      map['owner_scope'] = Variable<String>(ownerScope.value);
+    }
+    if (amountMinorUnits.present) {
+      map['amount_minor_units'] = Variable<int>(amountMinorUnits.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (sourceKey.present) {
+      map['source_key'] = Variable<String>(sourceKey.value);
+    }
+    if (destinationKey.present) {
+      map['destination_key'] = Variable<String>(destinationKey.value);
+    }
+    if (destinationName.present) {
+      map['destination_name'] = Variable<String>(destinationName.value);
+    }
+    if (countsAsExpense.present) {
+      map['counts_as_expense'] = Variable<bool>(countsAsExpense.value);
+    }
+    if (expenseCategoryKey.present) {
+      map['expense_category_key'] = Variable<String>(expenseCategoryKey.value);
+    }
+    if (feeMinorUnits.present) {
+      map['fee_minor_units'] = Variable<int>(feeMinorUnits.value);
+    }
+    if (occurredAtUtcMicros.present) {
+      map['occurred_at_utc_micros'] = Variable<int>(occurredAtUtcMicros.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAtUtcMicros.present) {
+      map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros.value);
+    }
+    if (updatedAtUtcMicros.present) {
+      map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredTransfersCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('amountMinorUnits: $amountMinorUnits, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('sourceKey: $sourceKey, ')
+          ..write('destinationKey: $destinationKey, ')
+          ..write('destinationName: $destinationName, ')
+          ..write('countsAsExpense: $countsAsExpense, ')
+          ..write('expenseCategoryKey: $expenseCategoryKey, ')
+          ..write('feeMinorUnits: $feeMinorUnits, ')
+          ..write('occurredAtUtcMicros: $occurredAtUtcMicros, ')
+          ..write('note: $note, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $RecurringTransactionRulesTable extends RecurringTransactionRules
     with TableInfo<$RecurringTransactionRulesTable, RecurringTransactionRule> {
   @override
@@ -3117,10 +3976,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $StoredTransactionsTable(this);
   late final $StoredPreferencesTable storedPreferences =
       $StoredPreferencesTable(this);
+  late final $StoredTransfersTable storedTransfers = $StoredTransfersTable(
+    this,
+  );
   late final $RecurringTransactionRulesTable recurringTransactionRules =
       $RecurringTransactionRulesTable(this);
   late final $RecurringTransactionOccurrencesTable
   recurringTransactionOccurrences = $RecurringTransactionOccurrencesTable(this);
+  late final Index storedTransfersOwnerDate = Index(
+    'stored_transfers_owner_date',
+    'CREATE INDEX stored_transfers_owner_date ON stored_transfers (owner_scope, occurred_at_utc_micros)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3128,8 +3994,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     storedTransactions,
     storedPreferences,
+    storedTransfers,
     recurringTransactionRules,
     recurringTransactionOccurrences,
+    storedTransfersOwnerDate,
   ];
 }
 
@@ -3649,6 +4517,405 @@ typedef $$StoredPreferencesTableProcessedTableManager =
         >,
       ),
       StoredPreference,
+      PrefetchHooks Function()
+    >;
+typedef $$StoredTransfersTableCreateCompanionBuilder =
+    StoredTransfersCompanion Function({
+      required String id,
+      required String ownerScope,
+      required int amountMinorUnits,
+      required String currencyCode,
+      required String sourceKey,
+      required String destinationKey,
+      Value<String?> destinationName,
+      Value<bool> countsAsExpense,
+      Value<String?> expenseCategoryKey,
+      Value<int> feeMinorUnits,
+      required int occurredAtUtcMicros,
+      Value<String?> note,
+      required int createdAtUtcMicros,
+      required int updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+typedef $$StoredTransfersTableUpdateCompanionBuilder =
+    StoredTransfersCompanion Function({
+      Value<String> id,
+      Value<String> ownerScope,
+      Value<int> amountMinorUnits,
+      Value<String> currencyCode,
+      Value<String> sourceKey,
+      Value<String> destinationKey,
+      Value<String?> destinationName,
+      Value<bool> countsAsExpense,
+      Value<String?> expenseCategoryKey,
+      Value<int> feeMinorUnits,
+      Value<int> occurredAtUtcMicros,
+      Value<String?> note,
+      Value<int> createdAtUtcMicros,
+      Value<int> updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+
+class $$StoredTransfersTableFilterComposer
+    extends Composer<_$AppDatabase, $StoredTransfersTable> {
+  $$StoredTransfersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinorUnits => $composableBuilder(
+    column: $table.amountMinorUnits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceKey => $composableBuilder(
+    column: $table.sourceKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get destinationKey => $composableBuilder(
+    column: $table.destinationKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get destinationName => $composableBuilder(
+    column: $table.destinationName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get countsAsExpense => $composableBuilder(
+    column: $table.countsAsExpense,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expenseCategoryKey => $composableBuilder(
+    column: $table.expenseCategoryKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get feeMinorUnits => $composableBuilder(
+    column: $table.feeMinorUnits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get occurredAtUtcMicros => $composableBuilder(
+    column: $table.occurredAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StoredTransfersTableOrderingComposer
+    extends Composer<_$AppDatabase, $StoredTransfersTable> {
+  $$StoredTransfersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinorUnits => $composableBuilder(
+    column: $table.amountMinorUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceKey => $composableBuilder(
+    column: $table.sourceKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get destinationKey => $composableBuilder(
+    column: $table.destinationKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get destinationName => $composableBuilder(
+    column: $table.destinationName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get countsAsExpense => $composableBuilder(
+    column: $table.countsAsExpense,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get expenseCategoryKey => $composableBuilder(
+    column: $table.expenseCategoryKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get feeMinorUnits => $composableBuilder(
+    column: $table.feeMinorUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get occurredAtUtcMicros => $composableBuilder(
+    column: $table.occurredAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StoredTransfersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StoredTransfersTable> {
+  $$StoredTransfersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountMinorUnits => $composableBuilder(
+    column: $table.amountMinorUnits,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceKey =>
+      $composableBuilder(column: $table.sourceKey, builder: (column) => column);
+
+  GeneratedColumn<String> get destinationKey => $composableBuilder(
+    column: $table.destinationKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get destinationName => $composableBuilder(
+    column: $table.destinationName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get countsAsExpense => $composableBuilder(
+    column: $table.countsAsExpense,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get expenseCategoryKey => $composableBuilder(
+    column: $table.expenseCategoryKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get feeMinorUnits => $composableBuilder(
+    column: $table.feeMinorUnits,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get occurredAtUtcMicros => $composableBuilder(
+    column: $table.occurredAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => column,
+  );
+}
+
+class $$StoredTransfersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StoredTransfersTable,
+          StoredTransfer,
+          $$StoredTransfersTableFilterComposer,
+          $$StoredTransfersTableOrderingComposer,
+          $$StoredTransfersTableAnnotationComposer,
+          $$StoredTransfersTableCreateCompanionBuilder,
+          $$StoredTransfersTableUpdateCompanionBuilder,
+          (
+            StoredTransfer,
+            BaseReferences<
+              _$AppDatabase,
+              $StoredTransfersTable,
+              StoredTransfer
+            >,
+          ),
+          StoredTransfer,
+          PrefetchHooks Function()
+        > {
+  $$StoredTransfersTableTableManager(
+    _$AppDatabase db,
+    $StoredTransfersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StoredTransfersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StoredTransfersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StoredTransfersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerScope = const Value.absent(),
+                Value<int> amountMinorUnits = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<String> sourceKey = const Value.absent(),
+                Value<String> destinationKey = const Value.absent(),
+                Value<String?> destinationName = const Value.absent(),
+                Value<bool> countsAsExpense = const Value.absent(),
+                Value<String?> expenseCategoryKey = const Value.absent(),
+                Value<int> feeMinorUnits = const Value.absent(),
+                Value<int> occurredAtUtcMicros = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> createdAtUtcMicros = const Value.absent(),
+                Value<int> updatedAtUtcMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StoredTransfersCompanion(
+                id: id,
+                ownerScope: ownerScope,
+                amountMinorUnits: amountMinorUnits,
+                currencyCode: currencyCode,
+                sourceKey: sourceKey,
+                destinationKey: destinationKey,
+                destinationName: destinationName,
+                countsAsExpense: countsAsExpense,
+                expenseCategoryKey: expenseCategoryKey,
+                feeMinorUnits: feeMinorUnits,
+                occurredAtUtcMicros: occurredAtUtcMicros,
+                note: note,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerScope,
+                required int amountMinorUnits,
+                required String currencyCode,
+                required String sourceKey,
+                required String destinationKey,
+                Value<String?> destinationName = const Value.absent(),
+                Value<bool> countsAsExpense = const Value.absent(),
+                Value<String?> expenseCategoryKey = const Value.absent(),
+                Value<int> feeMinorUnits = const Value.absent(),
+                required int occurredAtUtcMicros,
+                Value<String?> note = const Value.absent(),
+                required int createdAtUtcMicros,
+                required int updatedAtUtcMicros,
+                Value<int> rowid = const Value.absent(),
+              }) => StoredTransfersCompanion.insert(
+                id: id,
+                ownerScope: ownerScope,
+                amountMinorUnits: amountMinorUnits,
+                currencyCode: currencyCode,
+                sourceKey: sourceKey,
+                destinationKey: destinationKey,
+                destinationName: destinationName,
+                countsAsExpense: countsAsExpense,
+                expenseCategoryKey: expenseCategoryKey,
+                feeMinorUnits: feeMinorUnits,
+                occurredAtUtcMicros: occurredAtUtcMicros,
+                note: note,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StoredTransfersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StoredTransfersTable,
+      StoredTransfer,
+      $$StoredTransfersTableFilterComposer,
+      $$StoredTransfersTableOrderingComposer,
+      $$StoredTransfersTableAnnotationComposer,
+      $$StoredTransfersTableCreateCompanionBuilder,
+      $$StoredTransfersTableUpdateCompanionBuilder,
+      (
+        StoredTransfer,
+        BaseReferences<_$AppDatabase, $StoredTransfersTable, StoredTransfer>,
+      ),
+      StoredTransfer,
       PrefetchHooks Function()
     >;
 typedef $$RecurringTransactionRulesTableCreateCompanionBuilder =
@@ -4639,6 +5906,8 @@ class $AppDatabaseManager {
       $$StoredTransactionsTableTableManager(_db, _db.storedTransactions);
   $$StoredPreferencesTableTableManager get storedPreferences =>
       $$StoredPreferencesTableTableManager(_db, _db.storedPreferences);
+  $$StoredTransfersTableTableManager get storedTransfers =>
+      $$StoredTransfersTableTableManager(_db, _db.storedTransfers);
   $$RecurringTransactionRulesTableTableManager get recurringTransactionRules =>
       $$RecurringTransactionRulesTableTableManager(
         _db,

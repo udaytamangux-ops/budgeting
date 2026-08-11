@@ -14,6 +14,8 @@ import 'package:budgeting_app/features/transactions/domain/repositories/transact
 import 'package:budgeting_app/features/transactions/domain/services/financial_summary_service.dart';
 import 'package:budgeting_app/features/transactions/domain/services/recent_payment_methods_service.dart';
 import 'package:budgeting_app/features/transactions/domain/services/recent_transaction_categories_service.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'package:budgeting_app/core/database/database_providers.dart'
@@ -72,12 +74,30 @@ monthlyFinancialSummaryProvider = Provider<AsyncValue<MonthlyFinancialSummary>>(
     final AsyncValue<List<FinancialTransaction>> transactions = ref.watch(
       transactionListProvider,
     );
+    final AsyncValue<List<FinancialTransfer>> transfers = ref.watch(
+      transferListProvider,
+    );
     final CalendarPeriod currentPeriod = ref.watch(
       currentCalendarPeriodProvider,
     );
-    return transactions.whenData(
-      (List<FinancialTransaction> value) => const FinancialSummaryService()
-          .calculateForPeriod(transactions: value, period: currentPeriod),
+    if (transactions.hasError) {
+      return AsyncError(transactions.error!, transactions.stackTrace!);
+    }
+    if (transfers.hasError) {
+      return AsyncError(transfers.error!, transfers.stackTrace!);
+    }
+    final List<FinancialTransaction>? transactionValues =
+        transactions.valueOrNull;
+    final List<FinancialTransfer>? transferValues = transfers.valueOrNull;
+    if (transactionValues == null || transferValues == null) {
+      return const AsyncLoading<MonthlyFinancialSummary>();
+    }
+    return AsyncData<MonthlyFinancialSummary>(
+      const FinancialSummaryService().calculateForPeriod(
+        transactions: transactionValues,
+        transfers: transferValues,
+        period: currentPeriod,
+      ),
     );
   },
 );

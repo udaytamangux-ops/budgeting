@@ -1,3 +1,4 @@
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
@@ -67,7 +68,7 @@ final class CategoryActivityDetails {
     required this.total,
     required this.relevantMonthlyTotal,
     required this.sharePercentage,
-    required this.transactions,
+    required this.items,
     required this.averageTransaction,
   });
 
@@ -77,8 +78,25 @@ final class CategoryActivityDetails {
   final Money total;
   final Money relevantMonthlyTotal;
   final int sharePercentage;
-  final List<FinancialTransaction> transactions;
+  final List<CategoryActivityItem> items;
   final Money? averageTransaction;
 
-  int get transactionCount => transactions.length;
+  int get transactionCount => items.length;
+
+  List<FinancialTransaction> get transactions =>
+      List<FinancialTransaction>.unmodifiable(
+        items
+            .where((item) => item.activity is TransactionActivity)
+            .map((item) => (item.activity as TransactionActivity).transaction),
+      );
+}
+
+final class CategoryActivityItem {
+  const CategoryActivityItem({
+    required this.activity,
+    required this.contribution,
+  });
+
+  final FinancialActivity activity;
+  final Money contribution;
 }

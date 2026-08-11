@@ -1,6 +1,9 @@
 // dart format width=80
+import 'dart:io';
+
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,6 +11,7 @@ import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
+import 'generated/schema_v4.dart' as v4;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -169,6 +173,148 @@ void main() {
           );
         },
       );
+    },
+  );
+
+  test(
+    'migration from v3 to v4 preserves data and invents no transfers',
+    () async {
+      const v3.StoredTransactionsData transaction = v3.StoredTransactionsData(
+        id: 'existing-v3-transaction',
+        typeKey: 'expense',
+        amountMinorUnits: 125000,
+        currencyCode: 'NPR',
+        categoryKey: 'food',
+        paymentMethodKey: 'cash',
+        occurredAtUtcMicros: 1785824100000000,
+        merchant: 'Existing merchant',
+        note: 'Existing note',
+        createdAtUtcMicros: 1785824100000000,
+        updatedAtUtcMicros: 1785824100000000,
+        ownerScope: 'guest',
+      );
+      const v3.StoredPreferencesData preference = v3.StoredPreferencesData(
+        key: 'theme_mode',
+        value: 'dark',
+      );
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 3,
+        newVersion: 4,
+        createOld: v3.DatabaseAtV3.new,
+        createNew: v4.DatabaseAtV4.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch.insert(oldDb.storedTransactions, transaction);
+          batch.insert(oldDb.storedPreferences, preference);
+        },
+        validateItems: (newDb) async {
+          final transactions = await newDb
+              .select(newDb.storedTransactions)
+              .get();
+          expect(transactions, hasLength(1));
+          expect(transactions.single.id, transaction.id);
+          expect(
+            transactions.single.amountMinorUnits,
+            transaction.amountMinorUnits,
+          );
+          expect(transactions.single.ownerScope, 'guest');
+          expect(
+            await newDb.select(newDb.storedPreferences).get(),
+            <v4.StoredPreferencesData>[
+              const v4.StoredPreferencesData(key: 'theme_mode', value: 'dark'),
+            ],
+          );
+          expect(
+            await newDb.select(newDb.recurringTransactionRules).get(),
+            isEmpty,
+          );
+          expect(
+            await newDb.select(newDb.recurringTransactionOccurrences).get(),
+            isEmpty,
+          );
+          expect(await newDb.select(newDb.storedTransfers).get(), isEmpty);
+        },
+      );
+    },
+  );
+
+  test(
+    'abandoned Accounts v4 collision upgrades without losing financial data',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'budgeting-legacy-accounts-v4-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final File file = File('${directory.path}/legacy.sqlite');
+      final v3.DatabaseAtV3 legacy = v3.DatabaseAtV3(NativeDatabase(file));
+      await legacy
+          .into(legacy.storedTransactions)
+          .insert(
+            const v3.StoredTransactionsData(
+              id: 'legacy-financial-record',
+              typeKey: 'expense',
+              amountMinorUnits: 250000,
+              currencyCode: 'NPR',
+              categoryKey: 'food',
+              paymentMethodKey: 'cash',
+              occurredAtUtcMicros: 1785824100000000,
+              merchant: 'Existing merchant',
+              note: null,
+              createdAtUtcMicros: 1785824100000000,
+              updatedAtUtcMicros: 1785824100000000,
+              ownerScope: 'guest',
+            ),
+          );
+      await legacy
+          .into(legacy.storedPreferences)
+          .insert(
+            const v3.StoredPreferencesData(key: 'theme_mode', value: 'dark'),
+          );
+      await legacy.customStatement(
+        'ALTER TABLE stored_transactions ADD COLUMN account_id TEXT NULL',
+      );
+      await legacy.customStatement(
+        'ALTER TABLE recurring_transaction_rules '
+        'ADD COLUMN account_id TEXT NULL',
+      );
+      await legacy.customStatement(
+        'ALTER TABLE recurring_transaction_occurrences '
+        'ADD COLUMN account_id TEXT NULL',
+      );
+      await legacy.customStatement(
+        'CREATE TABLE accounts ('
+        'id TEXT NOT NULL PRIMARY KEY, owner_scope TEXT NOT NULL, '
+        'name TEXT NOT NULL, type_key TEXT NOT NULL, status_key TEXT NOT NULL, '
+        'created_at_utc_micros INTEGER NOT NULL, '
+        'updated_at_utc_micros INTEGER NOT NULL)',
+      );
+      await legacy.customStatement(
+        'CREATE TABLE account_balance_anchors ('
+        'id TEXT NOT NULL PRIMARY KEY, owner_scope TEXT NOT NULL, '
+        'account_id TEXT NOT NULL, balance_minor_units INTEGER NOT NULL, '
+        'effective_date_ad_utc_micros INTEGER NOT NULL, '
+        'created_at_utc_micros INTEGER NOT NULL, kind_key TEXT NOT NULL)',
+      );
+      await legacy.customStatement('PRAGMA user_version = 4');
+      await legacy.close();
+
+      final AppDatabase upgraded = AppDatabase(NativeDatabase(file));
+      addTearDown(upgraded.close);
+      expect(await upgraded.select(upgraded.storedTransfers).get(), isEmpty);
+      final transactions = await upgraded
+          .select(upgraded.storedTransactions)
+          .get();
+      expect(transactions, hasLength(1));
+      expect(transactions.single.id, 'legacy-financial-record');
+      expect(transactions.single.amountMinorUnits, 250000);
+      expect(
+        await upgraded.select(upgraded.storedPreferences).get(),
+        <StoredPreference>[
+          const StoredPreference(key: 'theme_mode', value: 'dark'),
+        ],
+      );
+      expect(upgraded.schemaVersion, 5);
     },
   );
 }

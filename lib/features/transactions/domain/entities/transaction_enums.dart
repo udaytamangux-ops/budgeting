@@ -21,6 +21,7 @@ enum TransactionCategory {
   education,
   entertainment,
   family,
+  feesAndCharges,
   salary,
   freelance,
   business,
@@ -42,7 +43,8 @@ extension TransactionCategoryRules on TransactionCategory {
       TransactionCategory.health ||
       TransactionCategory.education ||
       TransactionCategory.entertainment ||
-      TransactionCategory.family => type == TransactionType.expense,
+      TransactionCategory.family ||
+      TransactionCategory.feesAndCharges => type == TransactionType.expense,
       TransactionCategory.salary ||
       TransactionCategory.freelance ||
       TransactionCategory.business ||

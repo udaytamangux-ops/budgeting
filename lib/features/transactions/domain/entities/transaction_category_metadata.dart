@@ -11,6 +11,7 @@ extension TransactionCategoryMetadata on TransactionCategory {
     TransactionCategory.education => 'Education',
     TransactionCategory.entertainment => 'Entertainment',
     TransactionCategory.family => 'Family',
+    TransactionCategory.feesAndCharges => 'Fees & Charges',
     TransactionCategory.salary => 'Salary',
     TransactionCategory.freelance => 'Freelance',
     TransactionCategory.business => 'Business',

@@ -74,6 +74,12 @@ extension TransactionCategoryPresentation on TransactionCategory {
         foreground: AppColors.categorySlateAccent,
         background: AppColors.categorySlateSurface,
       ),
+      TransactionCategory.feesAndCharges => TransactionCategoryVisual(
+        label: displayLabel,
+        icon: Icons.receipt_long_outlined,
+        foreground: AppColors.categorySlateAccent,
+        background: AppColors.categorySlateSurface,
+      ),
       TransactionCategory.salary => TransactionCategoryVisual(
         label: displayLabel,
         icon: Icons.work_outline,

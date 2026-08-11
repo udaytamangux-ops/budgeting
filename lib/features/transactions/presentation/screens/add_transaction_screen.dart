@@ -3,6 +3,8 @@ import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/primary_button.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
+import 'package:budgeting_app/features/financial_activity/presentation/controllers/new_activity_type_controller.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/add_transaction_controller.dart';
@@ -15,6 +17,7 @@ import 'package:budgeting_app/features/transactions/presentation/widgets/transac
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_amount_pad.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/add_transfer_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -123,12 +126,12 @@ final class _AddTransactionScreenState
         ? 'Save expense'
         : 'Save income';
 
-    return PopScope<FinancialTransaction?>(
+    return PopScope<Object?>(
       canPop:
           _allowSuccessfulPop ||
           _allowSheetMinimize ||
           (!_showAmountPad && !state.isSubmitting),
-      onPopInvokedWithResult: (bool didPop, FinancialTransaction? result) {
+      onPopInvokedWithResult: (bool didPop, Object? result) {
         if (!didPop && _showAmountPad) {
           _closeAmountPad();
         }
@@ -209,10 +212,30 @@ final class _AddTransactionScreenState
                         ),
                         const SizedBox(height: AppSpacing.md),
                       ],
-                      TransactionTypeSelector(
-                        value: state.type,
+                      TransactionTypeSelector.activity(
+                        value: state.type == TransactionType.expense
+                            ? FinancialActivityType.expense
+                            : FinancialActivityType.income,
                         isEnabled: !state.isSubmitting,
-                        onChanged: controller.updateType,
+                        showTransfer: isNewTransactionSheet,
+                        onChanged: (FinancialActivityType value) {
+                          if (value == FinancialActivityType.transfer) {
+                            ref
+                                .read(newActivityTypeProvider.notifier)
+                                .select(value);
+                            return;
+                          }
+                          final TransactionType transactionType =
+                              value == FinancialActivityType.income
+                              ? TransactionType.income
+                              : TransactionType.expense;
+                          controller.updateType(transactionType);
+                          if (isNewTransactionSheet) {
+                            ref
+                                .read(newActivityTypeProvider.notifier)
+                                .select(value);
+                          }
+                        },
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       TransactionAmountField(
@@ -547,7 +570,10 @@ final class _AddTransactionScreenState
 
   void _popForm([FinancialTransaction? result]) {
     if (ref.read(newTransactionSheetModeProvider)) {
-      Navigator.of(context, rootNavigator: true).pop(result);
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pop(result == null ? null : TransactionActivity(result));
       return;
     }
     context.pop<FinancialTransaction>(result);
@@ -572,6 +598,9 @@ final class _AddTransactionScreenState
     final FinancialTransaction? saved = await controller.submit();
     if (saved != null) {
       draftController?.clear();
+      if (isNewTransactionSheet) {
+        ref.read(newTransferDraftSessionProvider.notifier).clear();
+      }
       if (!mounted) {
         rootNavigator.pop(saved);
         return;

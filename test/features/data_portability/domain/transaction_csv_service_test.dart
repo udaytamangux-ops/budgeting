@@ -5,6 +5,7 @@ import 'package:budgeting_app/features/data_portability/domain/services/transact
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/test_data.dart';
@@ -57,4 +58,32 @@ void main() {
     final String csv = utf8.decode(service.encode(const []));
     expect(csv.trim(), TransactionCsvService.headers.join(','));
   });
+
+  test(
+    'transfer columns are factual and normal transaction cells stay empty',
+    () {
+      final String csv = utf8.decode(
+        service.encode(
+          <FinancialTransaction>[buildTestTransaction()],
+          transfers: [
+            buildTestTransfer(
+              minorUnits: 200000,
+              source: TransferSource.bankAccount,
+              destination: TransferDestination.person,
+              destinationName: 'आमा',
+              countsAsExpense: true,
+              expenseCategory: TransactionCategory.family,
+              feeMinorUnits: 1000,
+              note: 'Support, monthly',
+            ),
+          ],
+        ),
+      );
+
+      expect(csv, contains('Transfer From,Transfer To,Transfer Destination'));
+      expect(csv, contains('Bank account,Person,आमा,Yes,Family,10'));
+      expect(csv, contains('"Support, monthly"'));
+      expect(csv, isNot(contains('Transfer,2000,Family,Cash')));
+    },
+  );
 }

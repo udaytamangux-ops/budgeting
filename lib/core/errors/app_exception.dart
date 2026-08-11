@@ -17,6 +17,15 @@ final class TransactionNotFoundException extends AppException {
     : super('Transaction $transactionId was not found.');
 }
 
+final class TransferRepositoryException extends AppException {
+  const TransferRepositoryException(super.message, {super.cause});
+}
+
+final class TransferNotFoundException extends AppException {
+  const TransferNotFoundException(String transferId)
+    : super('Transfer $transferId was not found.');
+}
+
 final class RecurringRepositoryException extends AppException {
   const RecurringRepositoryException(super.message, {super.cause});
 }

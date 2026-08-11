@@ -13,11 +13,13 @@ import 'package:budgeting_app/features/transactions/domain/entities/financial_tr
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 
 final class BackupCodec {
   const BackupCodec(this._recurrenceService);
 
-  static const int backupFormatVersion = 1;
+  static const int backupFormatVersion = 2;
   static const int maximumFileBytes = 10 * 1024 * 1024;
   static const int maximumRecordsPerCollection = 100000;
   static const String currency = 'NPR';
@@ -35,6 +37,9 @@ final class BackupCodec {
       'records': <String, Object?>{
         'transactions': backup.snapshot.transactions
             .map(_transactionToJson)
+            .toList(growable: false),
+        'transfers': backup.snapshot.transfers
+            .map(_transferToJson)
             .toList(growable: false),
         'recurringRules': backup.snapshot.recurringRules
             .map(_ruleToJson)
@@ -66,7 +71,7 @@ final class BackupCodec {
     }
     final Map<String, Object?> root = _object(decoded);
     final int version = _integer(root, 'backupFormatVersion');
-    if (version != backupFormatVersion) {
+    if (version != 1 && version != backupFormatVersion) {
       throw const BackupValidationException(
         BackupValidationIssue.unsupportedVersion,
         'This backup was created by a newer or unsupported app version. '
@@ -88,9 +93,13 @@ final class BackupCodec {
       records,
       'recurringOccurrences',
     );
+    final List<Object?> transferValues = version >= 2
+        ? _array(records, 'transfers')
+        : const <Object?>[];
     _checkCollectionSize(transactionValues);
     _checkCollectionSize(ruleValues);
     _checkCollectionSize(occurrenceValues);
+    _checkCollectionSize(transferValues);
 
     final List<FinancialTransaction> transactions = transactionValues
         .map((Object? value) => _transactionFromJson(_object(value)))
@@ -101,7 +110,10 @@ final class BackupCodec {
     final List<RecurringTransactionOccurrence> occurrences = occurrenceValues
         .map((Object? value) => _occurrenceFromJson(_object(value)))
         .toList(growable: false);
-    _validateRelationships(transactions, rules, occurrences);
+    final List<FinancialTransfer> transfers = transferValues
+        .map((Object? value) => _transferFromJson(_object(value)))
+        .toList(growable: false);
+    _validateRelationships(transactions, rules, occurrences, transfers);
 
     return PortableBackup(
       createdAtUtc: _parseTimestamp(_string(root, 'createdAtUtc')),
@@ -112,6 +124,7 @@ final class BackupCodec {
         recurringOccurrences: List<RecurringTransactionOccurrence>.unmodifiable(
           occurrences,
         ),
+        transfers: List<FinancialTransfer>.unmodifiable(transfers),
       ),
     );
   }
@@ -128,6 +141,25 @@ final class BackupCodec {
         ),
         'dateAd': _date(value.occurredAt),
         'merchantOrPayer': value.merchant,
+        'note': value.note,
+        'createdAtUtc': _timestamp(value.createdAt),
+        'updatedAtUtc': _timestamp(value.updatedAt),
+      };
+
+  Map<String, Object?> _transferToJson(FinancialTransfer value) =>
+      <String, Object?>{
+        'id': value.id,
+        'amountMinorUnits': value.amount.minorUnits,
+        'currency': value.amount.currencyCode,
+        'source': value.source.stableIdentifier,
+        'destination': value.destination.stableIdentifier,
+        'destinationName': value.destinationName,
+        'countsAsExpense': value.countsAsExpense,
+        'expenseCategory': value.expenseCategory == null
+            ? null
+            : TransactionDatabaseMapper.categoryToKey(value.expenseCategory!),
+        'feeMinorUnits': value.fee.minorUnits,
+        'dateAd': _date(value.occurredAt),
         'note': value.note,
         'createdAtUtc': _timestamp(value.createdAt),
         'updatedAtUtc': _timestamp(value.updatedAt),
@@ -200,6 +232,48 @@ final class BackupCodec {
       createdAt: _parseTimestamp(_string(json, 'createdAtUtc')),
       updatedAt: _parseTimestamp(_string(json, 'updatedAtUtc')),
     ).._validateTransactionTimes();
+  }
+
+  FinancialTransfer _transferFromJson(Map<String, Object?> json) {
+    final TransferSource? source = TransferSourceMetadata.tryParse(
+      _string(json, 'source'),
+    );
+    final TransferDestination? destination =
+        TransferDestinationMetadata.tryParse(_string(json, 'destination'));
+    if (source == null || destination == null) throw _malformed();
+    final String? destinationName = _nullableString(
+      json,
+      'destinationName',
+    )?.trim();
+    final bool countsAsExpense = _boolean(json, 'countsAsExpense');
+    final String? categoryKey = _nullableString(json, 'expenseCategory');
+    final TransactionCategory? category = categoryKey == null
+        ? null
+        : _category(categoryKey);
+    final int feeMinorUnits = _integer(json, 'feeMinorUnits');
+    if (feeMinorUnits < 0 ||
+        (destinationName?.length ?? 0) > 60 ||
+        destination.requiresName != (destinationName?.isNotEmpty == true) ||
+        countsAsExpense != (category != null) ||
+        (category != null && !category.supports(TransactionType.expense))) {
+      throw _malformed();
+    }
+    final FinancialTransfer transfer = FinancialTransfer(
+      id: _nonEmptyString(json, 'id'),
+      amount: _money(json),
+      source: source,
+      destination: destination,
+      destinationName: destination.requiresName ? destinationName : null,
+      countsAsExpense: countsAsExpense,
+      expenseCategory: category,
+      fee: Money(minorUnits: feeMinorUnits, currencyCode: currency),
+      occurredAt: _parseDate(_string(json, 'dateAd')),
+      note: _nullableString(json, 'note'),
+      createdAt: _parseTimestamp(_string(json, 'createdAtUtc')),
+      updatedAt: _parseTimestamp(_string(json, 'updatedAtUtc')),
+    );
+    if (transfer.updatedAt.isBefore(transfer.createdAt)) throw _malformed();
+    return transfer;
   }
 
   RecurringTransactionRule _ruleFromJson(Map<String, Object?> json) {
@@ -319,12 +393,14 @@ final class BackupCodec {
     List<FinancialTransaction> transactions,
     List<RecurringTransactionRule> rules,
     List<RecurringTransactionOccurrence> occurrences,
+    List<FinancialTransfer> transfers,
   ) {
     final Set<String> transactionIds = _uniqueIds(
       transactions.map((value) => value.id),
     );
     final Set<String> ruleIds = _uniqueIds(rules.map((value) => value.id));
     _uniqueIds(occurrences.map((value) => value.id));
+    _uniqueIds(transfers.map((value) => value.id));
     final Set<String> ruleDates = <String>{};
     for (final RecurringTransactionOccurrence occurrence in occurrences) {
       if (!ruleIds.contains(occurrence.ruleId)) {
@@ -433,6 +509,12 @@ final class BackupCodec {
     if (result is! int) {
       throw _malformed();
     }
+    return result;
+  }
+
+  bool _boolean(Map<String, Object?> value, String key) {
+    final Object? result = value[key];
+    if (result is! bool) throw _malformed();
     return result;
   }
 

@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/errors/app_exception.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/transaction_providers.dart';
+import 'package:budgeting_app/features/transfers/domain/repositories/transfer_repository.dart';
+import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,12 +16,14 @@ enum UndoTransactionPhase { ready, undoing, failure }
 
 final class CreatedTransactionConfirmation {
   const CreatedTransactionConfirmation({
-    required this.transaction,
+    required this.activity,
     this.phase = UndoTransactionPhase.ready,
     this.errorMessage,
   });
 
-  final FinancialTransaction transaction;
+  final FinancialActivity activity;
+  FinancialTransaction get transaction =>
+      (activity as TransactionActivity).transaction;
   final UndoTransactionPhase phase;
   final String? errorMessage;
 
@@ -29,7 +34,7 @@ final class CreatedTransactionConfirmation {
     String? errorMessage,
   }) {
     return CreatedTransactionConfirmation(
-      transaction: transaction,
+      activity: activity,
       phase: phase ?? this.phase,
       errorMessage: errorMessage,
     );
@@ -58,18 +63,25 @@ final class LastSavedTransactionController
     return null;
   }
 
-  void show(FinancialTransaction transaction) {
+  void show(Object value) {
+    final FinancialActivity activity = switch (value) {
+      final FinancialActivity activity => activity,
+      final FinancialTransaction transaction => TransactionActivity(
+        transaction,
+      ),
+      _ => throw ArgumentError.value(value, 'value'),
+    };
     _cancelExpiry();
-    state = CreatedTransactionConfirmation(transaction: transaction);
+    state = CreatedTransactionConfirmation(activity: activity);
     _expiryTimer = Timer(confirmationDuration, () {
-      if (state?.transaction.id == transaction.id) {
+      if (state?.activity.id == activity.id) {
         state = null;
       }
     });
   }
 
   void dismiss({String? transactionId}) {
-    if (transactionId != null && state?.transaction.id != transactionId) {
+    if (transactionId != null && state?.activity.id != transactionId) {
       return;
     }
     _cancelExpiry();
@@ -81,19 +93,27 @@ final class LastSavedTransactionController
     if (confirmation == null || confirmation.isUndoing) {
       return false;
     }
-    final String transactionId = confirmation.transaction.id;
+    final String transactionId = confirmation.activity.id;
     _cancelExpiry();
     state = confirmation.copyWith(phase: UndoTransactionPhase.undoing);
 
     try {
-      final TransactionRepository repository = ref.read(
-        transactionRepositoryProvider,
-      );
-      await repository.deleteTransaction(transactionId);
+      switch (confirmation.activity) {
+        case TransactionActivity():
+          final TransactionRepository repository = ref.read(
+            transactionRepositoryProvider,
+          );
+          await repository.deleteTransaction(transactionId);
+        case TransferActivity():
+          final TransferRepository repository = ref.read(
+            transferRepositoryProvider,
+          );
+          await repository.deleteTransfer(transactionId);
+      }
       ref
           .read(appAnalyticsProvider)
           .recordEvent(AnalyticsEventNames.transactionCreateUndone);
-      if (state?.transaction.id == transactionId) {
+      if (state?.activity.id == transactionId) {
         state = null;
       }
       return true;
@@ -119,7 +139,7 @@ final class LastSavedTransactionController
 
   void _showFailure(String transactionId, String message) {
     final CreatedTransactionConfirmation? current = state;
-    if (current?.transaction.id != transactionId) {
+    if (current?.activity.id != transactionId) {
       return;
     }
     state = current!.copyWith(

@@ -510,9 +510,378 @@ i1.GeneratedColumn<int> _column_28(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
+
+final class Schema4 extends i0.VersionedSchema {
+  Schema4({required super.database}) : super(version: 4);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    storedTransactions,
+    storedPreferences,
+    storedTransfers,
+    recurringTransactionRules,
+    recurringTransactionOccurrences,
+    storedTransfersOwnerDate,
+  ];
+  late final Shape0 storedTransactions = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'stored_transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 storedPreferences = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'stored_preferences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY("key")'],
+      columns: [_column_12, _column_13],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 storedTransfers = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'stored_transfers',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_14,
+        _column_2,
+        _column_3,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_6,
+        _column_8,
+        _column_9,
+        _column_10,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 recurringTransactionRules = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'recurring_transaction_rules',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_14,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_7,
+        _column_8,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_9,
+        _column_10,
+        _column_23,
+        _column_24,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 recurringTransactionOccurrences = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'recurring_transaction_occurrences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(owner_scope, rule_id, due_date_ad_utc_micros)',
+      ],
+      columns: [
+        _column_0,
+        _column_25,
+        _column_14,
+        _column_26,
+        _column_22,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_7,
+        _column_8,
+        _column_27,
+        _column_28,
+        _column_9,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index storedTransfersOwnerDate = i1.Index(
+    'stored_transfers_owner_date',
+    'CREATE INDEX stored_transfers_owner_date ON stored_transfers (owner_scope, occurred_at_utc_micros)',
+  );
+}
+
+class Shape4 extends i0.VersionedTable {
+  Shape4({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get ownerScope =>
+      columnsByName['owner_scope']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get amountMinorUnits =>
+      columnsByName['amount_minor_units']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get currencyCode =>
+      columnsByName['currency_code']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get sourceKey =>
+      columnsByName['source_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get destinationKey =>
+      columnsByName['destination_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get destinationName =>
+      columnsByName['destination_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get countsAsExpense =>
+      columnsByName['counts_as_expense']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get expenseCategoryKey =>
+      columnsByName['expense_category_key']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get feeMinorUnits =>
+      columnsByName['fee_minor_units']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get occurredAtUtcMicros =>
+      columnsByName['occurred_at_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get note =>
+      columnsByName['note']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get createdAtUtcMicros =>
+      columnsByName['created_at_utc_micros']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAtUtcMicros =>
+      columnsByName['updated_at_utc_micros']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_29(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'source_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_30(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'destination_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_31(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'destination_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_32(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'counts_as_expense',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (counts_as_expense IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<String> _column_33(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'expense_category_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_34(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'fee_minor_units',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+
+final class Schema5 extends i0.VersionedSchema {
+  Schema5({required super.database}) : super(version: 5);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    storedTransactions,
+    storedPreferences,
+    storedTransfers,
+    recurringTransactionRules,
+    recurringTransactionOccurrences,
+    storedTransfersOwnerDate,
+  ];
+  late final Shape0 storedTransactions = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'stored_transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 storedPreferences = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'stored_preferences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY("key")'],
+      columns: [_column_12, _column_13],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 storedTransfers = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'stored_transfers',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_14,
+        _column_2,
+        _column_3,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_6,
+        _column_8,
+        _column_9,
+        _column_10,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 recurringTransactionRules = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'recurring_transaction_rules',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_14,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_7,
+        _column_8,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_9,
+        _column_10,
+        _column_23,
+        _column_24,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 recurringTransactionOccurrences = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'recurring_transaction_occurrences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(owner_scope, rule_id, due_date_ad_utc_micros)',
+      ],
+      columns: [
+        _column_0,
+        _column_25,
+        _column_14,
+        _column_26,
+        _column_22,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_7,
+        _column_8,
+        _column_27,
+        _column_28,
+        _column_9,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index storedTransfersOwnerDate = i1.Index(
+    'stored_transfers_owner_date',
+    'CREATE INDEX stored_transfers_owner_date ON stored_transfers (owner_scope, occurred_at_utc_micros)',
+  );
+}
+
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
+  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -526,6 +895,16 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from2To3(migrator, schema);
         return 3;
+      case 3:
+        final schema = Schema4(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from3To4(migrator, schema);
+        return 4;
+      case 4:
+        final schema = Schema5(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from4To5(migrator, schema);
+        return 5;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -535,6 +914,13 @@ i0.MigrationStepWithVersion migrationSteps({
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
+  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
+  step: migrationSteps(
+    from1To2: from1To2,
+    from2To3: from2To3,
+    from3To4: from3To4,
+    from4To5: from4To5,
+  ),
 );

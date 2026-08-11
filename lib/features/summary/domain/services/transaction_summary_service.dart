@@ -7,6 +7,7 @@ import 'package:budgeting_app/features/transactions/domain/entities/financial_tr
 import 'package:budgeting_app/features/transactions/domain/entities/monthly_financial_summary.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/domain/services/financial_summary_service.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
 
 final class TransactionSummaryService {
   const TransactionSummaryService();
@@ -14,9 +15,11 @@ final class TransactionSummaryService {
   MonthlyTransactionSummary calculateForMonth({
     required List<FinancialTransaction> transactions,
     required DateTime month,
+    List<FinancialTransfer> transfers = const <FinancialTransfer>[],
   }) {
     return calculateForPeriod(
       transactions: transactions,
+      transfers: transfers,
       period: CalendarPeriod(
         calendarSystem: AppCalendarSystem.gregorianAd,
         year: month.year,
@@ -31,26 +34,33 @@ final class TransactionSummaryService {
   MonthlyTransactionSummary calculateForPeriod({
     required List<FinancialTransaction> transactions,
     required CalendarPeriod period,
+    List<FinancialTransfer> transfers = const <FinancialTransfer>[],
   }) {
     final MonthlyFinancialSummary financialSummary =
         const FinancialSummaryService().calculateForPeriod(
           transactions: transactions,
           period: period,
+          transfers: transfers,
         );
     final MonthlyCategoryActivity expenseActivity =
         const CategoryActivityService().calculateForPeriod(
           transactions: transactions,
           period: period,
           type: TransactionType.expense,
+          transfers: transfers,
         );
     final Map<PaymentMethod, int> paymentMethodCounts = <PaymentMethod, int>{};
-    int transactionCount = 0;
+    int transactionCount = transfers
+        .where((transfer) => period.contains(transfer.occurredAt))
+        .length;
+    int paymentMethodTransactionCount = 0;
 
     for (final FinancialTransaction transaction in transactions) {
       if (!period.contains(transaction.occurredAt)) {
         continue;
       }
       transactionCount += 1;
+      paymentMethodTransactionCount += 1;
       paymentMethodCounts.update(
         transaction.paymentMethod,
         (int count) => count + 1,
@@ -84,7 +94,10 @@ final class TransactionSummaryService {
               (MapEntry<PaymentMethod, int> entry) => PaymentMethodUsageRecord(
                 paymentMethod: entry.key,
                 transactionCount: entry.value,
-                sharePercentage: _percentage(entry.value, transactionCount),
+                sharePercentage: _percentage(
+                  entry.value,
+                  paymentMethodTransactionCount,
+                ),
               ),
             )
             .toList()

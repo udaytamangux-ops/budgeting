@@ -5,9 +5,11 @@ import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/last_saved_transaction_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,24 +21,20 @@ final class TransactionCreatedBanner extends ConsumerWidget {
     final CreatedTransactionConfirmation? confirmation = ref.watch(
       lastSavedTransactionProvider,
     );
-
     return AnimatedSwitcher(
       duration: AppMotion.accessibleDuration(context, AppMotion.fast),
       child: confirmation == null
           ? const SizedBox.shrink(key: ValueKey<String>('no_confirmation'))
-          : _CreatedTransactionBannerContent(
-              key: ValueKey<String>(confirmation.transaction.id),
+          : _Banner(
+              key: ValueKey<String>(confirmation.activity.id),
               confirmation: confirmation,
             ),
     );
   }
 }
 
-final class _CreatedTransactionBannerContent extends ConsumerWidget {
-  const _CreatedTransactionBannerContent({
-    required this.confirmation,
-    super.key,
-  });
+final class _Banner extends ConsumerWidget {
+  const _Banner({required this.confirmation, super.key});
 
   final CreatedTransactionConfirmation confirmation;
 
@@ -44,18 +42,24 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final String amount = ref
         .watch(currencyFormatterProvider)
-        .format(confirmation.transaction.amount);
-    final bool isExpense =
-        confirmation.transaction.type == TransactionType.expense;
-    final bool hasFailure = confirmation.phase == UndoTransactionPhase.failure;
-    final String transactionKind = isExpense ? 'Expense' : 'Income';
-    final String title = hasFailure
-        ? 'Could not undo transaction'
-        : '$transactionKind added · $amount · '
-              '${confirmation.transaction.category.visual.label}';
-    final String? detail = hasFailure ? confirmation.errorMessage! : null;
-    final String announcement = detail == null ? title : '$title. $detail';
-
+        .format(confirmation.activity.amount);
+    final String kind = switch (confirmation.activity) {
+      TransactionActivity(:final transaction) =>
+        transaction.type == TransactionType.expense ? 'Expense' : 'Income',
+      TransferActivity() => 'Transfer',
+    };
+    final String label = switch (confirmation.activity) {
+      TransactionActivity(:final transaction) =>
+        transaction.category.visual.label,
+      TransferActivity(:final transfer) =>
+        '${transfer.source.label} → ${transfer.destinationDisplayName}',
+    };
+    final bool failed = confirmation.phase == UndoTransactionPhase.failure;
+    final String title = failed
+        ? confirmation.activity is TransferActivity
+              ? 'Could not undo transfer'
+              : 'Could not undo transaction'
+        : '$kind added · $amount · $label';
     return Padding(
       key: const ValueKey<String>('transaction_created_banner'),
       padding: const EdgeInsets.fromLTRB(
@@ -88,56 +92,29 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xs),
-                        child: ExcludeSemantics(
-                          child: Icon(
-                            hasFailure
-                                ? Icons.error_outline
-                                : Icons.check_circle,
-                            color: hasFailure
-                                ? context.appColors.destructiveAction
-                                : context.appColors.primaryAction,
-                          ),
-                        ),
+                      Icon(
+                        failed ? Icons.error_outline : Icons.check_circle,
+                        color: failed
+                            ? context.appColors.destructiveAction
+                            : context.appColors.primaryAction,
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: AppSpacing.xs),
-                          child: Semantics(
-                            liveRegion: true,
-                            label: announcement,
-                            excludeSemantics: true,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                title,
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                              if (confirmation.errorMessage != null)
                                 Text(
-                                  title,
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(
-                                        color: hasFailure
-                                            ? context
-                                                  .appColors
-                                                  .destructiveAction
-                                            : context.appColors.textPrimary,
-                                      ),
+                                  confirmation.errorMessage!,
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
-                                if (detail != null) ...<Widget>[
-                                  const SizedBox(height: AppSpacing.xxs),
-                                  Text(
-                                    detail,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: context
-                                              .appColors
-                                              .destructiveAction,
-                                        ),
-                                  ),
-                                ],
-                              ],
-                            ),
+                            ],
                           ),
                         ),
                       ),
@@ -148,7 +125,7 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
                             : () => ref
                                   .read(lastSavedTransactionProvider.notifier)
                                   .dismiss(
-                                    transactionId: confirmation.transaction.id,
+                                    transactionId: confirmation.activity.id,
                                   ),
                         icon: const Icon(Icons.close),
                       ),
@@ -170,7 +147,7 @@ final class _CreatedTransactionBannerContent extends ConsumerWidget {
                               dimension: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(hasFailure ? 'Retry' : 'Undo'),
+                          : Text(failed ? 'Retry' : 'Undo'),
                     ),
                   ),
                 ],

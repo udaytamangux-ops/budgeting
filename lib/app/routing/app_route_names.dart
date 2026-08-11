@@ -10,6 +10,7 @@ abstract final class AppRouteNames {
   static const String home = 'home';
   static const String transactions = 'transactions';
   static const String transactionDetails = 'transaction-details';
+  static const String transferDetails = 'transfer-details';
   static const String budgets = 'budgets';
   static const String categoryDetails = 'category-details';
   static const String categoryTransactionDetails =

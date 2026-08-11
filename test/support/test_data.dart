@@ -5,6 +5,8 @@ import 'package:budgeting_app/features/recurring/domain/entities/recurring_trans
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
+import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 
 final DateTime fixedNow = DateTime.utc(2026, 8, 4, 6, 15);
 
@@ -28,6 +30,38 @@ FinancialTransaction buildTestTransaction({
     paymentMethod: paymentMethod,
     occurredAt: occurredAt ?? DateTime.utc(2026, 8, 4, 6, 15),
     merchant: merchant,
+    note: note,
+    createdAt: created,
+    updatedAt: created,
+  );
+}
+
+FinancialTransfer buildTestTransfer({
+  String id = 'test-transfer',
+  int minorUnits = 500000,
+  TransferSource source = TransferSource.bankAccount,
+  TransferDestination destination = TransferDestination.cash,
+  String? destinationName,
+  bool countsAsExpense = false,
+  TransactionCategory? expenseCategory,
+  int feeMinorUnits = 0,
+  DateTime? occurredAt,
+  String? note,
+  DateTime? createdAt,
+}) {
+  final DateTime created = createdAt ?? fixedNow;
+  return FinancialTransfer(
+    id: id,
+    amount: Money(minorUnits: minorUnits),
+    source: source,
+    destination: destination,
+    destinationName: destinationName,
+    countsAsExpense: countsAsExpense,
+    expenseCategory: countsAsExpense
+        ? expenseCategory ?? TransactionCategory.family
+        : null,
+    fee: Money(minorUnits: feeMinorUnits),
+    occurredAt: occurredAt ?? DateTime.utc(2026, 8, 4, 6, 15),
     note: note,
     createdAt: created,
     updatedAt: created,
