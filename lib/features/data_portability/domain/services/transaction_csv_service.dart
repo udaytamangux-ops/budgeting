@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:budgeting_app/core/calendar/domain/app_calendar_service.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
@@ -56,6 +57,23 @@ final class TransactionCsvService {
       csv.writeln(_row(activity).map(_escape).join(','));
     }
     return Uint8List.fromList(utf8.encode(csv.toString()));
+  }
+
+  Uint8List encodeForPeriod({
+    required List<FinancialTransaction> transactions,
+    required List<FinancialTransfer> transfers,
+    required CalendarPeriod period,
+  }) {
+    return encode(
+      transactions
+          .where(
+            (FinancialTransaction value) => period.contains(value.occurredAt),
+          )
+          .toList(growable: false),
+      transfers: transfers
+          .where((FinancialTransfer value) => period.contains(value.occurredAt))
+          .toList(growable: false),
+    );
   }
 
   List<String> _row(FinancialActivity activity) {

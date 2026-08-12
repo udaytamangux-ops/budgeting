@@ -10,6 +10,9 @@ import 'package:budgeting_app/features/access/presentation/controllers/access_pr
 import 'package:budgeting_app/features/access/presentation/screens/access_choice_screen.dart';
 import 'package:budgeting_app/features/access/presentation/screens/account_unavailable_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
+import 'package:budgeting_app/features/monthly_reports/presentation/screens/month_comparison_screen.dart';
+import 'package:budgeting_app/features/monthly_reports/presentation/screens/monthly_report_screen.dart';
+import 'package:budgeting_app/features/monthly_reports/presentation/screens/visual_report_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/privacy_and_data_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:budgeting_app/features/recurring/presentation/screens/recurring_rule_form_route.dart';
@@ -272,6 +275,23 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                 name: AppRouteNames.budgets,
                 builder: (_, _) => const SummaryScreen(),
                 routes: <RouteBase>[
+                  GoRoute(
+                    path: 'monthly-report',
+                    name: AppRouteNames.monthlyReport,
+                    builder: (_, _) => const MonthlyReportScreen(),
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'visual',
+                        name: AppRouteNames.monthlyVisualReport,
+                        builder: (_, _) => const VisualReportScreen(),
+                      ),
+                      GoRoute(
+                        path: 'comparison',
+                        name: AppRouteNames.monthlyComparison,
+                        builder: (_, _) => const MonthComparisonScreen(),
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'category/:transactionType/:categoryIds',
                     name: AppRouteNames.categoryDetails,

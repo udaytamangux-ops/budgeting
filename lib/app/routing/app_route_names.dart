@@ -13,6 +13,9 @@ abstract final class AppRouteNames {
   static const String transferDetails = 'transfer-details';
   static const String budgets = 'budgets';
   static const String categoryDetails = 'category-details';
+  static const String monthlyReport = 'monthly-report';
+  static const String monthlyVisualReport = 'monthly-visual-report';
+  static const String monthlyComparison = 'monthly-comparison';
   static const String categoryTransactionDetails =
       'category-transaction-details';
   static const String profile = 'profile';

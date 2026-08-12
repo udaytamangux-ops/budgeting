@@ -138,6 +138,25 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                         );
                       },
                     ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Semantics(
+                      button: true,
+                      label:
+                          'Monthly report. See statement, charts and month comparison.',
+                      child: ListTile(
+                        key: const ValueKey<String>('open_monthly_report'),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        leading: const Icon(Icons.assessment_outlined),
+                        title: const Text('Monthly report'),
+                        subtitle: const Text(
+                          'See statement, charts and month comparison',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push(AppRoutes.monthlyReport),
+                      ),
+                    ),
                   ],
                 ),
               ),

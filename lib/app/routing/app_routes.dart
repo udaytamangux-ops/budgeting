@@ -21,6 +21,9 @@ abstract final class AppRoutes {
   static const String addExpense = '/app/add-transaction';
   static const String addIncome = '/app/add-transaction?type=income';
   static const String addTransfer = '/app/add-transaction?type=transfer';
+  static const String monthlyReport = '/app/budgets/monthly-report';
+  static const String monthlyVisualReport = '$monthlyReport/visual';
+  static const String monthlyComparison = '$monthlyReport/comparison';
 
   static String categoryDetails(CategoryDetailsRouteData data) {
     return '${_categoryDetailsPath(data)}${_categoryQuery(data)}';
