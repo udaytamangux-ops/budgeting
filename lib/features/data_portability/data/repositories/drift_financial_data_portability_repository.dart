@@ -1,4 +1,5 @@
 import 'package:budgeting_app/core/database/app_database.dart' as db;
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/repositories/financial_data_portability_repository.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/data_portability_exception.dart';
@@ -9,6 +10,7 @@ import 'package:budgeting_app/features/recurring/domain/entities/recurring_trans
     as domain;
 import 'package:budgeting_app/features/transactions/data/database/transaction_database_mapper.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transfers/data/database/transfer_database_mapper.dart';
 import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
 import 'package:drift/drift.dart';
@@ -51,6 +53,8 @@ final class DriftFinancialDataPortabilityRepository
                     table.ownerScope.equals(ownerScope),
               ))
               .get();
+      final List<db.CustomCategory> customCategoryRows = await _database
+          .getCustomCategoriesForOwner(ownerScope);
 
       final List<FinancialTransaction> transactions =
           transactionRows
@@ -86,6 +90,9 @@ final class DriftFinancialDataPortabilityRepository
               .map(TransferDatabaseMapper.fromRow)
               .toList(growable: false)
             ..sort((a, b) => a.id.compareTo(b.id));
+      final List<CustomCategory> customCategories =
+          customCategoryRows.map(_customCategoryFromRow).toList(growable: false)
+            ..sort((a, b) => a.id.compareTo(b.id));
       return FinancialDataSnapshot(
         transactions: List<FinancialTransaction>.unmodifiable(transactions),
         recurringRules: List<domain.RecurringTransactionRule>.unmodifiable(
@@ -96,6 +103,7 @@ final class DriftFinancialDataPortabilityRepository
               occurrences,
             ),
         transfers: List<FinancialTransfer>.unmodifiable(transfers),
+        customCategories: List<CustomCategory>.unmodifiable(customCategories),
       );
     } catch (error) {
       throw DataPortabilityException(
@@ -133,11 +141,36 @@ final class DriftFinancialDataPortabilityRepository
               (db.StoredTransfers table) => table.ownerScope.equals(ownerScope),
             ))
             .go();
+        await (_database.delete(_database.customCategories)..where(
+              (db.CustomCategories table) =>
+                  table.ownerScope.equals(ownerScope),
+            ))
+            .go();
+
+        for (final CustomCategory category in snapshot.customCategories) {
+          final String restoredId = ids.categories[category.id]!;
+          await _database
+              .into(_database.customCategories)
+              .insert(
+                db.CustomCategoriesCompanion.insert(
+                  id: restoredId,
+                  ownerScope: ownerScope,
+                  typeKey: TransactionDatabaseMapper.typeToKey(category.type),
+                  name: category.name,
+                  normalizedName: category.normalizedName,
+                  iconKey: category.iconKey,
+                  isArchived: Value<bool>(category.isArchived),
+                  createdAtUtcMicros: category.createdAt.microsecondsSinceEpoch,
+                  updatedAtUtcMicros: category.updatedAt.microsecondsSinceEpoch,
+                ),
+              );
+        }
 
         for (final FinancialTransaction transaction in snapshot.transactions) {
           final FinancialTransaction restored = _transactionWithId(
             transaction,
             ids.transactions[transaction.id]!,
+            ids.categories,
           );
           await _database
               .into(_database.storedTransactions)
@@ -152,6 +185,7 @@ final class DriftFinancialDataPortabilityRepository
           final FinancialTransfer restored = _transferWithId(
             transfer,
             ids.transfers[transfer.id]!,
+            ids.categories,
           );
           await _database
               .into(_database.storedTransfers)
@@ -167,6 +201,7 @@ final class DriftFinancialDataPortabilityRepository
           final domain.RecurringTransactionRule restored = _ruleWithId(
             rule,
             ids.rules[rule.id]!,
+            ids.categories,
           );
           await _database
               .into(_database.recurringTransactionRules)
@@ -187,6 +222,7 @@ final class DriftFinancialDataPortabilityRepository
                 recordedTransactionId: occurrence.recordedTransactionId == null
                     ? null
                     : ids.transactions[occurrence.recordedTransactionId]!,
+                categoryIds: ids.categories,
               );
           await _database
               .into(_database.recurringTransactionOccurrences)
@@ -216,6 +252,15 @@ final class DriftFinancialDataPortabilityRepository
               _database.storedTransfers.ownerScope.equals(ownerScope).not(),
             ))
           .map((row) => row.read(_database.storedTransfers.id)!)
+          .get(),
+    );
+    used.addAll(
+      await (_database.selectOnly(_database.customCategories)
+            ..addColumns(<Expression<Object>>[_database.customCategories.id])
+            ..where(
+              _database.customCategories.ownerScope.equals(ownerScope).not(),
+            ))
+          .map((row) => row.read(_database.customCategories.id)!)
           .get(),
     );
     used.addAll(
@@ -270,11 +315,16 @@ final class DriftFinancialDataPortabilityRepository
       snapshot.transfers.map((value) => value.id),
       used,
     );
+    final Map<String, String> categoryIds = _allocate(
+      snapshot.customCategories.map((value) => value.id),
+      used,
+    );
     return _RestoreIds(
       transactions: transactionIds,
       rules: ruleIds,
       occurrences: occurrenceIds,
       transfers: transferIds,
+      categories: categoryIds,
     );
   }
 
@@ -298,11 +348,12 @@ final class DriftFinancialDataPortabilityRepository
   FinancialTransaction _transactionWithId(
     FinancialTransaction value,
     String id,
+    Map<String, String> categoryIds,
   ) => FinancialTransaction(
     id: id,
     type: value.type,
     amount: value.amount,
-    category: value.category,
+    category: _categoryWithIds(value.category, categoryIds),
     paymentMethod: value.paymentMethod,
     occurredAt: value.occurredAt,
     merchant: value.merchant,
@@ -311,30 +362,36 @@ final class DriftFinancialDataPortabilityRepository
     updatedAt: value.updatedAt,
   );
 
-  FinancialTransfer _transferWithId(FinancialTransfer value, String id) =>
-      FinancialTransfer(
-        id: id,
-        amount: value.amount,
-        source: value.source,
-        destination: value.destination,
-        destinationName: value.destinationName,
-        countsAsExpense: value.countsAsExpense,
-        expenseCategory: value.expenseCategory,
-        fee: value.fee,
-        occurredAt: value.occurredAt,
-        note: value.note,
-        createdAt: value.createdAt,
-        updatedAt: value.updatedAt,
-      );
+  FinancialTransfer _transferWithId(
+    FinancialTransfer value,
+    String id,
+    Map<String, String> categoryIds,
+  ) => FinancialTransfer(
+    id: id,
+    amount: value.amount,
+    source: value.source,
+    destination: value.destination,
+    destinationName: value.destinationName,
+    countsAsExpense: value.countsAsExpense,
+    expenseCategory: value.expenseCategory == null
+        ? null
+        : _categoryWithIds(value.expenseCategory!, categoryIds),
+    fee: value.fee,
+    occurredAt: value.occurredAt,
+    note: value.note,
+    createdAt: value.createdAt,
+    updatedAt: value.updatedAt,
+  );
 
   domain.RecurringTransactionRule _ruleWithId(
     domain.RecurringTransactionRule value,
     String id,
+    Map<String, String> categoryIds,
   ) => domain.RecurringTransactionRule(
     id: id,
     type: value.type,
     amount: value.amount,
-    category: value.category,
+    category: _categoryWithIds(value.category, categoryIds),
     paymentMethod: value.paymentMethod,
     merchant: value.merchant,
     note: value.note,
@@ -357,6 +414,7 @@ final class DriftFinancialDataPortabilityRepository
     required String id,
     required String ruleId,
     required String? recordedTransactionId,
+    required Map<String, String> categoryIds,
   }) => domain.RecurringTransactionOccurrence(
     id: id,
     ruleId: ruleId,
@@ -364,7 +422,7 @@ final class DriftFinancialDataPortabilityRepository
     status: value.status,
     type: value.type,
     amount: value.amount,
-    category: value.category,
+    category: _categoryWithIds(value.category, categoryIds),
     paymentMethod: value.paymentMethod,
     merchant: value.merchant,
     note: value.note,
@@ -372,6 +430,37 @@ final class DriftFinancialDataPortabilityRepository
     handledAt: value.handledAt,
     createdAt: value.createdAt,
   );
+
+  TransactionCategory _categoryWithIds(
+    TransactionCategory value,
+    Map<String, String> categoryIds,
+  ) {
+    if (value.isSystem) return value;
+    return TransactionCategory.custom(
+      categoryIds[value.name]!,
+      type: value.supports(TransactionType.expense)
+          ? TransactionType.expense
+          : TransactionType.income,
+    );
+  }
+
+  CustomCategory _customCategoryFromRow(db.CustomCategory row) =>
+      CustomCategory(
+        id: row.id,
+        type: TransactionDatabaseMapper.typeFromKey(row.typeKey),
+        name: row.name,
+        normalizedName: row.normalizedName,
+        iconKey: row.iconKey,
+        isArchived: row.isArchived,
+        createdAt: DateTime.fromMicrosecondsSinceEpoch(
+          row.createdAtUtcMicros,
+          isUtc: true,
+        ),
+        updatedAt: DateTime.fromMicrosecondsSinceEpoch(
+          row.updatedAtUtcMicros,
+          isUtc: true,
+        ),
+      );
 }
 
 final class _RestoreIds {
@@ -380,10 +469,12 @@ final class _RestoreIds {
     required this.rules,
     required this.occurrences,
     required this.transfers,
+    required this.categories,
   });
 
   final Map<String, String> transactions;
   final Map<String, String> rules;
   final Map<String, String> occurrences;
   final Map<String, String> transfers;
+  final Map<String, String> categories;
 }

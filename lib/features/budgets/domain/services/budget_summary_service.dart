@@ -13,8 +13,7 @@ final class BudgetSummaryService {
     required List<FinancialTransaction> transactions,
     required DateTime month,
     Money monthlyLimit = BudgetPolicy.monthlyLimit,
-    Map<TransactionCategory, Money> categoryLimits =
-        BudgetPolicy.categoryLimits,
+    Map<TransactionCategory, Money>? categoryLimits,
   }) {
     return calculateForPeriod(
       transactions: transactions,
@@ -27,7 +26,7 @@ final class BudgetSummaryService {
         displayLabel: '',
       ),
       monthlyLimit: monthlyLimit,
-      categoryLimits: categoryLimits,
+      categoryLimits: categoryLimits ?? BudgetPolicy.categoryLimits,
     );
   }
 
@@ -35,9 +34,9 @@ final class BudgetSummaryService {
     required List<FinancialTransaction> transactions,
     required CalendarPeriod period,
     Money monthlyLimit = BudgetPolicy.monthlyLimit,
-    Map<TransactionCategory, Money> categoryLimits =
-        BudgetPolicy.categoryLimits,
+    Map<TransactionCategory, Money>? categoryLimits,
   }) {
+    categoryLimits ??= BudgetPolicy.categoryLimits;
     Money spent = const Money.zero();
     final Map<TransactionCategory, Money> categorySpending =
         <TransactionCategory, Money>{};

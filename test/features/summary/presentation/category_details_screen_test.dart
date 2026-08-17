@@ -77,10 +77,7 @@ void main() {
       ),
     );
 
-    expect(
-      find.text('No recorded transactions for Health in August.'),
-      findsOneWidget,
-    );
+    expect(find.text('No Health activity in August.'), findsOneWidget);
     expect(find.text('0% of August expenses'), findsOneWidget);
     expect(find.textContaining('Average transaction:'), findsNothing);
 
@@ -94,10 +91,7 @@ void main() {
         month: DateTime(2026, 8),
       ),
     );
-    expect(
-      find.text('No recorded income transactions for Freelance in August.'),
-      findsOneWidget,
-    );
+    expect(find.text('No Freelance activity in August.'), findsOneWidget);
     expect(find.text('0% of August income'), findsOneWidget);
   });
 

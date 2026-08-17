@@ -197,7 +197,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('dark access and account unavailable screens fit at 320px 2x', (
+  testWidgets('dark access screen fits at 320px with 2x text', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -212,24 +212,27 @@ void main() {
       themePreference: AppThemePreference.dark,
     );
     expect(_effectiveBrightness(tester), Brightness.dark);
-    final Finder createAccount = find.byKey(
-      const ValueKey<String>('create_account_button'),
+    final Finder continueButton = find.byKey(
+      const ValueKey<String>('continue_as_guest_button'),
     );
     await tester.scrollUntilVisible(
-      createAccount,
+      continueButton,
       180,
       scrollable: find.byType(Scrollable).first,
     );
     await Scrollable.ensureVisible(
-      tester.element(createAccount),
+      tester.element(continueButton),
       alignment: 0.5,
       duration: Duration.zero,
     );
     await tester.pump();
-    await tester.tap(createAccount);
-    await tester.pumpAndSettle();
 
-    expect(find.text('Account setup is not connected yet'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Create account'), findsNothing);
+    expect(
+      find.textContaining('No account or bank connection'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

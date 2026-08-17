@@ -3,9 +3,9 @@ import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
-import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +26,7 @@ final class ScheduledTransactionsDueSurface extends ConsumerWidget {
         : '${occurrences.length} scheduled transactions waiting';
     final RecurringTransactionOccurrence first = occurrences.first;
     final String detail = occurrences.length == 1
-        ? '${first.merchant ?? first.category.visual.label} · '
+        ? '${first.merchant ?? ref.watch(categoryCatalogProvider).resolve(first.category).label} · '
               '${ref.watch(currencyFormatterProvider).format(first.amount)}'
         : 'Review each occurrence before recording it.';
     return Padding(

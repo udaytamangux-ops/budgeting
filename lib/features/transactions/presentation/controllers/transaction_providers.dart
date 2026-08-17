@@ -5,6 +5,7 @@ import 'package:budgeting_app/features/budgets/domain/entities/budget_configurat
 import 'package:budgeting_app/features/budgets/domain/entities/monthly_budget_summary.dart';
 import 'package:budgeting_app/features/budgets/domain/services/budget_summary_service.dart';
 import 'package:budgeting_app/features/budgets/presentation/controllers/budget_configuration_controller.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -44,10 +45,15 @@ recentTransactionCategoriesProvider =
           .watch(transactionListProvider)
           .whenData(
             (List<FinancialTransaction> transactions) =>
-                const RecentTransactionCategoriesService().findForType(
-                  transactions: transactions,
-                  type: type,
-                ),
+                const RecentTransactionCategoriesService()
+                    .findForType(transactions: transactions, type: type)
+                    .where(
+                      (TransactionCategory category) => !ref
+                          .watch(categoryCatalogProvider)
+                          .resolve(category)
+                          .isArchived,
+                    )
+                    .toList(growable: false),
           );
     });
 

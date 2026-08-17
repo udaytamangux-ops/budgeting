@@ -5,6 +5,9 @@ import 'package:budgeting_app/app/theme/app_typography.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
@@ -27,7 +30,14 @@ final class TransactionListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final TransactionCategoryVisual visual = transaction.category.visual;
+    final categoryDefinition = transaction.category.isCustom
+        ? ref.watch(categoryCatalogProvider).resolve(transaction.category)
+        : CategoryCatalog(
+            const <CustomCategory>[],
+          ).resolve(transaction.category);
+    final TransactionCategoryVisual visual = transaction.category.visualFor(
+      categoryDefinition,
+    );
     final String formattedAmount = ref
         .watch(currencyFormatterProvider)
         .format(transaction.amount);
@@ -44,7 +54,14 @@ final class TransactionListItem extends ConsumerWidget {
     final bool isIncome = transaction.type == TransactionType.income;
     final String transactionKind = isIncome ? 'Income' : 'Expense';
     final String amountPrefix = isIncome ? '+' : '−';
-    final String title = transaction.merchant ?? visual.label;
+    final String? merchant = transaction.merchant?.trim();
+    final bool hasMerchant = merchant != null && merchant.isNotEmpty;
+    final String title = hasMerchant ? merchant : visual.label;
+    final List<String> metadataParts = <String>[
+      if (hasMerchant) visual.label,
+      transaction.paymentMethod.label,
+      if (showDate) formattedDate,
+    ];
     final Color iconForeground = isIncome
         ? context.appColors.incomeAccent
         : visual.foreground;
@@ -88,10 +105,7 @@ final class TransactionListItem extends ConsumerWidget {
             final Widget details = _TransactionDetails(
               transactionId: transaction.id,
               title: title,
-              metadata: showDate
-                  ? '${visual.label} · ${transaction.paymentMethod.label} · '
-                        '$formattedDate'
-                  : '${visual.label} · ${transaction.paymentMethod.label}',
+              metadata: metadataParts.join(' · '),
             );
             final Widget amount = _TransactionAmount(
               transactionId: transaction.id,

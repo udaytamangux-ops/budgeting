@@ -32,6 +32,7 @@ final class SpendingDonutChart extends StatelessWidget {
     required this.currencyFormatter,
     required this.onGroupSelected,
     this.selectedGroupKey,
+    this.categoryLabelFor,
     super.key,
   });
 
@@ -44,6 +45,11 @@ final class SpendingDonutChart extends StatelessWidget {
   final CurrencyFormatter currencyFormatter;
   final ValueChanged<CategoryActivityGroup> onGroupSelected;
   final String? selectedGroupKey;
+  final String Function(TransactionCategory category)? categoryLabelFor;
+
+  String _label(CategoryActivityGroup group) => group.category == null
+      ? 'Other'
+      : categoryLabelFor?.call(group.category!) ?? group.displayLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +65,7 @@ final class SpendingDonutChart extends StatelessWidget {
       'Total ${totalLabel.toLowerCase()}, $formattedTotal',
       ...groups.map(
         (CategoryActivityGroup group) =>
-            '${group.displayLabel}, ${group.sharePercentage} percent, '
+            '${_label(group)}, ${group.sharePercentage} percent, '
             '${currencyFormatter.format(group.amount)}',
       ),
     ].join('. ');
@@ -98,7 +104,9 @@ final class SpendingDonutChart extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         Text(
-                          selectedGroup?.displayLabel ?? totalLabel,
+                          selectedGroup == null
+                              ? totalLabel
+                              : _label(selectedGroup),
                           key: const ValueKey<String>('donut_center_label'),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -198,7 +206,7 @@ final class SpendingDonutChart extends StatelessWidget {
             selected: isSelected,
             sortKey: OrdinalSortKey(index.toDouble()),
             label:
-                '${group.displayLabel}, $formattedAmount, '
+                '${_label(group)}, $formattedAmount, '
                 '${group.sharePercentage} percent, '
                 '${isSelected ? 'selected' : 'not selected'}',
             hint: isSelected

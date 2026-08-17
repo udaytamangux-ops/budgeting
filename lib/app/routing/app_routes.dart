@@ -16,6 +16,7 @@ abstract final class AppRoutes {
   static const String summary = budgets;
   static const String profile = '/app/profile';
   static const String privacyAndData = '/app/profile/privacy-and-data';
+  static const String categories = '/app/profile/categories';
   static const String recurring = '/app/recurring';
   static const String createRecurring = '/app/recurring/new';
   static const String addExpense = '/app/add-transaction';

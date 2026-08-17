@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:budgeting_app/core/data/owner_scope.dart';
 import 'package:budgeting_app/core/database/database_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/data_portability/data/repositories/drift_financial_data_portability_repository.dart';
 import 'package:budgeting_app/features/data_portability/data/services/system_document_service.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
@@ -38,7 +39,11 @@ final Provider<BackupCodec> backupCodecProvider = Provider<BackupCodec>((
 
 final Provider<TransactionCsvService> transactionCsvServiceProvider =
     Provider<TransactionCsvService>((Ref ref) {
-      return TransactionCsvService(ref.watch(appCalendarServiceProvider));
+      final catalog = ref.watch(categoryCatalogProvider);
+      return TransactionCsvService(
+        ref.watch(appCalendarServiceProvider),
+        categoryLabelFor: (category) => catalog.resolve(category).label,
+      );
     });
 
 enum DataPortabilityOperation { exportCsv, backup, restore }

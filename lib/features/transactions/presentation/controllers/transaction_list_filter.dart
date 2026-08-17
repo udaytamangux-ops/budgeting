@@ -31,6 +31,7 @@ final class TransactionListFilter {
     CalendarPeriod? period,
     String query = '',
     Object? type,
+    String Function(TransactionCategory category)? categoryLabelFor,
   }) {
     if (month == null && period == null) {
       throw ArgumentError('A month or calendar period is required.');
@@ -64,7 +65,10 @@ final class TransactionListFilter {
     for (final FinancialActivity activity in effectiveActivities) {
       if (!effectivePeriod.contains(activity.occurredAt)) continue;
       if (effectiveType != null && activity.type != effectiveType) continue;
-      if (normalized.isNotEmpty && !_matches(activity, normalized)) continue;
+      if (normalized.isNotEmpty &&
+          !_matches(activity, normalized, categoryLabelFor)) {
+        continue;
+      }
       final DateTime date = activity.occurredAt.toUtc();
       final DateTime day = DateTime.utc(date.year, date.month, date.day);
       grouped.putIfAbsent(day, () => <FinancialActivity>[]).add(activity);
@@ -92,11 +96,16 @@ final class TransactionListFilter {
     return created != 0 ? created : b.id.compareTo(a.id);
   }
 
-  bool _matches(FinancialActivity activity, String query) => switch (activity) {
+  bool _matches(
+    FinancialActivity activity,
+    String query,
+    String Function(TransactionCategory category)? categoryLabelFor,
+  ) => switch (activity) {
     TransactionActivity(:final transaction) => <String?>[
       transaction.merchant,
       transaction.note,
-      transaction.category.displayLabel,
+      categoryLabelFor?.call(transaction.category) ??
+          transaction.category.displayLabel,
       transaction.paymentMethod.label,
       activity.type.name,
     ].any((value) => value?.toLowerCase().contains(query) ?? false),
@@ -106,7 +115,10 @@ final class TransactionListFilter {
       transfer.destination.label,
       transfer.destinationName,
       transfer.note,
-      transfer.expenseCategory?.displayLabel,
+      transfer.expenseCategory == null
+          ? null
+          : categoryLabelFor?.call(transfer.expenseCategory!) ??
+                transfer.expenseCategory!.displayLabel,
     ].any((value) => value?.toLowerCase().contains(query) ?? false),
   };
 }

@@ -12,6 +12,7 @@ import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/payment_method_metadata.dart';
@@ -94,7 +95,9 @@ final class _TransactionDetailsContent extends ConsumerWidget {
       transaction.createdAt,
       primaryCalendar,
     );
-    final TransactionCategoryVisual category = transaction.category.visual;
+    final TransactionCategoryVisual category = transaction.category.visualFor(
+      ref.watch(categoryCatalogProvider).resolve(transaction.category),
+    );
     final bool isIncome = transaction.type == TransactionType.income;
     final Color amountColor = isIncome
         ? context.appColors.incomeAccent
@@ -320,7 +323,7 @@ final class _TransactionDetailsContent extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                '${transaction.category.visual.label} · $amount · $date',
+                '${ref.watch(categoryCatalogProvider).resolve(transaction.category).label} · $amount · $date',
                 style: Theme.of(dialogContext).textTheme.labelLarge?.copyWith(
                   fontFeatures: AppTypography.tabularFigures,
                 ),

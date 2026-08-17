@@ -3,7 +3,11 @@ import 'dart:convert';
 import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
 import 'package:budgeting_app/core/data/owner_scope.dart';
 import 'package:budgeting_app/core/database/app_database.dart'
-    hide RecurringTransactionOccurrence, RecurringTransactionRule;
+    hide
+        CustomCategory,
+        RecurringTransactionOccurrence,
+        RecurringTransactionRule;
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
 import 'package:budgeting_app/features/data_portability/data/repositories/drift_financial_data_portability_repository.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_codec.dart';
@@ -17,6 +21,8 @@ import 'package:budgeting_app/features/recurring/domain/services/recurrence_serv
 import 'package:budgeting_app/features/transactions/data/database/transaction_database_mapper.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -149,6 +155,29 @@ void main() {
     },
   );
 
+  test('custom category IDs and references remap portably by owner', () async {
+    await _insertSnapshot(database, _snapshot(custom: true), 'user:a');
+    final DriftFinancialDataPortabilityRepository ownerB =
+        DriftFinancialDataPortabilityRepository(database, ownerScope: 'user:b');
+
+    await ownerB.replaceCurrentOwnerSnapshot(_snapshot(custom: true));
+
+    final FinancialDataSnapshot a =
+        await DriftFinancialDataPortabilityRepository(
+          database,
+          ownerScope: 'user:a',
+        ).readCurrentOwnerSnapshot();
+    final FinancialDataSnapshot b = await ownerB.readCurrentOwnerSnapshot();
+    expect(a.customCategories.single.id, 'custom:fitness');
+    expect(b.customCategories.single.id, 'custom:fitness-restored-1');
+    expect(b.transactions.single.category.name, b.customCategories.single.id);
+    expect(b.recurringRules.single.category.name, b.customCategories.single.id);
+    expect(
+      b.recurringOccurrences.single.category.name,
+      b.customCategories.single.id,
+    );
+  });
+
   test('midway insert failure rolls back the exact original state', () async {
     final DriftFinancialDataPortabilityRepository repository =
         DriftFinancialDataPortabilityRepository(
@@ -219,11 +248,21 @@ void main() {
   });
 }
 
-FinancialDataSnapshot _snapshot({String prefix = ''}) {
+FinancialDataSnapshot _snapshot({String prefix = '', bool custom = false}) {
   final String p = prefix.isEmpty ? '' : '$prefix-';
-  final FinancialTransaction transaction = buildTestTransaction(id: '${p}tx');
+  final String categoryId = custom
+      ? 'custom:${p.isEmpty ? 'fitness' : '${p}fitness'}'
+      : '';
+  final TransactionCategory category = custom
+      ? TransactionCategory.custom(categoryId, type: TransactionType.expense)
+      : TransactionCategory.food;
+  final FinancialTransaction transaction = buildTestTransaction(
+    id: '${p}tx',
+    category: category,
+  );
   final RecurringTransactionRule rule = buildTestRecurringRule(
     id: '${p}rule',
+    category: category,
     firstDueDateAd: DateTime(2026, 8, 4, 12),
     nextDueDateAd: DateTime(2026, 9, 4, 12),
   );
@@ -242,6 +281,20 @@ FinancialDataSnapshot _snapshot({String prefix = ''}) {
         createdAt: fixedNow,
       );
   return FinancialDataSnapshot(
+    customCategories: custom
+        ? <CustomCategory>[
+            CustomCategory(
+              id: categoryId,
+              type: TransactionType.expense,
+              name: 'Fitness',
+              normalizedName: 'fitness',
+              iconKey: 'fitness',
+              isArchived: false,
+              createdAt: fixedNow,
+              updatedAt: fixedNow,
+            ),
+          ]
+        : const <CustomCategory>[],
     transactions: <FinancialTransaction>[transaction],
     recurringRules: <RecurringTransactionRule>[rule],
     recurringOccurrences: <RecurringTransactionOccurrence>[occurrence],
@@ -253,6 +306,23 @@ Future<void> _insertSnapshot(
   FinancialDataSnapshot snapshot,
   String owner,
 ) async {
+  for (final CustomCategory category in snapshot.customCategories) {
+    await database
+        .into(database.customCategories)
+        .insert(
+          CustomCategoriesCompanion.insert(
+            id: category.id,
+            ownerScope: owner,
+            typeKey: category.type.name,
+            name: category.name,
+            normalizedName: category.normalizedName,
+            iconKey: category.iconKey,
+            isArchived: Value<bool>(category.isArchived),
+            createdAtUtcMicros: category.createdAt.microsecondsSinceEpoch,
+            updatedAtUtcMicros: category.updatedAt.microsecondsSinceEpoch,
+          ),
+        );
+  }
   for (final FinancialTransaction transaction in snapshot.transactions) {
     await database
         .into(database.storedTransactions)

@@ -12,9 +12,13 @@ import 'package:budgeting_app/features/transactions/domain/entities/transaction_
 import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 
 final class MonthlyReportService {
-  const MonthlyReportService(this._calendarService);
+  const MonthlyReportService(this._calendarService, {this._categoryLabelFor});
 
   final AppCalendarService _calendarService;
+  final String Function(TransactionCategory category)? _categoryLabelFor;
+
+  String _label(TransactionCategory category) =>
+      _categoryLabelFor?.call(category) ?? category.displayLabel;
 
   MonthlyReportData build({
     required CalendarPeriod period,
@@ -89,16 +93,16 @@ final class MonthlyReportService {
             final RankedReportActivity candidate = RankedReportActivity(
               activity: activity,
               rankedAmount: transaction.amount,
-              label: transaction.merchant ?? transaction.category.displayLabel,
-              detail: transaction.category.displayLabel,
+              label: transaction.merchant ?? _label(transaction.category),
+              detail: _label(transaction.category),
             );
             largestIncome = _largerActivity(largestIncome, candidate);
           } else {
             final RankedReportActivity candidate = RankedReportActivity(
               activity: activity,
               rankedAmount: transaction.amount,
-              label: transaction.merchant ?? transaction.category.displayLabel,
-              detail: transaction.category.displayLabel,
+              label: transaction.merchant ?? _label(transaction.category),
+              detail: _label(transaction.category),
             );
             largestExpense = _largerActivity(largestExpense, candidate);
           }
@@ -259,6 +263,7 @@ final class MonthlyReportService {
           amount: sorted[index].value,
           basisPoints: basisPoints[index],
           activityCount: counts[sorted[index].key] ?? 0,
+          resolvedLabel: _label(sorted[index].key),
         ),
       ),
     );
@@ -294,7 +299,7 @@ final class MonthlyReportService {
       return List<ReportChartSlice>.unmodifiable(
         categories.map(
           (item) => ReportChartSlice(
-            label: item.category.displayLabel,
+            label: _label(item.category),
             amount: item.amount,
             basisPoints: item.basisPoints,
             categories: <TransactionCategory>[item.category],
@@ -317,7 +322,7 @@ final class MonthlyReportService {
     return List<ReportChartSlice>.unmodifiable(<ReportChartSlice>[
       ...major.map(
         (item) => ReportChartSlice(
-          label: item.category.displayLabel,
+          label: _label(item.category),
           amount: item.amount,
           basisPoints: item.basisPoints,
           categories: <TransactionCategory>[item.category],
@@ -352,6 +357,7 @@ final class MonthlyReportService {
             category: category,
             current: currentMap[category] ?? const Money.zero(),
             previous: previousMap[category] ?? const Money.zero(),
+            resolvedLabel: _label(category),
           ),
         )
         .where((value) => !value.delta.isZero)
@@ -402,7 +408,7 @@ final class MonthlyReportService {
       final List<String> increases = expenseDeltas
           .where((value) => value.delta.isPositive)
           .take(2)
-          .map((value) => value.category.displayLabel)
+          .map((value) => _label(value.category))
           .toList(growable: false);
       final String detail = increases.isEmpty
           ? ''

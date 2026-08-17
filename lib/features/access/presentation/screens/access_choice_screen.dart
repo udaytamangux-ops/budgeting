@@ -40,9 +40,8 @@ final class _AccessChoiceScreenState extends ConsumerState<AccessChoiceScreen> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Record income and expenses privately on this device. '
-                  'Create an account later when account features become '
-                  'available.',
+                  'Record expenses, income and transfers privately on this '
+                  'device. No account or bank connection required.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: colors.onSurfaceVariant,
@@ -50,8 +49,8 @@ final class _AccessChoiceScreenState extends ConsumerState<AccessChoiceScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Records are not backed up to the cloud. Uninstalling the '
-                  'app or clearing app data may remove them.',
+                  'Your records stay on this device unless you export a '
+                  'backup.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
@@ -66,23 +65,7 @@ final class _AccessChoiceScreenState extends ConsumerState<AccessChoiceScreen> {
                           dimension: 20,
                           child: CircularProgressIndicator(strokeWidth: 2.4),
                         )
-                      : const Text('Continue without an account'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                OutlinedButton(
-                  key: const ValueKey<String>('create_account_button'),
-                  onPressed: _isContinuing
-                      ? null
-                      : () => context.push(AppRoutes.signUp),
-                  child: const Text('Create account'),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                TextButton(
-                  key: const ValueKey<String>('sign_in_button'),
-                  onPressed: _isContinuing
-                      ? null
-                      : () => context.push(AppRoutes.signIn),
-                  child: const Text('Already have an account? Sign in'),
+                      : const Text('Continue'),
                 ),
               ],
             ),

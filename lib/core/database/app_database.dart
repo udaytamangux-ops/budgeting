@@ -43,6 +43,26 @@ class StoredPreferences extends Table {
 }
 
 @TableIndex(
+  name: 'custom_categories_owner_type_name',
+  columns: <Symbol>{#ownerScope, #typeKey, #normalizedName},
+  unique: true,
+)
+class CustomCategories extends Table {
+  TextColumn get id => text()();
+  TextColumn get ownerScope => text()();
+  TextColumn get typeKey => text()();
+  TextColumn get name => text()();
+  TextColumn get normalizedName => text()();
+  TextColumn get iconKey => text()();
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
+  IntColumn get createdAtUtcMicros => integer()();
+  IntColumn get updatedAtUtcMicros => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
+@TableIndex(
   name: 'stored_transfers_owner_date',
   columns: <Symbol>{#ownerScope, #occurredAtUtcMicros},
 )
@@ -124,6 +144,7 @@ class RecurringTransactionOccurrences extends Table {
   tables: <Type>[
     StoredTransactions,
     StoredPreferences,
+    CustomCategories,
     StoredTransfers,
     RecurringTransactionRules,
     RecurringTransactionOccurrences,
@@ -141,7 +162,7 @@ final class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -179,8 +200,161 @@ final class AppDatabase extends _$AppDatabase {
           'ON stored_transfers (owner_scope, occurred_at_utc_micros)',
         );
       },
+      from5To6: (Migrator migrator, Schema6 schema) async {
+        await migrator.createTable(schema.customCategories);
+        await migrator.createIndex(schema.customCategoriesOwnerTypeName);
+      },
     ),
   );
+
+  Stream<List<CustomCategory>> watchCustomCategoriesForOwner(
+    String ownerScope,
+  ) {
+    return (select(customCategories)
+          ..where(
+            (CustomCategories table) => table.ownerScope.equals(ownerScope),
+          )
+          ..orderBy(<OrderingTerm Function(CustomCategories)>[
+            (CustomCategories table) => OrderingTerm.asc(table.typeKey),
+            (CustomCategories table) => OrderingTerm.asc(table.normalizedName),
+          ]))
+        .watch();
+  }
+
+  Future<List<CustomCategory>> getCustomCategoriesForOwner(String ownerScope) {
+    return (select(customCategories)
+          ..where(
+            (CustomCategories table) => table.ownerScope.equals(ownerScope),
+          )
+          ..orderBy(<OrderingTerm Function(CustomCategories)>[
+            (CustomCategories table) => OrderingTerm.asc(table.typeKey),
+            (CustomCategories table) => OrderingTerm.asc(table.normalizedName),
+          ]))
+        .get();
+  }
+
+  Future<CustomCategory?> findCustomCategory(
+    String categoryId, {
+    required String ownerScope,
+  }) {
+    return (select(customCategories)..where(
+          (CustomCategories table) =>
+              table.id.equals(categoryId) & table.ownerScope.equals(ownerScope),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<void> insertCustomCategory(CustomCategoriesCompanion category) =>
+      into(customCategories).insert(category);
+
+  Future<int> updateCustomCategory(
+    String categoryId,
+    CustomCategoriesCompanion category, {
+    required String ownerScope,
+  }) {
+    return (update(customCategories)..where(
+          (CustomCategories table) =>
+              table.id.equals(categoryId) & table.ownerScope.equals(ownerScope),
+        ))
+        .write(category);
+  }
+
+  Future<bool> isCustomCategoryUsed(
+    String categoryId, {
+    required String ownerScope,
+  }) async {
+    final QueryRow row = await customSelect(
+      '''SELECT (
+        EXISTS(SELECT 1 FROM stored_transactions WHERE owner_scope = ? AND category_key = ?)
+        OR EXISTS(SELECT 1 FROM stored_transfers WHERE owner_scope = ? AND expense_category_key = ?)
+        OR EXISTS(SELECT 1 FROM recurring_transaction_rules WHERE owner_scope = ? AND category_key = ?)
+        OR EXISTS(SELECT 1 FROM recurring_transaction_occurrences WHERE owner_scope = ? AND category_key = ?)
+      ) AS is_used''',
+      variables: <Variable<Object>>[
+        Variable<String>(ownerScope),
+        Variable<String>(categoryId),
+        Variable<String>(ownerScope),
+        Variable<String>(categoryId),
+        Variable<String>(ownerScope),
+        Variable<String>(categoryId),
+        Variable<String>(ownerScope),
+        Variable<String>(categoryId),
+      ],
+    ).getSingle();
+    return row.read<bool>('is_used');
+  }
+
+  Future<Set<String>> getUsedCategoryIds({required String ownerScope}) async {
+    final List<QueryRow> rows = await _usedCategoryIdsQuery(ownerScope).get();
+    return _readCategoryIds(rows);
+  }
+
+  Stream<Set<String>> watchUsedCategoryIds({required String ownerScope}) {
+    return _usedCategoryIdsQuery(
+      ownerScope,
+      readsFrom: <ResultSetImplementation>{
+        storedTransactions,
+        storedTransfers,
+        recurringTransactionRules,
+        recurringTransactionOccurrences,
+      },
+    ).watch().map(_readCategoryIds);
+  }
+
+  Selectable<QueryRow> _usedCategoryIdsQuery(
+    String ownerScope, {
+    Set<ResultSetImplementation> readsFrom = const <ResultSetImplementation>{},
+  }) {
+    return customSelect(
+      '''SELECT category_key AS category_id
+         FROM stored_transactions
+         WHERE owner_scope = ?
+       UNION
+       SELECT expense_category_key AS category_id
+         FROM stored_transfers
+         WHERE owner_scope = ? AND expense_category_key IS NOT NULL
+       UNION
+       SELECT category_key AS category_id
+         FROM recurring_transaction_rules
+         WHERE owner_scope = ?
+       UNION
+       SELECT category_key AS category_id
+         FROM recurring_transaction_occurrences
+         WHERE owner_scope = ?''',
+      variables: <Variable<Object>>[
+        Variable<String>(ownerScope),
+        Variable<String>(ownerScope),
+        Variable<String>(ownerScope),
+        Variable<String>(ownerScope),
+      ],
+      readsFrom: readsFrom,
+    );
+  }
+
+  Set<String> _readCategoryIds(List<QueryRow> rows) {
+    return rows.map((QueryRow row) => row.read<String>('category_id')).toSet();
+  }
+
+  Future<int> deleteCustomCategory(
+    String categoryId, {
+    required String ownerScope,
+  }) {
+    return (delete(customCategories)..where(
+          (CustomCategories table) =>
+              table.id.equals(categoryId) & table.ownerScope.equals(ownerScope),
+        ))
+        .go();
+  }
+
+  Future<bool> hasAnyFinancialData() async {
+    final QueryRow row = await customSelect('''SELECT (
+        EXISTS(SELECT 1 FROM stored_transactions LIMIT 1)
+        OR EXISTS(SELECT 1 FROM stored_transfers LIMIT 1)
+        OR EXISTS(SELECT 1 FROM recurring_transaction_rules LIMIT 1)
+        OR EXISTS(SELECT 1 FROM recurring_transaction_occurrences LIMIT 1)
+      ) AS has_data''').getSingle();
+    return row.read<bool>('has_data');
+  }
 
   Stream<List<StoredTransaction>> watchStoredTransactionsForOwner(
     String ownerScope,

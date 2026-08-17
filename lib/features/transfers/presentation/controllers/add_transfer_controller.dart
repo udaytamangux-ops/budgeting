@@ -1,5 +1,6 @@
 import 'package:budgeting_app/core/errors/app_exception.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/domain/services/transaction_amount_calculator.dart';
@@ -370,9 +371,17 @@ final class AddTransferController
         state.destination.requiresName && state.destinationName.trim().isEmpty
         ? '${state.destination.destinationFieldLabel} is required.'
         : null;
+    final bool selectedCategoryArchived =
+        state.expenseCategory?.isCustom == true &&
+        ref
+            .read(categoryCatalogProvider)
+            .resolve(state.expenseCategory!)
+            .isArchived;
     final String? categoryError =
         state.countsAsExpense && state.expenseCategory == null
         ? 'Choose an expense category.'
+        : state.countsAsExpense && selectedCategoryArchived && !state.isEditing
+        ? 'Choose an active expense category before saving.'
         : null;
     final FinancialTransfer? existing = state.isEditing
         ? ref.read(initialTransferProvider)

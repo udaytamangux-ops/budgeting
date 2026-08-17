@@ -1,6 +1,7 @@
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/core/database/database_providers.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/onboarding/presentation/controllers/onboarding_providers.dart';
 import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/theme_preference_providers.dart';
@@ -15,11 +16,15 @@ abstract final class AppBootstrap {
         if (database != null) appDatabaseProvider.overrideWithValue(database),
       ],
     );
+    await container
+        .read(onboardingPreferenceRepositoryProvider)
+        .initializeForCurrentInstallation();
     await Future.wait(<Future<Object?>>[
       container.read(accessModeProvider.future),
       container.read(primaryCalendarProvider.future),
       container.read(calendarSetupCompleteProvider.future),
       container.read(themePreferenceProvider.future),
+      container.read(onboardingCompletedProvider.future),
       container.read(recurringReconciliationProvider.future),
     ]);
     return container;

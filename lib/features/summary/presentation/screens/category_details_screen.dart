@@ -13,6 +13,7 @@ import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/financial_activity/presentation/widgets/financial_activity_list_item.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
@@ -81,9 +82,10 @@ final class _CategoryDetailsContent extends ConsumerWidget {
     final TransactionCategory? category = routeData.categories.length == 1
         ? routeData.categories.single
         : null;
-    final TransactionCategoryVisual visual =
-        (category ?? TransactionCategory.other).visual;
-    final String categoryLabel = category?.visual.label ?? 'Other';
+    final selected = category ?? TransactionCategory.other;
+    final definition = ref.watch(categoryCatalogProvider).resolve(selected);
+    final TransactionCategoryVisual visual = selected.visualFor(definition);
+    final String categoryLabel = category == null ? 'Other' : definition.label;
     final AppCalendarService calendarService = ref.watch(
       appCalendarServiceProvider,
     );
@@ -137,12 +139,8 @@ final class _CategoryDetailsContent extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xs),
               if (details.items.isEmpty)
                 EmptyState(
-                  title: 'No recorded transactions',
-                  message: routeData.type == TransactionType.expense
-                      ? 'No recorded transactions for $categoryLabel in '
-                            '$monthName.'
-                      : 'No recorded income transactions for $categoryLabel '
-                            'in $monthName.',
+                  title: 'No $categoryLabel activity in $monthName.',
+                  message: 'No matching recorded activity for this period.',
                   icon: Icons.receipt_long_outlined,
                   action: TextButton(
                     onPressed: context.pop,

@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_icon_keys.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_exceptions.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_enums.dart';
@@ -19,7 +22,7 @@ import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.
 final class BackupCodec {
   const BackupCodec(this._recurrenceService);
 
-  static const int backupFormatVersion = 2;
+  static const int backupFormatVersion = 3;
   static const int maximumFileBytes = 10 * 1024 * 1024;
   static const int maximumRecordsPerCollection = 100000;
   static const String currency = 'NPR';
@@ -35,6 +38,9 @@ final class BackupCodec {
         'databaseSchemaVersion': backup.sourceDatabaseSchemaVersion,
       },
       'records': <String, Object?>{
+        'customCategories': backup.snapshot.customCategories
+            .map(_customCategoryToJson)
+            .toList(growable: false),
         'transactions': backup.snapshot.transactions
             .map(_transactionToJson)
             .toList(growable: false),
@@ -71,7 +77,7 @@ final class BackupCodec {
     }
     final Map<String, Object?> root = _object(decoded);
     final int version = _integer(root, 'backupFormatVersion');
-    if (version != 1 && version != backupFormatVersion) {
+    if (version < 1 || version > backupFormatVersion) {
       throw const BackupValidationException(
         BackupValidationIssue.unsupportedVersion,
         'This backup was created by a newer or unsupported app version. '
@@ -87,6 +93,9 @@ final class BackupCodec {
       throw _malformed();
     }
     final Map<String, Object?> records = _object(root['records']);
+    final List<Object?> customCategoryValues = version >= 3
+        ? _array(records, 'customCategories')
+        : const <Object?>[];
     final List<Object?> transactionValues = _array(records, 'transactions');
     final List<Object?> ruleValues = _array(records, 'recurringRules');
     final List<Object?> occurrenceValues = _array(
@@ -97,21 +106,31 @@ final class BackupCodec {
         ? _array(records, 'transfers')
         : const <Object?>[];
     _checkCollectionSize(transactionValues);
+    _checkCollectionSize(customCategoryValues);
     _checkCollectionSize(ruleValues);
     _checkCollectionSize(occurrenceValues);
     _checkCollectionSize(transferValues);
 
+    final List<CustomCategory> customCategories = customCategoryValues
+        .map((Object? value) => _customCategoryFromJson(_object(value)))
+        .toList(growable: false);
+    _validateCustomCategories(customCategories);
+    final Map<String, CustomCategory> customById = <String, CustomCategory>{
+      for (final CustomCategory value in customCategories) value.id: value,
+    };
     final List<FinancialTransaction> transactions = transactionValues
-        .map((Object? value) => _transactionFromJson(_object(value)))
+        .map(
+          (Object? value) => _transactionFromJson(_object(value), customById),
+        )
         .toList(growable: false);
     final List<RecurringTransactionRule> rules = ruleValues
-        .map((Object? value) => _ruleFromJson(_object(value)))
+        .map((Object? value) => _ruleFromJson(_object(value), customById))
         .toList(growable: false);
     final List<RecurringTransactionOccurrence> occurrences = occurrenceValues
-        .map((Object? value) => _occurrenceFromJson(_object(value)))
+        .map((Object? value) => _occurrenceFromJson(_object(value), customById))
         .toList(growable: false);
     final List<FinancialTransfer> transfers = transferValues
-        .map((Object? value) => _transferFromJson(_object(value)))
+        .map((Object? value) => _transferFromJson(_object(value), customById))
         .toList(growable: false);
     _validateRelationships(transactions, rules, occurrences, transfers);
 
@@ -125,8 +144,76 @@ final class BackupCodec {
           occurrences,
         ),
         transfers: List<FinancialTransfer>.unmodifiable(transfers),
+        customCategories: List<CustomCategory>.unmodifiable(customCategories),
       ),
     );
+  }
+
+  Map<String, Object?> _customCategoryToJson(CustomCategory value) =>
+      <String, Object?>{
+        'id': value.id,
+        'type': TransactionDatabaseMapper.typeToKey(value.type),
+        'name': value.name,
+        'normalizedName': value.normalizedName,
+        'iconKey': value.iconKey,
+        'isArchived': value.isArchived,
+        'createdAtUtc': _timestamp(value.createdAt),
+        'updatedAtUtc': _timestamp(value.updatedAt),
+      };
+
+  CustomCategory _customCategoryFromJson(Map<String, Object?> json) {
+    final String id = _nonEmptyString(json, 'id');
+    final TransactionType type = _type(_string(json, 'type'));
+    final String name = CategoryNameRules.clean(_string(json, 'name'));
+    final String normalized = _string(json, 'normalizedName');
+    final String iconKey = _string(json, 'iconKey');
+    final DateTime createdAt = _parseTimestamp(_string(json, 'createdAtUtc'));
+    final DateTime updatedAt = _parseTimestamp(_string(json, 'updatedAtUtc'));
+    if (!TransactionCategory.isCustomIdentifier(id) ||
+        name.isEmpty ||
+        name.length > CategoryNameRules.maximumLength ||
+        normalized != CategoryNameRules.normalize(name) ||
+        !CategoryIconKeys.isSupported(iconKey) ||
+        updatedAt.isBefore(createdAt)) {
+      throw _malformed();
+    }
+    return CustomCategory(
+      id: id,
+      type: type,
+      name: name,
+      normalizedName: normalized,
+      iconKey: iconKey,
+      isArchived: _boolean(json, 'isArchived'),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  void _validateCustomCategories(List<CustomCategory> values) {
+    _uniqueIds(values.map((CustomCategory value) => value.id));
+    final Set<String> names = <String>{};
+    final Map<TransactionType, int> active = <TransactionType, int>{};
+    for (final CustomCategory value in values) {
+      if (!names.add('${value.type.name}|${value.normalizedName}')) {
+        throw _malformed();
+      }
+      final bool systemCollision = TransactionCategory.values
+          .where(
+            (TransactionCategory category) => category.supports(value.type),
+          )
+          .any(
+            (TransactionCategory category) =>
+                CategoryNameRules.normalize(category.systemLabel ?? '') ==
+                value.normalizedName,
+          );
+      if (systemCollision) throw _malformed();
+      if (!value.isArchived) {
+        active[value.type] = (active[value.type] ?? 0) + 1;
+        if (active[value.type]! > CategoryNameRules.maximumActivePerType) {
+          throw _malformed();
+        }
+      }
+    }
   }
 
   Map<String, Object?> _transactionToJson(FinancialTransaction value) =>
@@ -212,11 +299,18 @@ final class BackupCodec {
     'createdAtUtc': _timestamp(value.createdAt),
   };
 
-  FinancialTransaction _transactionFromJson(Map<String, Object?> json) {
+  FinancialTransaction _transactionFromJson(
+    Map<String, Object?> json,
+    Map<String, CustomCategory> customById,
+  ) {
     final String id = _nonEmptyString(json, 'id');
     final TransactionType type = _type(_string(json, 'type'));
     final Money amount = _money(json);
-    final TransactionCategory category = _category(_string(json, 'category'));
+    final TransactionCategory category = _category(
+      _string(json, 'category'),
+      type,
+      customById,
+    );
     if (!category.supports(type)) {
       throw _malformed();
     }
@@ -234,7 +328,10 @@ final class BackupCodec {
     ).._validateTransactionTimes();
   }
 
-  FinancialTransfer _transferFromJson(Map<String, Object?> json) {
+  FinancialTransfer _transferFromJson(
+    Map<String, Object?> json,
+    Map<String, CustomCategory> customById,
+  ) {
     final TransferSource? source = TransferSourceMetadata.tryParse(
       _string(json, 'source'),
     );
@@ -249,7 +346,7 @@ final class BackupCodec {
     final String? categoryKey = _nullableString(json, 'expenseCategory');
     final TransactionCategory? category = categoryKey == null
         ? null
-        : _category(categoryKey);
+        : _category(categoryKey, TransactionType.expense, customById);
     final int feeMinorUnits = _integer(json, 'feeMinorUnits');
     if (feeMinorUnits < 0 ||
         (destinationName?.length ?? 0) > 60 ||
@@ -276,9 +373,16 @@ final class BackupCodec {
     return transfer;
   }
 
-  RecurringTransactionRule _ruleFromJson(Map<String, Object?> json) {
+  RecurringTransactionRule _ruleFromJson(
+    Map<String, Object?> json,
+    Map<String, CustomCategory> customById,
+  ) {
     final TransactionType type = _type(_string(json, 'type'));
-    final TransactionCategory category = _category(_string(json, 'category'));
+    final TransactionCategory category = _category(
+      _string(json, 'category'),
+      type,
+      customById,
+    );
     final RecurringFrequency? frequency = RecurringFrequencyMetadata.tryParse(
       _string(json, 'frequency'),
     );
@@ -348,9 +452,14 @@ final class BackupCodec {
 
   RecurringTransactionOccurrence _occurrenceFromJson(
     Map<String, Object?> json,
+    Map<String, CustomCategory> customById,
   ) {
     final TransactionType type = _type(_string(json, 'type'));
-    final TransactionCategory category = _category(_string(json, 'category'));
+    final TransactionCategory category = _category(
+      _string(json, 'category'),
+      type,
+      customById,
+    );
     final RecurringOccurrenceStatus? status =
         RecurringOccurrenceStatusMetadata.tryParse(_string(json, 'status'));
     if (status == null || !category.supports(type)) {
@@ -444,12 +553,17 @@ final class BackupCodec {
     }
   }
 
-  TransactionCategory _category(String value) {
-    try {
-      return TransactionDatabaseMapper.categoryFromKey(value);
-    } on FormatException {
-      throw _malformed();
-    }
+  TransactionCategory _category(
+    String value,
+    TransactionType type,
+    Map<String, CustomCategory> customById,
+  ) {
+    final TransactionCategory? system =
+        TransactionCategory.systemFromIdentifier(value);
+    if (system != null && system.supports(type)) return system;
+    final CustomCategory? custom = customById[value];
+    if (custom != null && custom.type == type) return custom.reference;
+    throw _malformed();
   }
 
   PaymentMethod _paymentMethod(String value) {

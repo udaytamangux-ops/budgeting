@@ -20,7 +20,8 @@ final class AuthenticatedShell extends ConsumerWidget {
       body: Column(
         children: <Widget>[
           Expanded(child: navigationShell),
-          const TransactionCreatedBanner(),
+          if (navigationShell.currentIndex == 0)
+            const TransactionCreatedBanner(),
         ],
       ),
       extendBody: false,

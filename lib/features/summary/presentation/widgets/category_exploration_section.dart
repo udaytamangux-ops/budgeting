@@ -2,16 +2,21 @@ import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
+import 'package:budgeting_app/features/categories/presentation/category_icon_data.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/spending_donut_chart.dart';
 import 'package:budgeting_app/features/summary/presentation/widgets/summary_record_row.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final class CategoryExplorationSection extends StatelessWidget {
+final class CategoryExplorationSection extends ConsumerWidget {
   const CategoryExplorationSection({
     required this.activity,
+    required this.hasAnyActivity,
     required this.monthName,
     required this.selectedGroupKey,
     required this.currencyFormatter,
@@ -24,6 +29,7 @@ final class CategoryExplorationSection extends StatelessWidget {
   });
 
   final MonthlyCategoryActivity activity;
+  final bool hasAnyActivity;
   final String monthName;
   final String? selectedGroupKey;
   final CurrencyFormatter currencyFormatter;
@@ -34,7 +40,8 @@ final class CategoryExplorationSection extends StatelessWidget {
   final ValueChanged<TransactionType> onAddTransaction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final CategoryCatalog catalog = ref.watch(categoryCatalogProvider);
     final bool isExpense = activity.type == TransactionType.expense;
     final CategoryActivityGroup? selectedGroup = _selectedGroup;
     final String sectionTitle = isExpense
@@ -61,9 +68,16 @@ final class CategoryExplorationSection extends StatelessWidget {
               isExpense ? 'summary_empty_expenses' : 'summary_empty_income',
             ),
             title: isExpense
-                ? 'No recorded expenses in $monthName'
-                : 'No recorded income in $monthName',
-            message: isExpense
+                ? hasAnyActivity
+                      ? 'No recorded expenses in $monthName'
+                      : 'No recorded activity this month.'
+                : hasAnyActivity
+                ? 'No recorded income in $monthName'
+                : 'No recorded activity this month.',
+            message: !hasAnyActivity
+                ? 'Your summary will appear after you record income or '
+                      'expenses.'
+                : isExpense
                 ? 'Expenses recorded for this month will appear here by '
                       'category.'
                 : 'Income recorded for this month will appear here by source.',
@@ -90,6 +104,7 @@ final class CategoryExplorationSection extends StatelessWidget {
               currencyFormatter: currencyFormatter,
               selectedGroupKey: selectedGroupKey,
               onGroupSelected: onGroupSelected,
+              categoryLabelFor: (category) => catalog.resolve(category).label,
             ),
           ),
           _SelectionActions(
@@ -108,6 +123,7 @@ final class CategoryExplorationSection extends StatelessWidget {
               isSelected:
                   activity.groups[index].selectionKey == selectedGroupKey,
               onTap: () => onGroupSelected(activity.groups[index]),
+              catalog: catalog,
             ),
             if (index < activity.groups.length - 1) const Divider(),
           ],
@@ -182,6 +198,7 @@ final class _CategoryActivityRow extends StatelessWidget {
     required this.currencyFormatter,
     required this.isSelected,
     required this.onTap,
+    required this.catalog,
   });
 
   final CategoryActivityGroup group;
@@ -189,12 +206,15 @@ final class _CategoryActivityRow extends StatelessWidget {
   final CurrencyFormatter currencyFormatter;
   final bool isSelected;
   final VoidCallback onTap;
+  final CategoryCatalog catalog;
 
   @override
   Widget build(BuildContext context) {
     return SummaryRecordRow(
       key: ValueKey<String>('summary_category_row_${group.selectionKey}'),
-      label: group.displayLabel,
+      label: group.category == null
+          ? 'Other'
+          : catalog.resolve(group.category!).label,
       value: currencyFormatter.format(group.amount),
       supportingText:
           '${group.sharePercentage}% of recorded '
@@ -206,7 +226,15 @@ final class _CategoryActivityRow extends StatelessWidget {
           color: group.displaySurface,
           shape: BoxShape.circle,
         ),
-        child: Icon(group.displayIcon, color: group.displayAccent, size: 20),
+        child: Icon(
+          group.category == null
+              ? group.displayIcon
+              : CategoryIconData.forKey(
+                  catalog.resolve(group.category!).iconKey,
+                ),
+          color: group.displayAccent,
+          size: 20,
+        ),
       ),
       onTap: onTap,
       isSelected: isSelected,

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_codec.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_exceptions.dart';
@@ -22,7 +23,7 @@ void main() {
     RecurrenceService(BikramSambatCalendarService()),
   );
 
-  test('v2 backup round-trips full financial state exactly', () {
+  test('v3 backup round-trips full financial state exactly', () {
     final PortableBackup original = _backup();
     final Uint8List firstEncoding = codec.encode(original);
     final PortableBackup restored = codec.decode(firstEncoding);
@@ -48,12 +49,12 @@ void main() {
     );
 
     final Map<String, Object?> json = jsonDecode(utf8.decode(firstEncoding));
-    expect(json['backupFormatVersion'], 2);
+    expect(json['backupFormatVersion'], 3);
     expect(json.toString(), isNot(contains('ownerScope')));
     expect(json.toString(), isNot(contains('theme_mode')));
   });
 
-  test('empty financial state is a valid deterministic v2 backup', () {
+  test('empty financial state is a valid deterministic v3 backup', () {
     final PortableBackup backup = PortableBackup(
       createdAtUtc: DateTime.utc(2026, 8, 8, 12),
       sourceDatabaseSchemaVersion: 3,
@@ -69,7 +70,7 @@ void main() {
     expect(decoded.snapshot.recurringOccurrences, isEmpty);
   });
 
-  test('v2 supports all categories, payment methods and recurrence states', () {
+  test('v3 supports all categories, payment methods and recurrence states', () {
     final DateTime now = DateTime.utc(2026, 8, 8, 12);
     final List<FinancialTransaction> transactions = <FinancialTransaction>[];
     for (int index = 0; index < TransactionCategory.values.length; index++) {
@@ -194,6 +195,94 @@ void main() {
     expect(restored.snapshot.transfers, isEmpty);
   });
 
+  test('v2 remains restorable and does not invent custom categories', () {
+    final Map<String, Object?> legacy = _json(codec);
+    legacy['backupFormatVersion'] = 2;
+    _records(legacy).remove('customCategories');
+
+    final PortableBackup restored = codec.decode(
+      Uint8List.fromList(utf8.encode(jsonEncode(legacy))),
+    );
+
+    expect(restored.snapshot.transactions, hasLength(1));
+    expect(restored.snapshot.customCategories, isEmpty);
+  });
+
+  test('v3 round-trips custom category identity and references', () {
+    final DateTime created = DateTime.utc(2026, 8, 8, 12);
+    const String categoryId = 'custom:fitness';
+    final TransactionCategory reference = TransactionCategory.custom(
+      categoryId,
+      type: TransactionType.expense,
+    );
+    final PortableBackup backup = PortableBackup(
+      createdAtUtc: created,
+      sourceDatabaseSchemaVersion: 6,
+      snapshot: FinancialDataSnapshot(
+        customCategories: <CustomCategory>[
+          CustomCategory(
+            id: categoryId,
+            type: TransactionType.expense,
+            name: 'Fitness',
+            normalizedName: 'fitness',
+            iconKey: 'fitness',
+            isArchived: true,
+            createdAt: created,
+            updatedAt: created,
+          ),
+        ],
+        transactions: <FinancialTransaction>[
+          FinancialTransaction(
+            id: 'custom-transaction',
+            type: TransactionType.expense,
+            amount: const Money(minorUnits: 123456),
+            category: reference,
+            paymentMethod: PaymentMethod.cash,
+            occurredAt: DateTime.utc(2026, 8, 7, 12),
+            createdAt: created,
+            updatedAt: created,
+          ),
+        ],
+        recurringRules: const <RecurringTransactionRule>[],
+        recurringOccurrences: const <RecurringTransactionOccurrence>[],
+      ),
+    );
+
+    final PortableBackup restored = codec.decode(codec.encode(backup));
+
+    expect(restored.snapshot.customCategories.single.id, categoryId);
+    expect(restored.snapshot.customCategories.single.isArchived, isTrue);
+    expect(restored.snapshot.transactions.single.category.name, categoryId);
+    expect(restored.snapshot.transactions.single.amount.minorUnits, 123456);
+    expect(utf8.decode(codec.encode(backup)), isNot(contains('ownerScope')));
+  });
+
+  test('v3 rejects missing custom references and category collisions', () {
+    final Map<String, Object?> missingReference = _json(codec);
+    _transactions(missingReference).single['category'] = 'custom:missing';
+    expect(
+      () => _decode(codec, missingReference),
+      throwsA(isA<BackupValidationException>()),
+    );
+
+    final Map<String, Object?> systemCollision = _json(codec);
+    (_records(systemCollision)['customCategories']! as List<Object?>)
+        .add(<String, Object?>{
+          'id': 'custom:food-copy',
+          'type': 'expense',
+          'name': ' Food ',
+          'normalizedName': 'food',
+          'iconKey': 'food',
+          'isArchived': false,
+          'createdAtUtc': '2026-08-08T12:00:00.000Z',
+          'updatedAtUtc': '2026-08-08T12:00:00.000Z',
+        });
+    expect(
+      () => _decode(codec, systemCollision),
+      throwsA(isA<BackupValidationException>()),
+    );
+  });
+
   group('validation rejects before producing a snapshot', () {
     test('empty, malformed, missing and unsupported versions', () {
       expect(
@@ -211,7 +300,7 @@ void main() {
         throwsA(isA<BackupValidationException>()),
       );
       final Map<String, Object?> unsupported = _json(codec);
-      unsupported['backupFormatVersion'] = 3;
+      unsupported['backupFormatVersion'] = 4;
       expect(
         () => _decode(codec, unsupported),
         throwsA(

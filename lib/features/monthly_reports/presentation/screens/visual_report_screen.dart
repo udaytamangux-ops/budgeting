@@ -6,7 +6,6 @@ import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/features/monthly_reports/domain/entities/monthly_report_data.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/controllers/monthly_report_providers.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/widgets/report_donut_chart.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/transaction_category_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -123,7 +122,7 @@ final class _CategoryVisual extends StatelessWidget {
       return Semantics(
         container: true,
         label:
-            '${value.category.displayLabel}, ${currency.format(value.amount)}, '
+            '${value.displayLabel}, ${currency.format(value.amount)}, '
             '$percentage of recorded $semanticName.',
         child: ExcludeSemantics(
           child: Column(
@@ -131,7 +130,7 @@ final class _CategoryVisual extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                value.category.displayLabel,
+                value.displayLabel,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.xxs),
@@ -199,7 +198,7 @@ final class _ExpenseHighlights extends StatelessWidget {
           if (report.highestExpenseCategory case final value?)
             (
               'Highest expense category',
-              value.category.displayLabel,
+              value.displayLabel,
               formatter.format(value.amount),
               null,
             ),
@@ -245,7 +244,7 @@ final class _IncomeHighlights extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Largest income source'),
-            subtitle: Text(value.category.displayLabel),
+            subtitle: Text(value.displayLabel),
             trailing: Text(formatter.format(value.amount)),
           ),
         if (report.largestIncomeActivity case final value?)

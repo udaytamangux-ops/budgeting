@@ -9,10 +9,13 @@ import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
 import 'package:budgeting_app/features/access/presentation/screens/access_choice_screen.dart';
 import 'package:budgeting_app/features/access/presentation/screens/account_unavailable_screen.dart';
+import 'package:budgeting_app/features/categories/presentation/screens/categories_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/screens/month_comparison_screen.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/screens/monthly_report_screen.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/screens/visual_report_screen.dart';
+import 'package:budgeting_app/features/onboarding/presentation/controllers/onboarding_providers.dart';
+import 'package:budgeting_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/privacy_and_data_screen.dart';
 import 'package:budgeting_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:budgeting_app/features/recurring/presentation/screens/recurring_rule_form_route.dart';
@@ -49,12 +52,15 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           ref.read(accessModeProvider).valueOrNull ?? AccessMode.undecided;
       final bool calendarSetupComplete =
           ref.read(calendarSetupCompleteProvider).valueOrNull ?? false;
+      final bool onboardingComplete =
+          ref.read(onboardingCompletedProvider).valueOrNull ?? false;
       final String location = state.matchedLocation;
       final bool isAccessEntry =
           location == AppRoutes.access ||
           location == AppRoutes.signIn ||
           location == AppRoutes.signUp;
       final bool isCalendarSetup = location == AppRoutes.calendarSetup;
+      final bool isOnboarding = location == AppRoutes.onboarding;
       final bool hasAccess = accessMode != AccessMode.undecided;
 
       if (!hasAccess && !isAccessEntry) {
@@ -69,13 +75,29 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         final String? intended = _safeIntendedLocation(
           state.uri.queryParameters['from'],
         );
+        if (!onboardingComplete) {
+          return _onboardingLocation(intended);
+        }
         if (!calendarSetupComplete) {
           return _calendarSetupLocation(intended);
         }
         return intended ?? AppRoutes.home;
       }
 
+      if (hasAccess && !onboardingComplete && !isOnboarding && !isAccessEntry) {
+        return _onboardingLocation(_safeIntendedLocation(state.uri.toString()));
+      }
+
+      if (onboardingComplete && isOnboarding) {
+        final String? intended = _safeIntendedLocation(
+          state.uri.queryParameters['from'],
+        );
+        return calendarSetupComplete
+            ? intended ?? AppRoutes.home
+            : _calendarSetupLocation(intended);
+      }
       if (hasAccess &&
+          onboardingComplete &&
           !calendarSetupComplete &&
           !isCalendarSetup &&
           !isAccessEntry) {
@@ -83,7 +105,6 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           _safeIntendedLocation(state.uri.toString()),
         );
       }
-
       if (hasAccess && calendarSetupComplete && isCalendarSetup) {
         return _safeIntendedLocation(state.uri.queryParameters['from']) ??
             AppRoutes.home;
@@ -112,6 +133,15 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
             ),
           );
         },
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        name: AppRouteNames.onboarding,
+        builder: (_, GoRouterState state) => OnboardingScreen(
+          intendedLocation: _safeIntendedLocation(
+            state.uri.queryParameters['from'],
+          ),
+        ),
       ),
       GoRoute(
         path: AppRoutes.signIn,
@@ -346,6 +376,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                     name: AppRouteNames.privacyAndData,
                     builder: (_, _) => const PrivacyAndDataScreen(),
                   ),
+                  GoRoute(
+                    path: 'categories',
+                    name: AppRouteNames.categories,
+                    builder: (_, _) => const CategoriesScreen(),
+                  ),
                 ],
               ),
             ],
@@ -367,6 +402,9 @@ final Provider<ChangeNotifier> _routerRefreshProvider =
       ref.listen<AsyncValue<bool>>(calendarSetupCompleteProvider, (_, _) {
         notifier.refresh();
       });
+      ref.listen<AsyncValue<bool>>(onboardingCompletedProvider, (_, _) {
+        notifier.refresh();
+      });
       ref.onDispose(notifier.dispose);
       return notifier;
     });
@@ -382,6 +420,15 @@ String? _safeIntendedLocation(String? value) {
 String _calendarSetupLocation(String? intendedLocation) {
   return Uri(
     path: AppRoutes.calendarSetup,
+    queryParameters: intendedLocation == null
+        ? null
+        : <String, String>{'from': intendedLocation},
+  ).toString();
+}
+
+String _onboardingLocation(String? intendedLocation) {
+  return Uri(
+    path: AppRoutes.onboarding,
     queryParameters: intendedLocation == null
         ? null
         : <String, String>{'from': intendedLocation},

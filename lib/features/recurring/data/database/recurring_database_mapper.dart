@@ -73,14 +73,18 @@ abstract final class RecurringDatabaseMapper {
       return null;
     }
     try {
+      final type = TransactionDatabaseMapper.typeFromKey(row.typeKey);
       return domain.RecurringTransactionRule(
         id: row.id,
-        type: TransactionDatabaseMapper.typeFromKey(row.typeKey),
+        type: type,
         amount: Money(
           minorUnits: row.amountMinorUnits,
           currencyCode: row.currencyCode,
         ),
-        category: TransactionDatabaseMapper.categoryFromKey(row.categoryKey),
+        category: TransactionDatabaseMapper.categoryFromKey(
+          row.categoryKey,
+          type: type,
+        ),
         paymentMethod: TransactionDatabaseMapper.paymentMethodFromKey(
           row.paymentMethodKey,
         ),
@@ -148,17 +152,21 @@ abstract final class RecurringDatabaseMapper {
       return null;
     }
     try {
+      final type = TransactionDatabaseMapper.typeFromKey(row.typeKey);
       return domain.RecurringTransactionOccurrence(
         id: row.id,
         ruleId: row.ruleId,
         dueDateAd: _date(row.dueDateAdUtcMicros),
         status: status,
-        type: TransactionDatabaseMapper.typeFromKey(row.typeKey),
+        type: type,
         amount: Money(
           minorUnits: row.amountMinorUnits,
           currencyCode: row.currencyCode,
         ),
-        category: TransactionDatabaseMapper.categoryFromKey(row.categoryKey),
+        category: TransactionDatabaseMapper.categoryFromKey(
+          row.categoryKey,
+          type: type,
+        ),
         paymentMethod: TransactionDatabaseMapper.paymentMethodFromKey(
           row.paymentMethodKey,
         ),

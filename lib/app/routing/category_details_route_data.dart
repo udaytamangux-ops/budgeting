@@ -61,7 +61,7 @@ final class CategoryDetailsRouteData {
 
     final List<TransactionCategory> categories = <TransactionCategory>[];
     for (final String identifier in categoryIdentifiers.split(',')) {
-      final TransactionCategory? category = _category(identifier);
+      final TransactionCategory? category = _category(identifier, type);
       if (category == null || !category.supports(type)) {
         return null;
       }
@@ -99,13 +99,14 @@ final class CategoryDetailsRouteData {
     return null;
   }
 
-  static TransactionCategory? _category(String identifier) {
-    for (final TransactionCategory category in TransactionCategory.values) {
-      if (category.name == identifier) {
-        return category;
-      }
-    }
-    return null;
+  static TransactionCategory? _category(
+    String identifier,
+    TransactionType type,
+  ) {
+    return TransactionCategory.systemFromIdentifier(identifier) ??
+        (TransactionCategory.isCustomIdentifier(identifier)
+            ? TransactionCategory.custom(identifier, type: type)
+            : null);
   }
 
   static CalendarPeriod _periodForGregorianMonth(DateTime? month) {

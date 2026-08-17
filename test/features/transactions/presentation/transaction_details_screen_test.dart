@@ -485,6 +485,9 @@ void main() {
         records.map((FinancialTransaction value) => value.paymentMethod),
         everyElement(PaymentMethod.cash),
       );
+      expect(find.text('Expense added · NPR 1,250 · Food'), findsNothing);
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
       expect(find.text('Expense added · NPR 1,250 · Food'), findsOneWidget);
     },
   );

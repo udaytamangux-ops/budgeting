@@ -4,14 +4,14 @@ import 'package:budgeting_app/features/transactions/domain/entities/transaction_
 abstract final class BudgetPolicy {
   static const Money monthlyLimit = Money(minorUnits: 4000000);
 
-  static const Map<TransactionCategory, Money> categoryLimits =
+  static final Map<TransactionCategory, Money> categoryLimits =
       <TransactionCategory, Money>{
-        TransactionCategory.food: Money(minorUnits: 800000),
-        TransactionCategory.transport: Money(minorUnits: 400000),
-        TransactionCategory.rentAndHousing: Money(minorUnits: 1000000),
-        TransactionCategory.utilities: Money(minorUnits: 350000),
-        TransactionCategory.shopping: Money(minorUnits: 300000),
-        TransactionCategory.health: Money(minorUnits: 250000),
-        TransactionCategory.entertainment: Money(minorUnits: 250000),
+        TransactionCategory.food: const Money(minorUnits: 800000),
+        TransactionCategory.transport: const Money(minorUnits: 400000),
+        TransactionCategory.rentAndHousing: const Money(minorUnits: 1000000),
+        TransactionCategory.utilities: const Money(minorUnits: 350000),
+        TransactionCategory.shopping: const Money(minorUnits: 300000),
+        TransactionCategory.health: const Money(minorUnits: 250000),
+        TransactionCategory.entertainment: const Money(minorUnits: 250000),
       };
 }

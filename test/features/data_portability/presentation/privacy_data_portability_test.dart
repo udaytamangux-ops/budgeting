@@ -6,6 +6,8 @@ import 'package:budgeting_app/core/database/app_database.dart'
     hide RecurringTransactionOccurrence, RecurringTransactionRule;
 import 'package:budgeting_app/core/database/database_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/repositories/financial_data_portability_repository.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_codec.dart';
@@ -203,7 +205,7 @@ void main() {
       final PortableBackup recovery = codec.decode(
         documents.savedDocuments.single.bytes,
       );
-      expect(BackupCodec.backupFormatVersion, 2);
+      expect(BackupCodec.backupFormatVersion, 3);
       expect(recovery.snapshot.transactions.single.id, 'current-transaction');
       expect(repository.replaceCalls, 1);
       expect(repository.snapshot.transactions, isEmpty);
@@ -376,6 +378,7 @@ Future<void> _pump(
     ProviderScope(
       overrides: <Override>[
         appDatabaseProvider.overrideWithValue(database),
+        categoryCatalogProvider.overrideWithValue(CategoryCatalog(const [])),
         financialDataPortabilityRepositoryProvider.overrideWithValue(
           repository,
         ),

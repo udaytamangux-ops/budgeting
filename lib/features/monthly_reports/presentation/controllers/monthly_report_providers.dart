@@ -1,5 +1,6 @@
 import 'package:budgeting_app/core/calendar/presentation/selected_calendar_period_providers.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/financial_activity/presentation/controllers/financial_activity_providers.dart';
 import 'package:budgeting_app/features/monthly_reports/domain/entities/monthly_comparison_data.dart';
@@ -10,7 +11,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final Provider<MonthlyReportService> monthlyReportServiceProvider =
     Provider<MonthlyReportService>((Ref ref) {
-      return MonthlyReportService(ref.watch(appCalendarServiceProvider));
+      final catalog = ref.watch(categoryCatalogProvider);
+      return MonthlyReportService(
+        ref.watch(appCalendarServiceProvider),
+        categoryLabelFor: (category) => catalog.resolve(category).label,
+      );
     });
 
 final Provider<AsyncValue<MonthlyReportData>> monthlyReportProvider =

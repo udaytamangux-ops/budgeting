@@ -482,10 +482,10 @@ void main() {
 
     expect(find.text('August 2026'), findsOneWidget);
     expect(find.text('0 recorded'), findsOneWidget);
-    expect(find.text('No recorded expenses in August'), findsOneWidget);
+    expect(find.text('No recorded activity this month.'), findsOneWidget);
     expect(
       find.text(
-        'Expenses recorded for this month will appear here by category.',
+        'Your summary will appear after you record income or expenses.',
       ),
       findsOneWidget,
     );
@@ -498,7 +498,7 @@ void main() {
     );
     await tester.tap(previousMonth);
     await tester.pumpAndSettle();
-    expect(find.text('No recorded expenses in July'), findsOneWidget);
+    expect(find.text('No recorded activity this month.'), findsOneWidget);
 
     final Finder incomeSelector = find.byKey(
       const ValueKey<String>('transaction_type_income'),
@@ -506,9 +506,11 @@ void main() {
     await _revealSummary(tester, incomeSelector);
     await tester.tap(incomeSelector);
     await tester.pumpAndSettle();
-    expect(find.text('No recorded income in July'), findsOneWidget);
+    expect(find.text('No recorded activity this month.'), findsOneWidget);
     expect(
-      find.text('Income recorded for this month will appear here by source.'),
+      find.text(
+        'Your summary will appear after you record income or expenses.',
+      ),
       findsOneWidget,
     );
     expect(find.byType(SpendingDonutChart), findsNothing);

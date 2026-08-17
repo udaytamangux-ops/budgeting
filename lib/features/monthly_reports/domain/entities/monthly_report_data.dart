@@ -9,12 +9,16 @@ final class ReportCategoryTotal {
     required this.amount,
     required this.basisPoints,
     required this.activityCount,
+    this.resolvedLabel,
   });
 
   final TransactionCategory category;
   final Money amount;
   final int basisPoints;
   final int activityCount;
+  final String? resolvedLabel;
+
+  String get displayLabel => resolvedLabel ?? category.systemLabel ?? 'Other';
 }
 
 final class ReportChartSlice {

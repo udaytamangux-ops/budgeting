@@ -3,6 +3,7 @@ import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/widgets/primary_button.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/financial_activity/presentation/controllers/new_activity_type_controller.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -16,7 +17,6 @@ import 'package:budgeting_app/features/transactions/presentation/widgets/quick_d
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_amount_field.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_amount_pad.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
-import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:budgeting_app/features/transfers/presentation/controllers/add_transfer_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,10 +200,10 @@ final class _AddTransactionScreenState
                           recurringOccurrence != null) ...<Widget>[
                         Semantics(
                           label:
-                              'Scheduled from ${recurringOccurrence.merchant ?? recurringOccurrence.category.visual.label}',
+                              'Scheduled from ${recurringOccurrence.merchant ?? ref.watch(categoryCatalogProvider).resolve(recurringOccurrence.category).label}',
                           child: Text(
                             'Scheduled from '
-                            '${recurringOccurrence.merchant ?? recurringOccurrence.category.visual.label}',
+                            '${recurringOccurrence.merchant ?? ref.watch(categoryCatalogProvider).resolve(recurringOccurrence.category).label}',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: context.appColors.textSecondary,

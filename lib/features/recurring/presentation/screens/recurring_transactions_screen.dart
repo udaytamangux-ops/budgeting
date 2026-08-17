@@ -9,13 +9,13 @@ import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_enums.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
 import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_actions_controller.dart';
 import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
-import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -287,7 +287,7 @@ final class _SectionTitle extends StatelessWidget {
   }
 }
 
-final class _DueOccurrenceTile extends StatelessWidget {
+final class _DueOccurrenceTile extends ConsumerWidget {
   const _DueOccurrenceTile({
     required this.occurrence,
     required this.rule,
@@ -307,9 +307,10 @@ final class _DueOccurrenceTile extends StatelessWidget {
   final VoidCallback onSkip;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final String title =
-        occurrence.merchant ?? occurrence.category.visual.label;
+        occurrence.merchant ??
+        ref.watch(categoryCatalogProvider).resolve(occurrence.category).label;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
@@ -355,7 +356,7 @@ final class _DueOccurrenceTile extends StatelessWidget {
   }
 }
 
-final class _RuleTile extends StatelessWidget {
+final class _RuleTile extends ConsumerWidget {
   const _RuleTile({
     required this.rule,
     required this.amount,
@@ -377,8 +378,10 @@ final class _RuleTile extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) {
-    final String title = rule.merchant ?? rule.category.visual.label;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final String title =
+        rule.merchant ??
+        ref.watch(categoryCatalogProvider).resolve(rule.category).label;
     return Semantics(
       container: true,
       label:

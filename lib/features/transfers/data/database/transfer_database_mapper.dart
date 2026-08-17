@@ -1,6 +1,7 @@
 import 'package:budgeting_app/core/database/app_database.dart';
 import 'package:budgeting_app/features/transactions/data/database/transaction_database_mapper.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
+import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
 import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 import 'package:drift/drift.dart';
@@ -61,7 +62,10 @@ abstract final class TransferDatabaseMapper {
       countsAsExpense: row.countsAsExpense,
       expenseCategory: row.expenseCategoryKey == null
           ? null
-          : TransactionDatabaseMapper.categoryFromKey(row.expenseCategoryKey!),
+          : TransactionDatabaseMapper.categoryFromKey(
+              row.expenseCategoryKey!,
+              type: TransactionType.expense,
+            ),
       fee: Money(minorUnits: row.feeMinorUnits, currencyCode: row.currencyCode),
       occurredAt: DateTime.fromMicrosecondsSinceEpoch(
         row.occurredAtUtcMicros,

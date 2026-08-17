@@ -35,14 +35,15 @@ abstract final class TransactionDatabaseMapper {
   }
 
   static FinancialTransaction fromRow(StoredTransaction row) {
+    final TransactionType type = typeFromKey(row.typeKey);
     return FinancialTransaction(
       id: row.id,
-      type: typeFromKey(row.typeKey),
+      type: type,
       amount: Money(
         minorUnits: row.amountMinorUnits,
         currencyCode: row.currencyCode,
       ),
-      category: categoryFromKey(row.categoryKey),
+      category: categoryFromKey(row.categoryKey, type: type),
       paymentMethod: paymentMethodFromKey(row.paymentMethodKey),
       occurredAt: DateTime.fromMicrosecondsSinceEpoch(
         row.occurredAtUtcMicros,
@@ -78,49 +79,18 @@ abstract final class TransactionDatabaseMapper {
   static PaymentMethod paymentMethodFromKey(String key) =>
       PaymentMethodCodec.decode(key);
 
-  static String categoryToKey(TransactionCategory category) =>
-      switch (category) {
-        TransactionCategory.food => 'food',
-        TransactionCategory.transport => 'transport',
-        TransactionCategory.rentAndHousing => 'rent_and_housing',
-        TransactionCategory.utilities => 'utilities',
-        TransactionCategory.shopping => 'shopping',
-        TransactionCategory.health => 'health',
-        TransactionCategory.education => 'education',
-        TransactionCategory.entertainment => 'entertainment',
-        TransactionCategory.family => 'family',
-        TransactionCategory.feesAndCharges => 'fees_and_charges',
-        TransactionCategory.salary => 'salary',
-        TransactionCategory.freelance => 'freelance',
-        TransactionCategory.business => 'business',
-        TransactionCategory.allowance => 'allowance',
-        TransactionCategory.remittance => 'remittance',
-        TransactionCategory.gift => 'gift',
-        TransactionCategory.refund => 'refund',
-        TransactionCategory.other => 'other',
-      };
+  static String categoryToKey(TransactionCategory category) => category.name;
 
-  static TransactionCategory categoryFromKey(String key) => switch (key) {
-    'food' => TransactionCategory.food,
-    'transport' => TransactionCategory.transport,
-    'rent_and_housing' => TransactionCategory.rentAndHousing,
-    'utilities' => TransactionCategory.utilities,
-    'shopping' => TransactionCategory.shopping,
-    'health' => TransactionCategory.health,
-    'education' => TransactionCategory.education,
-    'entertainment' => TransactionCategory.entertainment,
-    'family' => TransactionCategory.family,
-    'fees_and_charges' => TransactionCategory.feesAndCharges,
-    'salary' => TransactionCategory.salary,
-    'freelance' => TransactionCategory.freelance,
-    'business' => TransactionCategory.business,
-    'allowance' => TransactionCategory.allowance,
-    'remittance' => TransactionCategory.remittance,
-    'gift' => TransactionCategory.gift,
-    'refund' => TransactionCategory.refund,
-    'other' => TransactionCategory.other,
-    _ => throw const FormatException(
-      'Unsupported stored transaction category.',
-    ),
-  };
+  static TransactionCategory categoryFromKey(
+    String key, {
+    TransactionType? type,
+  }) {
+    final TransactionCategory? system =
+        TransactionCategory.systemFromIdentifier(key);
+    if (system != null) return system;
+    if (TransactionCategory.isCustomIdentifier(key) && type != null) {
+      return TransactionCategory.custom(key, type: type);
+    }
+    throw const FormatException('Unsupported stored transaction category.');
+  }
 }

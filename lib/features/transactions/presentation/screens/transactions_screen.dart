@@ -12,6 +12,7 @@ import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/core/widgets/empty_state.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/financial_activity/presentation/controllers/financial_activity_providers.dart';
 import 'package:budgeting_app/features/financial_activity/presentation/widgets/financial_activity_list_item.dart';
@@ -102,8 +103,9 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               data: (List<FinancialActivity> values) {
                 if (values.isEmpty) {
                   return EmptyState(
-                    title: 'No transactions recorded yet',
-                    message: 'Income and expenses you add will appear here.',
+                    title: 'No activity yet',
+                    message:
+                        'Your expenses, income and transfers will appear here.',
                     icon: Icons.receipt_long_outlined,
                     action: FilledButton.icon(
                       key: const ValueKey<String>(
@@ -113,7 +115,7 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         unawaited(context.push<void>(AppRoutes.addExpense));
                       },
                       icon: const Icon(Icons.add),
-                      label: const Text('Add transaction'),
+                      label: const Text('Add your first activity'),
                     ),
                   );
                 }
@@ -122,6 +124,10 @@ final class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   period: selectedPeriod,
                   query: _query,
                   type: _selectedType,
+                  categoryLabelFor: (category) => ref
+                      .watch(categoryCatalogProvider)
+                      .resolve(category)
+                      .label,
                 );
                 final List<_TransactionListEntry> entries = _buildEntries(
                   groups,

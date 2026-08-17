@@ -137,11 +137,10 @@ final class _FirstUseMonthlySummary extends StatelessWidget {
         EmptyState(
           key: const ValueKey<String>('home_first_use_state'),
           title: isFirstUse
-              ? 'Start recording your money activity'
+              ? 'Start with your first record'
               : 'No transactions in ${period.displayLabel}',
           message: isFirstUse
-              ? 'Add your first income or expense to begin building your '
-                    'personal ledger.'
+              ? 'Record money when it comes in, goes out, or moves somewhere.'
               : 'No recorded financial activity for this month.',
           icon: Icons.edit_note_outlined,
         ),

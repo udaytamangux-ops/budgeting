@@ -5,6 +5,11 @@ import 'package:budgeting_app/core/utilities/app_clock.dart';
 import 'package:budgeting_app/features/access/data/repositories/in_memory_access_preference_repository.dart';
 import 'package:budgeting_app/features/access/domain/entities/access_mode.dart';
 import 'package:budgeting_app/features/access/presentation/controllers/access_providers.dart';
+import 'package:budgeting_app/features/categories/data/repositories/in_memory_custom_category_repository.dart';
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
+import 'package:budgeting_app/features/onboarding/data/repositories/in_memory_onboarding_preference_repository.dart';
+import 'package:budgeting_app/features/onboarding/presentation/controllers/onboarding_providers.dart';
 import 'package:budgeting_app/features/recurring/data/repositories/in_memory_recurring_transaction_repository.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
@@ -42,6 +47,10 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
   AppCalendarSystem calendarSystem = AppCalendarSystem.gregorianAd,
   bool calendarSetupComplete = true,
   InMemoryCalendarPreferenceRepository? calendarRepository,
+  bool onboardingComplete = true,
+  InMemoryOnboardingPreferenceRepository? onboardingRepository,
+  List<CustomCategory> seedCustomCategories = const <CustomCategory>[],
+  InMemoryCustomCategoryRepository? customCategoryRepository,
   RecurringTransactionRepository? recurringRepository,
   List<RecurringTransactionRule> seedRecurringRules =
       const <RecurringTransactionRule>[],
@@ -76,6 +85,17 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
         initialCalendar: calendarSystem,
         initialSetupComplete: calendarSetupComplete,
       );
+  final InMemoryOnboardingPreferenceRepository resolvedOnboardingRepository =
+      onboardingRepository ??
+      InMemoryOnboardingPreferenceRepository(
+        initialCompleted: onboardingComplete,
+      );
+  final InMemoryCustomCategoryRepository resolvedCustomCategoryRepository =
+      customCategoryRepository ??
+      InMemoryCustomCategoryRepository(
+        categories: seedCustomCategories,
+        now: () => fixedNow,
+      );
   final InMemoryRecurringTransactionRepository? ownedRecurringRepository =
       recurringRepository == null
       ? InMemoryRecurringTransactionRepository(
@@ -96,6 +116,12 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
   if (calendarRepository == null) {
     addTearDown(resolvedCalendarRepository.dispose);
   }
+  if (onboardingRepository == null) {
+    addTearDown(resolvedOnboardingRepository.dispose);
+  }
+  if (customCategoryRepository == null) {
+    addTearDown(resolvedCustomCategoryRepository.dispose);
+  }
   if (ownedRecurringRepository != null) {
     addTearDown(ownedRecurringRepository.dispose);
   }
@@ -109,6 +135,12 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
     ),
     calendarPreferenceRepositoryProvider.overrideWithValue(
       resolvedCalendarRepository,
+    ),
+    onboardingPreferenceRepositoryProvider.overrideWithValue(
+      resolvedOnboardingRepository,
+    ),
+    customCategoryRepositoryProvider.overrideWithValue(
+      resolvedCustomCategoryRepository,
     ),
     transactionRepositoryProvider.overrideWithValue(repository),
     transferRepositoryProvider.overrideWithValue(transferRepository),

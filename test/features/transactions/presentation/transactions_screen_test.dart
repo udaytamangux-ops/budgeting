@@ -69,16 +69,17 @@ void main() {
     await tester.tap(find.text('Transactions'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No transactions recorded yet'), findsOneWidget);
+    expect(find.text('No activity yet'), findsOneWidget);
     expect(
-      find.text('Income and expenses you add will appear here.'),
+      find.text('Your expenses, income and transfers will appear here.'),
       findsOneWidget,
     );
+    expect(find.text('Add your first activity'), findsOneWidget);
     final Finder action = find.byKey(
       const ValueKey<String>('empty_transactions_add_button'),
     );
     expect(action, findsOneWidget);
-    expect(tester.getSemantics(action).label, 'Add transaction');
+    expect(tester.getSemantics(action).label, 'Add your first activity');
 
     await tester.tap(action);
     await tester.pumpAndSettle();

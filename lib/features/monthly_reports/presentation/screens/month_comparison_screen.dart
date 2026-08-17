@@ -4,7 +4,6 @@ import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
 import 'package:budgeting_app/features/monthly_reports/domain/entities/monthly_comparison_data.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/controllers/monthly_report_providers.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/transaction_category_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -171,14 +170,14 @@ final class _DeltaRow extends StatelessWidget {
     final String direction = delta.delta.isPositive ? 'Increase' : 'Decrease';
     return Semantics(
       label:
-          '${delta.category.displayLabel}. Previous ${formatter.format(delta.previous)}. '
+          '${delta.displayLabel}. Previous ${formatter.format(delta.previous)}. '
           'Current ${formatter.format(delta.current)}. $direction ${formatter.format(delta.delta.absolute)}.',
       child: ExcludeSemantics(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
           child: Row(
             children: <Widget>[
-              Expanded(child: Text(delta.category.displayLabel)),
+              Expanded(child: Text(delta.displayLabel)),
               Flexible(
                 child: Text(
                   '${delta.delta.isPositive ? '↑' : '↓'} '

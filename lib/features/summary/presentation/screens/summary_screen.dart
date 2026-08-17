@@ -115,6 +115,7 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                     const SizedBox(height: AppSpacing.xxl),
                     CategoryExplorationSection(
                       activity: activity,
+                      hasAnyActivity: value.transactionCount > 0,
                       monthName: calendarService.formatMonthName(
                         selectedPeriod,
                       ),

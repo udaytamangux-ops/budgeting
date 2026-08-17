@@ -1,7 +1,6 @@
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/features/monthly_reports/domain/entities/monthly_report_data.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/transaction_category_metadata.dart';
 import 'package:flutter/material.dart';
 
 final class ReportMetricGrid extends StatelessWidget {
@@ -104,7 +103,7 @@ final class ReportCategoryList extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Expanded(child: Text(item.category.displayLabel)),
+                  Expanded(child: Text(item.displayLabel)),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     formatter.format(item.amount),

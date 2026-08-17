@@ -5,10 +5,12 @@ import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/controllers/last_saved_transaction_controller.dart';
-import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,7 +52,14 @@ final class _Banner extends ConsumerWidget {
     };
     final String label = switch (confirmation.activity) {
       TransactionActivity(:final transaction) =>
-        transaction.category.visual.label,
+        transaction.category.isCustom
+            ? ref
+                  .watch(categoryCatalogProvider)
+                  .resolve(transaction.category)
+                  .label
+            : CategoryCatalog(
+                const <CustomCategory>[],
+              ).resolve(transaction.category).label,
       TransferActivity(:final transfer) =>
         '${transfer.source.label} → ${transfer.destinationDisplayName}',
     };

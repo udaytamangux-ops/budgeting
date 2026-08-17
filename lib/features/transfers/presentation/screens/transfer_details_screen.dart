@@ -7,8 +7,8 @@ import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
-import 'package:budgeting_app/features/transactions/domain/entities/transaction_category_metadata.dart';
 import 'package:budgeting_app/features/transfers/domain/entities/financial_transfer.dart';
 import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 import 'package:budgeting_app/features/transfers/presentation/controllers/transfer_details_controller.dart';
@@ -94,7 +94,10 @@ final class _TransferDetailsContent extends ConsumerWidget {
           if (transfer.expenseCategory != null)
             _DetailRow(
               label: 'Expense category',
-              value: transfer.expenseCategory!.displayLabel,
+              value: ref
+                  .watch(categoryCatalogProvider)
+                  .resolve(transfer.expenseCategory!)
+                  .label,
             ),
           if (transfer.fee.isPositive)
             _DetailRow(

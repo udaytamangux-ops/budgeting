@@ -2,8 +2,10 @@ import 'package:budgeting_app/app/theme/app_colors.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/in_memory_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
+import 'package:budgeting_app/features/transactions/presentation/controllers/last_saved_transaction_controller.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_type_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/pump_app.dart';
@@ -194,11 +196,9 @@ void main() {
       find.byKey(const ValueKey<String>('home_add_income_button')),
       findsOneWidget,
     );
-    expect(find.text('Start recording your money activity'), findsOneWidget);
+    expect(find.text('Start with your first record'), findsOneWidget);
     expect(
-      find.text(
-        'Add your first income or expense to begin building your personal ledger.',
-      ),
+      find.text('Record money when it comes in, goes out, or moves somewhere.'),
       findsOneWidget,
     );
     await tester.scrollUntilVisible(
@@ -208,9 +208,9 @@ void main() {
       240,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('No recent transactions yet'), findsOneWidget);
+    expect(find.text('No activity yet'), findsOneWidget);
     expect(
-      find.text('Income and expenses you add will appear here.'),
+      find.text('Your expenses, income and transfers will appear here.'),
       findsOneWidget,
     );
     expect(find.text('Add expense'), findsOneWidget);
@@ -225,7 +225,7 @@ void main() {
     final InMemoryTransactionRepository repository = await pumpBudgetingApp(
       tester,
     );
-    expect(find.text('Start recording your money activity'), findsOneWidget);
+    expect(find.text('Start with your first record'), findsOneWidget);
 
     await tester.runAsync(
       () => repository.createTransaction(
@@ -234,7 +234,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Start recording your money activity'), findsNothing);
+    expect(find.text('Start with your first record'), findsNothing);
     expect(find.text('1 transaction recorded'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Lunch at Thamel'),
@@ -242,6 +242,49 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Lunch at Thamel'), findsOneWidget);
+  });
+
+  testWidgets('opening details consumes the Home-only saved confirmation', (
+    WidgetTester tester,
+  ) async {
+    final FinancialTransaction transaction = buildTestTransaction(
+      id: 'saved-before-details',
+    );
+    await pumpBudgetingApp(
+      tester,
+      seedTransactions: <FinancialTransaction>[transaction],
+    );
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(Scaffold).first),
+    );
+    container.read(lastSavedTransactionProvider.notifier).show(transaction);
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey<String>('transaction_created_banner')),
+      findsOneWidget,
+    );
+    expect(find.text('Undo'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Lunch at Thamel'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await Scrollable.ensureVisible(
+      tester.element(find.text('Lunch at Thamel')),
+      alignment: 0.3,
+      duration: Duration.zero,
+    );
+    await tester.pump();
+    await tester.tap(find.text('Lunch at Thamel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Transaction details'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('transaction_created_banner')),
+      findsNothing,
+    );
+    expect(container.read(lastSavedTransactionProvider), isNull);
   });
 
   testWidgets('Recorded Balance explanation is truthful and closable', (

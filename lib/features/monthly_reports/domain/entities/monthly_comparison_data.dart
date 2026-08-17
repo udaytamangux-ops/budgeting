@@ -25,11 +25,15 @@ final class ReportCategoryDelta {
     required this.category,
     required this.current,
     required this.previous,
+    this.resolvedLabel,
   });
 
   final TransactionCategory category;
   final Money current;
   final Money previous;
+  final String? resolvedLabel;
+
+  String get displayLabel => resolvedLabel ?? category.systemLabel ?? 'Other';
 
   Money get delta => current - previous;
 }

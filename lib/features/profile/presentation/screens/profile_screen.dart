@@ -65,6 +65,18 @@ final class ProfileScreen extends ConsumerWidget {
                     const Divider(),
                     _CalendarSetting(currentCalendar: calendarSystem),
                     const Divider(),
+                    ListTile(
+                      key: const ValueKey<String>('categories_setting'),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      leading: const Icon(Icons.category_outlined),
+                      title: const Text('Categories'),
+                      subtitle: const Text('Manage your custom categories'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push(AppRoutes.categories),
+                    ),
+                    const Divider(),
                     const SwitchListTile(
                       key: ValueKey<String>('notifications_setting'),
                       contentPadding: EdgeInsets.symmetric(

@@ -19,6 +19,7 @@ final class MonthlyReportPdfService {
   MonthlyReportPdfService(
     this._calendarService, {
     MonthlyReportPdfTextFormatter? textFormatter,
+    this._categoryLabelFor,
   }) : _textFormatter = textFormatter ?? MonthlyReportPdfTextFormatter();
 
   static const List<String> activityTableHeaders = <String>[
@@ -42,6 +43,10 @@ final class MonthlyReportPdfService {
 
   final AppCalendarService _calendarService;
   final MonthlyReportPdfTextFormatter _textFormatter;
+  final String Function(TransactionCategory category)? _categoryLabelFor;
+
+  String _categoryLabel(TransactionCategory category) =>
+      _categoryLabelFor?.call(category) ?? category.displayLabel;
 
   Future<Uint8List> generate({
     required MonthlyReportData report,
@@ -228,7 +233,7 @@ final class MonthlyReportPdfService {
             data: values
                 .map(
                   (ReportCategoryTotal value) => <String>[
-                    value.category.displayLabel,
+                    value.displayLabel,
                     _money(value.amount.minorUnits),
                     ReportPercentageFormatter.formatBasisPoints(
                       value.basisPoints,
@@ -278,7 +283,7 @@ final class MonthlyReportPdfService {
       if (report.highestExpenseCategory case final value?)
         <String>[
           'Highest expense category',
-          value.category.displayLabel,
+          value.displayLabel,
           _money(value.amount.minorUnits),
         ],
       if (report.largestExpenseActivity case final value?)
@@ -290,7 +295,7 @@ final class MonthlyReportPdfService {
       if (report.largestIncomeSource case final value?)
         <String>[
           'Largest income source',
-          value.category.displayLabel,
+          value.displayLabel,
           _money(value.amount.minorUnits),
         ],
       if (report.largestIncomeActivity case final value?)
@@ -511,8 +516,8 @@ final class MonthlyReportPdfService {
           AppCalendarSystem.gregorianAd,
         ),
         transaction.type == TransactionType.expense ? 'Expense' : 'Income',
-        transaction.merchant ?? transaction.category.displayLabel,
-        transaction.category.displayLabel,
+        transaction.merchant ?? _categoryLabel(transaction.category),
+        _categoryLabel(transaction.category),
         transaction.paymentMethod.label,
         _money(transaction.amount.minorUnits),
       ],
@@ -525,7 +530,9 @@ final class MonthlyReportPdfService {
         '${transfer.source.label} -> ${transfer.destinationDisplayName}'
             '${transfer.countsAsExpense ? ' - Counted as expense' : ''}'
             '${transfer.fee.isPositive ? ' - Fee ${_money(transfer.fee.minorUnits)}' : ''}',
-        transfer.expenseCategory?.displayLabel ?? '-',
+        transfer.expenseCategory == null
+            ? '-'
+            : _categoryLabel(transfer.expenseCategory!),
         '-',
         _money(transfer.amount.minorUnits),
       ],

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/local_document_service.dart';
 import 'package:budgeting_app/features/data_portability/presentation/controllers/data_portability_controller.dart';
 import 'package:budgeting_app/features/financial_activity/domain/entities/financial_activity.dart';
@@ -21,7 +22,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final Provider<MonthlyReportPdfService> monthlyReportPdfServiceProvider =
     Provider<MonthlyReportPdfService>((Ref ref) {
-      return MonthlyReportPdfService(ref.watch(appCalendarServiceProvider));
+      final catalog = ref.watch(categoryCatalogProvider);
+      return MonthlyReportPdfService(
+        ref.watch(appCalendarServiceProvider),
+        categoryLabelFor: (category) => catalog.resolve(category).label,
+      );
     });
 
 final class MonthlyReportExportState {

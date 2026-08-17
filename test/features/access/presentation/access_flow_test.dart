@@ -16,21 +16,28 @@ void main() {
     await pumpBudgetingApp(tester, accessMode: AccessMode.undecided);
 
     expect(find.text('Track money your way'), findsOneWidget);
-    expect(find.text('Continue without an account'), findsOneWidget);
-    expect(find.text('Create account'), findsOneWidget);
-    expect(find.text('Already have an account? Sign in'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Create account'), findsNothing);
+    expect(find.text('Already have an account? Sign in'), findsNothing);
     expect(find.bySemanticsLabel('App logo'), findsOneWidget);
-    expect(find.textContaining('not backed up to the cloud'), findsOneWidget);
-    expect(find.textContaining('Uninstalling the app'), findsOneWidget);
+    expect(
+      find.textContaining('No account or bank connection'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('unless you export a backup'), findsOneWidget);
   });
 
-  testWidgets('Continue without an account persists guest and opens Home', (
+  testWidgets('Continue persists guest and opens onboarding for a fresh user', (
     WidgetTester tester,
   ) async {
     final InMemoryAccessPreferenceRepository repository =
         InMemoryAccessPreferenceRepository();
     addTearDown(repository.dispose);
-    await pumpBudgetingApp(tester, accessRepository: repository);
+    await pumpBudgetingApp(
+      tester,
+      accessRepository: repository,
+      onboardingComplete: false,
+    );
 
     await tester.tap(
       find.byKey(const ValueKey<String>('continue_as_guest_button')),
@@ -38,7 +45,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(await repository.getAccessMode(), AccessMode.guest);
-    expect(find.text('Home'), findsWidgets);
+    expect(find.text('Know where your money went'), findsOneWidget);
     expect(find.text('Track money your way'), findsNothing);
   });
 
@@ -88,47 +95,6 @@ void main() {
     expect(find.text('Recorded balance'), findsOneWidget);
   });
 
-  testWidgets('Create account and Sign in never enter fake auth', (
-    WidgetTester tester,
-  ) async {
-    final InMemoryAccessPreferenceRepository repository =
-        InMemoryAccessPreferenceRepository();
-    addTearDown(repository.dispose);
-    await pumpBudgetingApp(tester, accessRepository: repository);
-
-    await tester.tap(
-      find.byKey(const ValueKey<String>('create_account_button')),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Account setup is not connected yet'), findsOneWidget);
-    expect(
-      find.textContaining('Cloud backup and cross-device sync'),
-      findsOneWidget,
-    );
-    expect(await repository.getAccessMode(), AccessMode.undecided);
-
-    await tester.tap(
-      find.byKey(const ValueKey<String>('account_unavailable_back')),
-    );
-    await tester.pumpAndSettle();
-    final Finder signIn = find.byKey(const ValueKey<String>('sign_in_button'));
-    await tester.scrollUntilVisible(
-      signIn,
-      160,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await Scrollable.ensureVisible(
-      tester.element(signIn),
-      alignment: 0.5,
-      duration: Duration.zero,
-    );
-    await tester.pump();
-    await tester.tap(signIn);
-    await tester.pumpAndSettle();
-    expect(find.text('Account setup is not connected yet'), findsOneWidget);
-    expect(await repository.getAccessMode(), AccessMode.undecided);
-  });
-
   testWidgets('undecided deep link resumes its safe destination after guest', (
     WidgetTester tester,
   ) async {
@@ -146,7 +112,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Transactions'), findsWidgets);
-    expect(find.text('No transactions recorded yet'), findsOneWidget);
+    expect(find.text('No activity yet'), findsOneWidget);
   });
 
   for (final double width in <double>[320, 768]) {
@@ -189,27 +155,5 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Track money your way'), findsNothing);
     }
-  });
-
-  testWidgets('account unavailable Continue enters guest mode', (
-    WidgetTester tester,
-  ) async {
-    final InMemoryAccessPreferenceRepository repository =
-        InMemoryAccessPreferenceRepository();
-    addTearDown(repository.dispose);
-    await pumpBudgetingApp(tester, accessRepository: repository);
-    await tester.tap(
-      find.byKey(const ValueKey<String>('create_account_button')),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(
-      find.byKey(const ValueKey<String>('account_unavailable_continue_guest')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(await repository.getAccessMode(), AccessMode.guest);
-    expect(find.text('Recorded balance'), findsOneWidget);
-    expect(find.text('Account setup is not connected yet'), findsNothing);
   });
 }

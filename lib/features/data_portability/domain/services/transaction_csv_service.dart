@@ -13,7 +13,7 @@ import 'package:budgeting_app/features/transfers/domain/entities/financial_trans
 import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.dart';
 
 final class TransactionCsvService {
-  const TransactionCsvService(this._calendarService);
+  const TransactionCsvService(this._calendarService, {this._categoryLabelFor});
 
   static const List<String> headers = <String>[
     'Date (AD)',
@@ -34,6 +34,10 @@ final class TransactionCsvService {
   ];
 
   final AppCalendarService _calendarService;
+  final String Function(TransactionCategory category)? _categoryLabelFor;
+
+  String _categoryLabel(TransactionCategory category) =>
+      _categoryLabelFor?.call(category) ?? category.displayLabel;
 
   /// Includes a UTF-8 BOM so spreadsheet applications detect Nepali Unicode.
   Uint8List encode(
@@ -92,7 +96,7 @@ final class TransactionCsvService {
         ...common,
         transaction.type == TransactionType.expense ? 'Expense' : 'Income',
         _amount(transaction.amount.minorUnits),
-        transaction.category.displayLabel,
+        _categoryLabel(transaction.category),
         transaction.paymentMethod.label,
         transaction.merchant ?? '',
         transaction.note ?? '',
@@ -117,7 +121,9 @@ final class TransactionCsvService {
         transfer.destination.label,
         transfer.destinationName ?? '',
         transfer.countsAsExpense ? 'Yes' : 'No',
-        transfer.expenseCategory?.displayLabel ?? '',
+        transfer.expenseCategory == null
+            ? ''
+            : _categoryLabel(transfer.expenseCategory!),
         _amount(transfer.fee.minorUnits),
       ],
     };

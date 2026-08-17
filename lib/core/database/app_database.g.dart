@@ -952,6 +952,584 @@ class StoredPreferencesCompanion extends UpdateCompanion<StoredPreference> {
   }
 }
 
+class $CustomCategoriesTable extends CustomCategories
+    with TableInfo<$CustomCategoriesTable, CustomCategory> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CustomCategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerScopeMeta = const VerificationMeta(
+    'ownerScope',
+  );
+  @override
+  late final GeneratedColumn<String> ownerScope = GeneratedColumn<String>(
+    'owner_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeKeyMeta = const VerificationMeta(
+    'typeKey',
+  );
+  @override
+  late final GeneratedColumn<String> typeKey = GeneratedColumn<String>(
+    'type_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _normalizedNameMeta = const VerificationMeta(
+    'normalizedName',
+  );
+  @override
+  late final GeneratedColumn<String> normalizedName = GeneratedColumn<String>(
+    'normalized_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconKeyMeta = const VerificationMeta(
+    'iconKey',
+  );
+  @override
+  late final GeneratedColumn<String> iconKey = GeneratedColumn<String>(
+    'icon_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isArchivedMeta = const VerificationMeta(
+    'isArchived',
+  );
+  @override
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+    'is_archived',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_archived" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtUtcMicrosMeta =
+      const VerificationMeta('createdAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> createdAtUtcMicros = GeneratedColumn<int>(
+    'created_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMicrosMeta =
+      const VerificationMeta('updatedAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMicros = GeneratedColumn<int>(
+    'updated_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerScope,
+    typeKey,
+    name,
+    normalizedName,
+    iconKey,
+    isArchived,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'custom_categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CustomCategory> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_scope')) {
+      context.handle(
+        _ownerScopeMeta,
+        ownerScope.isAcceptableOrUnknown(data['owner_scope']!, _ownerScopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerScopeMeta);
+    }
+    if (data.containsKey('type_key')) {
+      context.handle(
+        _typeKeyMeta,
+        typeKey.isAcceptableOrUnknown(data['type_key']!, _typeKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeKeyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('normalized_name')) {
+      context.handle(
+        _normalizedNameMeta,
+        normalizedName.isAcceptableOrUnknown(
+          data['normalized_name']!,
+          _normalizedNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_normalizedNameMeta);
+    }
+    if (data.containsKey('icon_key')) {
+      context.handle(
+        _iconKeyMeta,
+        iconKey.isAcceptableOrUnknown(data['icon_key']!, _iconKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconKeyMeta);
+    }
+    if (data.containsKey('is_archived')) {
+      context.handle(
+        _isArchivedMeta,
+        isArchived.isAcceptableOrUnknown(data['is_archived']!, _isArchivedMeta),
+      );
+    }
+    if (data.containsKey('created_at_utc_micros')) {
+      context.handle(
+        _createdAtUtcMicrosMeta,
+        createdAtUtcMicros.isAcceptableOrUnknown(
+          data['created_at_utc_micros']!,
+          _createdAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMicrosMeta);
+    }
+    if (data.containsKey('updated_at_utc_micros')) {
+      context.handle(
+        _updatedAtUtcMicrosMeta,
+        updatedAtUtcMicros.isAcceptableOrUnknown(
+          data['updated_at_utc_micros']!,
+          _updatedAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMicrosMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CustomCategory map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CustomCategory(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_scope'],
+      )!,
+      typeKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type_key'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      normalizedName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}normalized_name'],
+      )!,
+      iconKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_key'],
+      )!,
+      isArchived: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_archived'],
+      )!,
+      createdAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_micros'],
+      )!,
+      updatedAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_micros'],
+      )!,
+    );
+  }
+
+  @override
+  $CustomCategoriesTable createAlias(String alias) {
+    return $CustomCategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class CustomCategory extends DataClass implements Insertable<CustomCategory> {
+  final String id;
+  final String ownerScope;
+  final String typeKey;
+  final String name;
+  final String normalizedName;
+  final String iconKey;
+  final bool isArchived;
+  final int createdAtUtcMicros;
+  final int updatedAtUtcMicros;
+  const CustomCategory({
+    required this.id,
+    required this.ownerScope,
+    required this.typeKey,
+    required this.name,
+    required this.normalizedName,
+    required this.iconKey,
+    required this.isArchived,
+    required this.createdAtUtcMicros,
+    required this.updatedAtUtcMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_scope'] = Variable<String>(ownerScope);
+    map['type_key'] = Variable<String>(typeKey);
+    map['name'] = Variable<String>(name);
+    map['normalized_name'] = Variable<String>(normalizedName);
+    map['icon_key'] = Variable<String>(iconKey);
+    map['is_archived'] = Variable<bool>(isArchived);
+    map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros);
+    map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros);
+    return map;
+  }
+
+  CustomCategoriesCompanion toCompanion(bool nullToAbsent) {
+    return CustomCategoriesCompanion(
+      id: Value(id),
+      ownerScope: Value(ownerScope),
+      typeKey: Value(typeKey),
+      name: Value(name),
+      normalizedName: Value(normalizedName),
+      iconKey: Value(iconKey),
+      isArchived: Value(isArchived),
+      createdAtUtcMicros: Value(createdAtUtcMicros),
+      updatedAtUtcMicros: Value(updatedAtUtcMicros),
+    );
+  }
+
+  factory CustomCategory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CustomCategory(
+      id: serializer.fromJson<String>(json['id']),
+      ownerScope: serializer.fromJson<String>(json['ownerScope']),
+      typeKey: serializer.fromJson<String>(json['typeKey']),
+      name: serializer.fromJson<String>(json['name']),
+      normalizedName: serializer.fromJson<String>(json['normalizedName']),
+      iconKey: serializer.fromJson<String>(json['iconKey']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
+      createdAtUtcMicros: serializer.fromJson<int>(json['createdAtUtcMicros']),
+      updatedAtUtcMicros: serializer.fromJson<int>(json['updatedAtUtcMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ownerScope': serializer.toJson<String>(ownerScope),
+      'typeKey': serializer.toJson<String>(typeKey),
+      'name': serializer.toJson<String>(name),
+      'normalizedName': serializer.toJson<String>(normalizedName),
+      'iconKey': serializer.toJson<String>(iconKey),
+      'isArchived': serializer.toJson<bool>(isArchived),
+      'createdAtUtcMicros': serializer.toJson<int>(createdAtUtcMicros),
+      'updatedAtUtcMicros': serializer.toJson<int>(updatedAtUtcMicros),
+    };
+  }
+
+  CustomCategory copyWith({
+    String? id,
+    String? ownerScope,
+    String? typeKey,
+    String? name,
+    String? normalizedName,
+    String? iconKey,
+    bool? isArchived,
+    int? createdAtUtcMicros,
+    int? updatedAtUtcMicros,
+  }) => CustomCategory(
+    id: id ?? this.id,
+    ownerScope: ownerScope ?? this.ownerScope,
+    typeKey: typeKey ?? this.typeKey,
+    name: name ?? this.name,
+    normalizedName: normalizedName ?? this.normalizedName,
+    iconKey: iconKey ?? this.iconKey,
+    isArchived: isArchived ?? this.isArchived,
+    createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+    updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+  );
+  CustomCategory copyWithCompanion(CustomCategoriesCompanion data) {
+    return CustomCategory(
+      id: data.id.present ? data.id.value : this.id,
+      ownerScope: data.ownerScope.present
+          ? data.ownerScope.value
+          : this.ownerScope,
+      typeKey: data.typeKey.present ? data.typeKey.value : this.typeKey,
+      name: data.name.present ? data.name.value : this.name,
+      normalizedName: data.normalizedName.present
+          ? data.normalizedName.value
+          : this.normalizedName,
+      iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
+      isArchived: data.isArchived.present
+          ? data.isArchived.value
+          : this.isArchived,
+      createdAtUtcMicros: data.createdAtUtcMicros.present
+          ? data.createdAtUtcMicros.value
+          : this.createdAtUtcMicros,
+      updatedAtUtcMicros: data.updatedAtUtcMicros.present
+          ? data.updatedAtUtcMicros.value
+          : this.updatedAtUtcMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomCategory(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('typeKey: $typeKey, ')
+          ..write('name: $name, ')
+          ..write('normalizedName: $normalizedName, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('isArchived: $isArchived, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerScope,
+    typeKey,
+    name,
+    normalizedName,
+    iconKey,
+    isArchived,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CustomCategory &&
+          other.id == this.id &&
+          other.ownerScope == this.ownerScope &&
+          other.typeKey == this.typeKey &&
+          other.name == this.name &&
+          other.normalizedName == this.normalizedName &&
+          other.iconKey == this.iconKey &&
+          other.isArchived == this.isArchived &&
+          other.createdAtUtcMicros == this.createdAtUtcMicros &&
+          other.updatedAtUtcMicros == this.updatedAtUtcMicros);
+}
+
+class CustomCategoriesCompanion extends UpdateCompanion<CustomCategory> {
+  final Value<String> id;
+  final Value<String> ownerScope;
+  final Value<String> typeKey;
+  final Value<String> name;
+  final Value<String> normalizedName;
+  final Value<String> iconKey;
+  final Value<bool> isArchived;
+  final Value<int> createdAtUtcMicros;
+  final Value<int> updatedAtUtcMicros;
+  final Value<int> rowid;
+  const CustomCategoriesCompanion({
+    this.id = const Value.absent(),
+    this.ownerScope = const Value.absent(),
+    this.typeKey = const Value.absent(),
+    this.name = const Value.absent(),
+    this.normalizedName = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.isArchived = const Value.absent(),
+    this.createdAtUtcMicros = const Value.absent(),
+    this.updatedAtUtcMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CustomCategoriesCompanion.insert({
+    required String id,
+    required String ownerScope,
+    required String typeKey,
+    required String name,
+    required String normalizedName,
+    required String iconKey,
+    this.isArchived = const Value.absent(),
+    required int createdAtUtcMicros,
+    required int updatedAtUtcMicros,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerScope = Value(ownerScope),
+       typeKey = Value(typeKey),
+       name = Value(name),
+       normalizedName = Value(normalizedName),
+       iconKey = Value(iconKey),
+       createdAtUtcMicros = Value(createdAtUtcMicros),
+       updatedAtUtcMicros = Value(updatedAtUtcMicros);
+  static Insertable<CustomCategory> custom({
+    Expression<String>? id,
+    Expression<String>? ownerScope,
+    Expression<String>? typeKey,
+    Expression<String>? name,
+    Expression<String>? normalizedName,
+    Expression<String>? iconKey,
+    Expression<bool>? isArchived,
+    Expression<int>? createdAtUtcMicros,
+    Expression<int>? updatedAtUtcMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerScope != null) 'owner_scope': ownerScope,
+      if (typeKey != null) 'type_key': typeKey,
+      if (name != null) 'name': name,
+      if (normalizedName != null) 'normalized_name': normalizedName,
+      if (iconKey != null) 'icon_key': iconKey,
+      if (isArchived != null) 'is_archived': isArchived,
+      if (createdAtUtcMicros != null)
+        'created_at_utc_micros': createdAtUtcMicros,
+      if (updatedAtUtcMicros != null)
+        'updated_at_utc_micros': updatedAtUtcMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CustomCategoriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerScope,
+    Value<String>? typeKey,
+    Value<String>? name,
+    Value<String>? normalizedName,
+    Value<String>? iconKey,
+    Value<bool>? isArchived,
+    Value<int>? createdAtUtcMicros,
+    Value<int>? updatedAtUtcMicros,
+    Value<int>? rowid,
+  }) {
+    return CustomCategoriesCompanion(
+      id: id ?? this.id,
+      ownerScope: ownerScope ?? this.ownerScope,
+      typeKey: typeKey ?? this.typeKey,
+      name: name ?? this.name,
+      normalizedName: normalizedName ?? this.normalizedName,
+      iconKey: iconKey ?? this.iconKey,
+      isArchived: isArchived ?? this.isArchived,
+      createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+      updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerScope.present) {
+      map['owner_scope'] = Variable<String>(ownerScope.value);
+    }
+    if (typeKey.present) {
+      map['type_key'] = Variable<String>(typeKey.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (normalizedName.present) {
+      map['normalized_name'] = Variable<String>(normalizedName.value);
+    }
+    if (iconKey.present) {
+      map['icon_key'] = Variable<String>(iconKey.value);
+    }
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
+    if (createdAtUtcMicros.present) {
+      map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros.value);
+    }
+    if (updatedAtUtcMicros.present) {
+      map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomCategoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('typeKey: $typeKey, ')
+          ..write('name: $name, ')
+          ..write('normalizedName: $normalizedName, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('isArchived: $isArchived, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $StoredTransfersTable extends StoredTransfers
     with TableInfo<$StoredTransfersTable, StoredTransfer> {
   @override
@@ -3976,6 +4554,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $StoredTransactionsTable(this);
   late final $StoredPreferencesTable storedPreferences =
       $StoredPreferencesTable(this);
+  late final $CustomCategoriesTable customCategories = $CustomCategoriesTable(
+    this,
+  );
   late final $StoredTransfersTable storedTransfers = $StoredTransfersTable(
     this,
   );
@@ -3983,6 +4564,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RecurringTransactionRulesTable(this);
   late final $RecurringTransactionOccurrencesTable
   recurringTransactionOccurrences = $RecurringTransactionOccurrencesTable(this);
+  late final Index customCategoriesOwnerTypeName = Index(
+    'custom_categories_owner_type_name',
+    'CREATE UNIQUE INDEX custom_categories_owner_type_name ON custom_categories (owner_scope, type_key, normalized_name)',
+  );
   late final Index storedTransfersOwnerDate = Index(
     'stored_transfers_owner_date',
     'CREATE INDEX stored_transfers_owner_date ON stored_transfers (owner_scope, occurred_at_utc_micros)',
@@ -3994,9 +4579,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     storedTransactions,
     storedPreferences,
+    customCategories,
     storedTransfers,
     recurringTransactionRules,
     recurringTransactionOccurrences,
+    customCategoriesOwnerTypeName,
     storedTransfersOwnerDate,
   ];
 }
@@ -4517,6 +5104,298 @@ typedef $$StoredPreferencesTableProcessedTableManager =
         >,
       ),
       StoredPreference,
+      PrefetchHooks Function()
+    >;
+typedef $$CustomCategoriesTableCreateCompanionBuilder =
+    CustomCategoriesCompanion Function({
+      required String id,
+      required String ownerScope,
+      required String typeKey,
+      required String name,
+      required String normalizedName,
+      required String iconKey,
+      Value<bool> isArchived,
+      required int createdAtUtcMicros,
+      required int updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+typedef $$CustomCategoriesTableUpdateCompanionBuilder =
+    CustomCategoriesCompanion Function({
+      Value<String> id,
+      Value<String> ownerScope,
+      Value<String> typeKey,
+      Value<String> name,
+      Value<String> normalizedName,
+      Value<String> iconKey,
+      Value<bool> isArchived,
+      Value<int> createdAtUtcMicros,
+      Value<int> updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+
+class $$CustomCategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CustomCategoriesTable> {
+  $$CustomCategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get typeKey => $composableBuilder(
+    column: $table.typeKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get normalizedName => $composableBuilder(
+    column: $table.normalizedName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isArchived => $composableBuilder(
+    column: $table.isArchived,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CustomCategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CustomCategoriesTable> {
+  $$CustomCategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get typeKey => $composableBuilder(
+    column: $table.typeKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get normalizedName => $composableBuilder(
+    column: $table.normalizedName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isArchived => $composableBuilder(
+    column: $table.isArchived,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CustomCategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CustomCategoriesTable> {
+  $$CustomCategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get typeKey =>
+      $composableBuilder(column: $table.typeKey, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get normalizedName => $composableBuilder(
+    column: $table.normalizedName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get iconKey =>
+      $composableBuilder(column: $table.iconKey, builder: (column) => column);
+
+  GeneratedColumn<bool> get isArchived => $composableBuilder(
+    column: $table.isArchived,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => column,
+  );
+}
+
+class $$CustomCategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CustomCategoriesTable,
+          CustomCategory,
+          $$CustomCategoriesTableFilterComposer,
+          $$CustomCategoriesTableOrderingComposer,
+          $$CustomCategoriesTableAnnotationComposer,
+          $$CustomCategoriesTableCreateCompanionBuilder,
+          $$CustomCategoriesTableUpdateCompanionBuilder,
+          (
+            CustomCategory,
+            BaseReferences<
+              _$AppDatabase,
+              $CustomCategoriesTable,
+              CustomCategory
+            >,
+          ),
+          CustomCategory,
+          PrefetchHooks Function()
+        > {
+  $$CustomCategoriesTableTableManager(
+    _$AppDatabase db,
+    $CustomCategoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CustomCategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CustomCategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CustomCategoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerScope = const Value.absent(),
+                Value<String> typeKey = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> normalizedName = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<bool> isArchived = const Value.absent(),
+                Value<int> createdAtUtcMicros = const Value.absent(),
+                Value<int> updatedAtUtcMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CustomCategoriesCompanion(
+                id: id,
+                ownerScope: ownerScope,
+                typeKey: typeKey,
+                name: name,
+                normalizedName: normalizedName,
+                iconKey: iconKey,
+                isArchived: isArchived,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerScope,
+                required String typeKey,
+                required String name,
+                required String normalizedName,
+                required String iconKey,
+                Value<bool> isArchived = const Value.absent(),
+                required int createdAtUtcMicros,
+                required int updatedAtUtcMicros,
+                Value<int> rowid = const Value.absent(),
+              }) => CustomCategoriesCompanion.insert(
+                id: id,
+                ownerScope: ownerScope,
+                typeKey: typeKey,
+                name: name,
+                normalizedName: normalizedName,
+                iconKey: iconKey,
+                isArchived: isArchived,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CustomCategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CustomCategoriesTable,
+      CustomCategory,
+      $$CustomCategoriesTableFilterComposer,
+      $$CustomCategoriesTableOrderingComposer,
+      $$CustomCategoriesTableAnnotationComposer,
+      $$CustomCategoriesTableCreateCompanionBuilder,
+      $$CustomCategoriesTableUpdateCompanionBuilder,
+      (
+        CustomCategory,
+        BaseReferences<_$AppDatabase, $CustomCategoriesTable, CustomCategory>,
+      ),
+      CustomCategory,
       PrefetchHooks Function()
     >;
 typedef $$StoredTransfersTableCreateCompanionBuilder =
@@ -5906,6 +6785,8 @@ class $AppDatabaseManager {
       $$StoredTransactionsTableTableManager(_db, _db.storedTransactions);
   $$StoredPreferencesTableTableManager get storedPreferences =>
       $$StoredPreferencesTableTableManager(_db, _db.storedPreferences);
+  $$CustomCategoriesTableTableManager get customCategories =>
+      $$CustomCategoriesTableTableManager(_db, _db.customCategories);
   $$StoredTransfersTableTableManager get storedTransfers =>
       $$StoredTransfersTableTableManager(_db, _db.storedTransfers);
   $$RecurringTransactionRulesTableTableManager get recurringTransactionRules =>

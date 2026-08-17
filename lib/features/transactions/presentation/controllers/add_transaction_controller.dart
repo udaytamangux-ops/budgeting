@@ -2,6 +2,7 @@ import 'package:budgeting_app/core/analytics/analytics_event_names.dart';
 import 'package:budgeting_app/core/analytics/app_analytics.dart';
 import 'package:budgeting_app/core/errors/app_exception.dart';
 import 'package:budgeting_app/core/utilities/app_clock.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/presentation/controllers/recurring_providers.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -476,10 +477,18 @@ final class AddTransactionController
         : amount.isPositive
         ? null
         : 'Amount must be greater than NPR 0.';
+    final bool selectedCategoryArchived =
+        state.selectedCategory?.isCustom == true &&
+        ref
+            .read(categoryCatalogProvider)
+            .resolve(state.selectedCategory!)
+            .isArchived;
     final String? categoryError = state.selectedCategory == null
         ? state.type == TransactionType.expense
               ? 'Choose a category.'
               : 'Choose an income source.'
+        : selectedCategoryArchived && !state.isEditing
+        ? 'Choose an active category before saving.'
         : null;
     final FinancialTransaction? existing = state.isEditing
         ? ref.read(initialTransactionProvider)

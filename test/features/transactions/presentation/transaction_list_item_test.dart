@@ -97,4 +97,141 @@ void main() {
       BoxShape.circle,
     );
   });
+
+  testWidgets('category or source is not repeated when merchant is absent', (
+    WidgetTester tester,
+  ) async {
+    final InMemoryCalendarPreferenceRepository calendarRepository =
+        InMemoryCalendarPreferenceRepository(
+          initialCalendar: AppCalendarSystem.gregorianAd,
+          initialSetupComplete: true,
+        );
+    addTearDown(calendarRepository.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          calendarPreferenceRepositoryProvider.overrideWithValue(
+            calendarRepository,
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Column(
+              children: <Widget>[
+                TransactionListItem(
+                  transaction: buildTestTransaction(
+                    id: 'expense-no-merchant',
+                    merchant: null,
+                    paymentMethod: PaymentMethod.khalti,
+                  ),
+                  onTap: () {},
+                ),
+                TransactionListItem(
+                  transaction: buildTestTransaction(
+                    id: 'income-no-payer',
+                    type: TransactionType.income,
+                    category: TransactionCategory.salary,
+                    merchant: null,
+                    paymentMethod: PaymentMethod.bankAccount,
+                  ),
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(
+              const ValueKey<String>('transaction_title_expense-no-merchant'),
+            ),
+          )
+          .data,
+      'Food',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(
+              const ValueKey<String>(
+                'transaction_metadata_expense-no-merchant',
+              ),
+            ),
+          )
+          .data,
+      isNot(contains('Food')),
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(
+              const ValueKey<String>('transaction_title_income-no-payer'),
+            ),
+          )
+          .data,
+      'Salary',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(
+              const ValueKey<String>('transaction_metadata_income-no-payer'),
+            ),
+          )
+          .data,
+      isNot(contains('Salary')),
+    );
+  });
+
+  testWidgets('merchant remains primary while category stays in metadata', (
+    WidgetTester tester,
+  ) async {
+    final InMemoryCalendarPreferenceRepository calendarRepository =
+        InMemoryCalendarPreferenceRepository(
+          initialCalendar: AppCalendarSystem.gregorianAd,
+          initialSetupComplete: true,
+        );
+    addTearDown(calendarRepository.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          calendarPreferenceRepositoryProvider.overrideWithValue(
+            calendarRepository,
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: TransactionListItem(
+              transaction: buildTestTransaction(
+                id: 'merchant-present',
+                merchant: 'Bhat-Bhateni',
+                paymentMethod: PaymentMethod.khalti,
+              ),
+              onTap: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Bhat-Bhateni'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(
+              const ValueKey<String>('transaction_metadata_merchant-present'),
+            ),
+          )
+          .data,
+      contains('Food · Khalti'),
+    );
+  });
 }

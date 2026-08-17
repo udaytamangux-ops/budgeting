@@ -12,6 +12,8 @@ import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
+import 'generated/schema_v5.dart' as v5;
+import 'generated/schema_v6.dart' as v6;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -314,7 +316,57 @@ void main() {
           const StoredPreference(key: 'theme_mode', value: 'dark'),
         ],
       );
-      expect(upgraded.schemaVersion, 5);
+      expect(upgraded.schemaVersion, 6);
+    },
+  );
+
+  test(
+    'migration from v5 to v6 preserves financial data and adds no categories',
+    () async {
+      const v5.StoredTransactionsData transaction = v5.StoredTransactionsData(
+        id: 'existing-v5-transaction',
+        typeKey: 'expense',
+        amountMinorUnits: 125000,
+        currencyCode: 'NPR',
+        categoryKey: 'food',
+        paymentMethodKey: 'cash',
+        occurredAtUtcMicros: 1785824100000000,
+        merchant: 'Existing merchant',
+        note: null,
+        createdAtUtcMicros: 1785824100000000,
+        updatedAtUtcMicros: 1785824100000000,
+        ownerScope: 'guest',
+      );
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 5,
+        newVersion: 6,
+        createOld: v5.DatabaseAtV5.new,
+        createNew: v6.DatabaseAtV6.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch.insert(oldDb.storedTransactions, transaction);
+          batch.insert(
+            oldDb.storedPreferences,
+            const v5.StoredPreferencesData(key: 'theme_mode', value: 'dark'),
+          );
+        },
+        validateItems: (newDb) async {
+          final transactions = await newDb
+              .select(newDb.storedTransactions)
+              .get();
+          expect(transactions, hasLength(1));
+          expect(transactions.single.id, transaction.id);
+          expect(transactions.single.amountMinorUnits, 125000);
+          expect(
+            await newDb.select(newDb.storedPreferences).get(),
+            <v6.StoredPreferencesData>[
+              const v6.StoredPreferencesData(key: 'theme_mode', value: 'dark'),
+            ],
+          );
+          expect(await newDb.select(newDb.customCategories).get(), isEmpty);
+        },
+      );
     },
   );
 }

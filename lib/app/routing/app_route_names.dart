@@ -20,6 +20,7 @@ abstract final class AppRouteNames {
       'category-transaction-details';
   static const String profile = 'profile';
   static const String privacyAndData = 'privacy-and-data';
+  static const String categories = 'categories';
   static const String addTransaction = 'add-transaction';
   static const String recurring = 'recurring-transactions';
   static const String createRecurring = 'create-recurring-transaction';

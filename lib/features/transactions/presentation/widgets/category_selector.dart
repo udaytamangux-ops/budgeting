@@ -2,11 +2,16 @@ import 'package:budgeting_app/app/theme/app_motion.dart';
 import 'package:budgeting_app/app/theme/app_radius.dart';
 import 'package:budgeting_app/app/theme/app_semantic_colors.dart';
 import 'package:budgeting_app/app/theme/app_spacing.dart';
+import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
+import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
+import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
+import 'package:budgeting_app/features/categories/presentation/widgets/custom_category_editor_sheet.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/transaction_enums.dart';
 import 'package:budgeting_app/features/transactions/presentation/widgets/transaction_visuals.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final class CategorySelector extends StatelessWidget {
+final class CategorySelector extends ConsumerWidget {
   const CategorySelector({
     required this.type,
     required this.selectedCategory,
@@ -27,9 +32,20 @@ final class CategorySelector extends StatelessWidget {
   final String? errorText;
 
   @override
-  Widget build(BuildContext context) {
-    final List<TransactionCategory> categories = TransactionCategory.values
-        .where((TransactionCategory category) => category.supports(type))
+  Widget build(BuildContext context, WidgetRef ref) {
+    final CategoryCatalog catalog = ref.watch(categoryCatalogProvider);
+    final List<CategoryDefinition> categories = <CategoryDefinition>[
+      ...ref.watch(availableCategoryDefinitionsProvider(type)),
+    ];
+    if (selectedCategory != null &&
+        !categories.any(
+          (CategoryDefinition value) => value.reference == selectedCategory,
+        )) {
+      categories.add(catalog.resolve(selectedCategory!));
+    }
+    final List<CategoryDefinition> recents = recentCategories
+        .map(catalog.resolve)
+        .where((CategoryDefinition value) => !value.isArchived)
         .toList(growable: false);
     final String fieldLabel = type == TransactionType.expense
         ? 'Category'
@@ -46,11 +62,11 @@ final class CategorySelector extends StatelessWidget {
         children: <Widget>[
           Text(fieldLabel, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: AppSpacing.xs),
-          if (recentCategories.length >= 2) ...<Widget>[
+          if (recents.length >= 2) ...<Widget>[
             Text('Recent', style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: AppSpacing.xs),
             _CategoryOptions(
-              categories: recentCategories,
+              categories: recents,
               keyPrefix: 'recent_category',
               selectedCategory: selectedCategory,
               isEnabled: isEnabled,
@@ -69,6 +85,28 @@ final class CategorySelector extends StatelessWidget {
             selectedCategory: selectedCategory,
             isEnabled: isEnabled,
             onSelected: onSelected,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey<String>('add_custom_category'),
+              onPressed: !isEnabled
+                  ? null
+                  : () async {
+                      final custom = await showCustomCategoryEditor(
+                        context,
+                        type: type,
+                      );
+                      if (custom != null) onSelected(custom.reference);
+                    },
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(
+                type == TransactionType.expense
+                    ? 'Add category'
+                    : 'Add income source',
+              ),
+            ),
           ),
           AnimatedSize(
             duration: AppMotion.accessibleDuration(context, AppMotion.fast),
@@ -102,7 +140,7 @@ final class _CategoryOptions extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<TransactionCategory> categories;
+  final List<CategoryDefinition> categories;
   final String keyPrefix;
   final TransactionCategory? selectedCategory;
   final bool isEnabled;
@@ -114,10 +152,12 @@ final class _CategoryOptions extends StatelessWidget {
       spacing: AppSpacing.xs,
       runSpacing: AppSpacing.xs,
       children: categories
-          .map((TransactionCategory category) {
+          .map((CategoryDefinition definition) {
+            final TransactionCategory category = definition.reference;
             return _CategoryOption(
               key: ValueKey<String>('${keyPrefix}_${category.name}'),
               category: category,
+              definition: definition,
               isSelected: selectedCategory == category,
               isEnabled: isEnabled,
               onTap: () => onSelected(category),
@@ -131,6 +171,7 @@ final class _CategoryOptions extends StatelessWidget {
 final class _CategoryOption extends StatelessWidget {
   const _CategoryOption({
     required this.category,
+    required this.definition,
     required this.isSelected,
     required this.isEnabled,
     required this.onTap,
@@ -138,13 +179,14 @@ final class _CategoryOption extends StatelessWidget {
   });
 
   final TransactionCategory category;
+  final CategoryDefinition definition;
   final bool isSelected;
   final bool isEnabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final TransactionCategoryVisual visual = category.visual;
+    final TransactionCategoryVisual visual = category.visualFor(definition);
     return Semantics(
       button: true,
       selected: isSelected,

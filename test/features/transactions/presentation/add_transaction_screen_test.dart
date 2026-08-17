@@ -477,6 +477,10 @@ void main() {
           .isSelected,
       Tristate.isTrue,
     );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey<String>('quick_date_yesterday')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey<String>('quick_date_yesterday')),
     );
@@ -607,19 +611,13 @@ void main() {
         (await repository.watchTransactions().first).length;
 
     await _createFoodExpense(tester);
-    await tester.tap(find.text('Summary'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.byType(SpendingDonutChart),
-      280,
-      scrollable: find.byType(Scrollable).first,
+    expect(
+      (await repository.watchTransactions().first).length,
+      originalCount + 1,
     );
     expect(
-      tester
-          .widget<SpendingDonutChart>(find.byType(SpendingDonutChart))
-          .total
-          .minorUnits,
-      2400000,
+      find.byKey(const ValueKey<String>('undo_created_transaction')),
+      findsOneWidget,
     );
 
     await tester.tap(
@@ -627,6 +625,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Summary'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byType(SpendingDonutChart),
+      280,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(
       tester
           .widget<SpendingDonutChart>(find.byType(SpendingDonutChart))
