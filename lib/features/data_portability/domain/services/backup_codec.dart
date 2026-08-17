@@ -1,12 +1,15 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
 import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
+import 'package:budgeting_app/core/calendar/domain/calendar_period.dart';
 import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
 import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
 import 'package:budgeting_app/features/categories/domain/services/category_icon_keys.dart';
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_exceptions.dart';
+import 'package:budgeting_app/features/money_plan/domain/entities/money_plan.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_enums.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
@@ -22,7 +25,7 @@ import 'package:budgeting_app/features/transfers/domain/entities/transfer_enums.
 final class BackupCodec {
   const BackupCodec(this._recurrenceService);
 
-  static const int backupFormatVersion = 3;
+  static const int backupFormatVersion = 4;
   static const int maximumFileBytes = 10 * 1024 * 1024;
   static const int maximumRecordsPerCollection = 100000;
   static const String currency = 'NPR';
@@ -38,6 +41,15 @@ final class BackupCodec {
         'databaseSchemaVersion': backup.sourceDatabaseSchemaVersion,
       },
       'records': <String, Object?>{
+        'moneyPlanPreference': backup.snapshot.moneyPlanPreference == null
+            ? null
+            : _moneyPlanPreferenceToJson(backup.snapshot.moneyPlanPreference!),
+        'moneyPlanPeriods': backup.snapshot.moneyPlanPeriods
+            .map(_moneyPlanPeriodToJson)
+            .toList(growable: false),
+        'moneyPlanCategoryMappings': backup.snapshot.moneyPlanCategoryMappings
+            .map(_moneyPlanMappingToJson)
+            .toList(growable: false),
         'customCategories': backup.snapshot.customCategories
             .map(_customCategoryToJson)
             .toList(growable: false),
@@ -105,11 +117,22 @@ final class BackupCodec {
     final List<Object?> transferValues = version >= 2
         ? _array(records, 'transfers')
         : const <Object?>[];
+    final Object? moneyPlanPreferenceValue = version >= 4
+        ? _requiredValue(records, 'moneyPlanPreference')
+        : null;
+    final List<Object?> moneyPlanPeriodValues = version >= 4
+        ? _array(records, 'moneyPlanPeriods')
+        : const <Object?>[];
+    final List<Object?> moneyPlanMappingValues = version >= 4
+        ? _array(records, 'moneyPlanCategoryMappings')
+        : const <Object?>[];
     _checkCollectionSize(transactionValues);
     _checkCollectionSize(customCategoryValues);
     _checkCollectionSize(ruleValues);
     _checkCollectionSize(occurrenceValues);
     _checkCollectionSize(transferValues);
+    _checkCollectionSize(moneyPlanPeriodValues);
+    _checkCollectionSize(moneyPlanMappingValues);
 
     final List<CustomCategory> customCategories = customCategoryValues
         .map((Object? value) => _customCategoryFromJson(_object(value)))
@@ -133,6 +156,23 @@ final class BackupCodec {
         .map((Object? value) => _transferFromJson(_object(value), customById))
         .toList(growable: false);
     _validateRelationships(transactions, rules, occurrences, transfers);
+    final MoneyPlanPreference? moneyPlanPreference =
+        moneyPlanPreferenceValue == null
+        ? null
+        : _moneyPlanPreferenceFromJson(_object(moneyPlanPreferenceValue));
+    final List<MoneyPlanPeriod> moneyPlanPeriods = moneyPlanPeriodValues
+        .map((Object? value) => _moneyPlanPeriodFromJson(_object(value)))
+        .toList(growable: false);
+    final List<MoneyPlanCategoryMapping> moneyPlanMappings =
+        moneyPlanMappingValues
+            .map((Object? value) => _moneyPlanMappingFromJson(_object(value)))
+            .toList(growable: false);
+    _validateMoneyPlan(
+      preference: moneyPlanPreference,
+      periods: moneyPlanPeriods,
+      mappings: moneyPlanMappings,
+      customById: customById,
+    );
 
     return PortableBackup(
       createdAtUtc: _parseTimestamp(_string(root, 'createdAtUtc')),
@@ -145,8 +185,168 @@ final class BackupCodec {
         ),
         transfers: List<FinancialTransfer>.unmodifiable(transfers),
         customCategories: List<CustomCategory>.unmodifiable(customCategories),
+        moneyPlanPreference: moneyPlanPreference,
+        moneyPlanPeriods: List<MoneyPlanPeriod>.unmodifiable(moneyPlanPeriods),
+        moneyPlanCategoryMappings: List<MoneyPlanCategoryMapping>.unmodifiable(
+          moneyPlanMappings,
+        ),
       ),
     );
+  }
+
+  Map<String, Object?> _moneyPlanPreferenceToJson(MoneyPlanPreference value) =>
+      <String, Object?>{
+        'isEnabled': value.isEnabled,
+        'createdAtUtc': _timestamp(value.createdAt),
+        'updatedAtUtc': _timestamp(value.updatedAt),
+      };
+
+  MoneyPlanPreference _moneyPlanPreferenceFromJson(Map<String, Object?> json) {
+    final DateTime createdAt = _parseTimestamp(_string(json, 'createdAtUtc'));
+    final DateTime updatedAt = _parseTimestamp(_string(json, 'updatedAtUtc'));
+    if (updatedAt.isBefore(createdAt)) throw _malformed();
+    return MoneyPlanPreference(
+      isEnabled: _boolean(json, 'isEnabled'),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  Map<String, Object?> _moneyPlanPeriodToJson(MoneyPlanPeriod value) =>
+      <String, Object?>{
+        'id': value.id,
+        'periodStartAd': _date(value.period.startAdInclusive),
+        'periodEndExclusiveAd': _date(value.period.endAdExclusive),
+        'calendarSystem': value.period.calendarSystem.storageValue,
+        'calendarYear': value.period.year,
+        'calendarMonth': value.period.month,
+        'needsPercent': value.ratios.needsPercent,
+        'wantsPercent': value.ratios.wantsPercent,
+        'savingsPercent': value.ratios.savingsPercent,
+        'createdAtUtc': _timestamp(value.createdAt),
+        'updatedAtUtc': _timestamp(value.updatedAt),
+      };
+
+  MoneyPlanPeriod _moneyPlanPeriodFromJson(Map<String, Object?> json) {
+    final AppCalendarSystem? calendar = _calendar(
+      _string(json, 'calendarSystem'),
+    );
+    if (calendar == null) throw _malformed();
+    final int year = _integer(json, 'calendarYear');
+    final int month = _integer(json, 'calendarMonth');
+    late final MoneyPlanRatios ratios;
+    try {
+      ratios = MoneyPlanRatios(
+        needsPercent: _integer(json, 'needsPercent'),
+        wantsPercent: _integer(json, 'wantsPercent'),
+        savingsPercent: _integer(json, 'savingsPercent'),
+      );
+    } on ArgumentError {
+      throw _malformed();
+    }
+    late final CalendarPeriod expected;
+    try {
+      expected = _calendarService.periodFor(
+        calendarSystem: calendar,
+        year: year,
+        month: month,
+      );
+    } on Object {
+      throw _malformed();
+    }
+    final DateTime start = _parseDate(_string(json, 'periodStartAd'));
+    final DateTime end = _parseDate(_string(json, 'periodEndExclusiveAd'));
+    if (_date(start) != _date(expected.startAdInclusive) ||
+        _date(end) != _date(expected.endAdExclusive)) {
+      throw _malformed();
+    }
+    final DateTime createdAt = _parseTimestamp(_string(json, 'createdAtUtc'));
+    final DateTime updatedAt = _parseTimestamp(_string(json, 'updatedAtUtc'));
+    if (updatedAt.isBefore(createdAt)) throw _malformed();
+    return MoneyPlanPeriod(
+      id: _nonEmptyString(json, 'id'),
+      period: expected,
+      ratios: ratios,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  Map<String, Object?> _moneyPlanMappingToJson(
+    MoneyPlanCategoryMapping value,
+  ) => <String, Object?>{
+    'id': value.id,
+    'periodId': value.periodId,
+    'categoryId': value.categoryId,
+    'group': value.group.storageValue,
+    'createdAtUtc': _timestamp(value.createdAt),
+    'updatedAtUtc': _timestamp(value.updatedAt),
+  };
+
+  MoneyPlanCategoryMapping _moneyPlanMappingFromJson(
+    Map<String, Object?> json,
+  ) {
+    final MoneyPlanGroup? group = MoneyPlanGroupMetadata.tryParse(
+      _string(json, 'group'),
+    );
+    if (group == null || group == MoneyPlanGroup.unassigned) {
+      throw _malformed();
+    }
+    final DateTime createdAt = _parseTimestamp(_string(json, 'createdAtUtc'));
+    final DateTime updatedAt = _parseTimestamp(_string(json, 'updatedAtUtc'));
+    if (updatedAt.isBefore(createdAt)) throw _malformed();
+    return MoneyPlanCategoryMapping(
+      id: _nonEmptyString(json, 'id'),
+      periodId: _nonEmptyString(json, 'periodId'),
+      categoryId: _nonEmptyString(json, 'categoryId'),
+      group: group,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  void _validateMoneyPlan({
+    required MoneyPlanPreference? preference,
+    required List<MoneyPlanPeriod> periods,
+    required List<MoneyPlanCategoryMapping> mappings,
+    required Map<String, CustomCategory> customById,
+  }) {
+    if (preference == null && (periods.isNotEmpty || mappings.isNotEmpty)) {
+      throw _malformed();
+    }
+    _uniqueIds(periods.map((MoneyPlanPeriod value) => value.id));
+    _uniqueIds(mappings.map((MoneyPlanCategoryMapping value) => value.id));
+    final Set<String> periodIds = periods
+        .map((MoneyPlanPeriod value) => value.id)
+        .toSet();
+    final Set<String> identities = <String>{};
+    for (final MoneyPlanPeriod period in periods) {
+      if (!identities.add(period.period.identifier)) throw _malformed();
+    }
+    final Set<String> mappingKeys = <String>{};
+    for (final MoneyPlanCategoryMapping mapping in mappings) {
+      if (!periodIds.contains(mapping.periodId) ||
+          !mappingKeys.add('${mapping.periodId}|${mapping.categoryId}')) {
+        throw _malformed();
+      }
+      final TransactionCategory? system =
+          TransactionCategory.systemFromIdentifier(mapping.categoryId);
+      final CustomCategory? custom = customById[mapping.categoryId];
+      if ((system == null || !system.supports(TransactionType.expense)) &&
+          (custom == null || custom.type != TransactionType.expense)) {
+        throw _malformed();
+      }
+    }
+  }
+
+  static final BikramSambatCalendarService _calendarService =
+      BikramSambatCalendarService();
+
+  AppCalendarSystem? _calendar(String value) {
+    for (final AppCalendarSystem calendar in AppCalendarSystem.values) {
+      if (calendar.storageValue == value) return calendar;
+    }
+    return null;
   }
 
   Map<String, Object?> _customCategoryToJson(CustomCategory value) =>
@@ -589,6 +789,11 @@ final class BackupCodec {
       throw _malformed();
     }
     return result;
+  }
+
+  Object? _requiredValue(Map<String, Object?> value, String key) {
+    if (!value.containsKey(key)) throw _malformed();
+    return value[key];
   }
 
   String _string(Map<String, Object?> value, String key) {

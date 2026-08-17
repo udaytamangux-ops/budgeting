@@ -4547,6 +4547,1614 @@ class RecurringTransactionOccurrencesCompanion
   }
 }
 
+class $MoneyPlanPreferencesTable extends MoneyPlanPreferences
+    with TableInfo<$MoneyPlanPreferencesTable, MoneyPlanPreference> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoneyPlanPreferencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _ownerScopeMeta = const VerificationMeta(
+    'ownerScope',
+  );
+  @override
+  late final GeneratedColumn<String> ownerScope = GeneratedColumn<String>(
+    'owner_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isEnabledMeta = const VerificationMeta(
+    'isEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> isEnabled = GeneratedColumn<bool>(
+    'is_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_enabled" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _createdAtUtcMicrosMeta =
+      const VerificationMeta('createdAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> createdAtUtcMicros = GeneratedColumn<int>(
+    'created_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMicrosMeta =
+      const VerificationMeta('updatedAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMicros = GeneratedColumn<int>(
+    'updated_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    ownerScope,
+    isEnabled,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'money_plan_preferences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MoneyPlanPreference> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('owner_scope')) {
+      context.handle(
+        _ownerScopeMeta,
+        ownerScope.isAcceptableOrUnknown(data['owner_scope']!, _ownerScopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerScopeMeta);
+    }
+    if (data.containsKey('is_enabled')) {
+      context.handle(
+        _isEnabledMeta,
+        isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_isEnabledMeta);
+    }
+    if (data.containsKey('created_at_utc_micros')) {
+      context.handle(
+        _createdAtUtcMicrosMeta,
+        createdAtUtcMicros.isAcceptableOrUnknown(
+          data['created_at_utc_micros']!,
+          _createdAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMicrosMeta);
+    }
+    if (data.containsKey('updated_at_utc_micros')) {
+      context.handle(
+        _updatedAtUtcMicrosMeta,
+        updatedAtUtcMicros.isAcceptableOrUnknown(
+          data['updated_at_utc_micros']!,
+          _updatedAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMicrosMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {ownerScope};
+  @override
+  MoneyPlanPreference map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoneyPlanPreference(
+      ownerScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_scope'],
+      )!,
+      isEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_enabled'],
+      )!,
+      createdAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_micros'],
+      )!,
+      updatedAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_micros'],
+      )!,
+    );
+  }
+
+  @override
+  $MoneyPlanPreferencesTable createAlias(String alias) {
+    return $MoneyPlanPreferencesTable(attachedDatabase, alias);
+  }
+}
+
+class MoneyPlanPreference extends DataClass
+    implements Insertable<MoneyPlanPreference> {
+  final String ownerScope;
+  final bool isEnabled;
+  final int createdAtUtcMicros;
+  final int updatedAtUtcMicros;
+  const MoneyPlanPreference({
+    required this.ownerScope,
+    required this.isEnabled,
+    required this.createdAtUtcMicros,
+    required this.updatedAtUtcMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['owner_scope'] = Variable<String>(ownerScope);
+    map['is_enabled'] = Variable<bool>(isEnabled);
+    map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros);
+    map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros);
+    return map;
+  }
+
+  MoneyPlanPreferencesCompanion toCompanion(bool nullToAbsent) {
+    return MoneyPlanPreferencesCompanion(
+      ownerScope: Value(ownerScope),
+      isEnabled: Value(isEnabled),
+      createdAtUtcMicros: Value(createdAtUtcMicros),
+      updatedAtUtcMicros: Value(updatedAtUtcMicros),
+    );
+  }
+
+  factory MoneyPlanPreference.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoneyPlanPreference(
+      ownerScope: serializer.fromJson<String>(json['ownerScope']),
+      isEnabled: serializer.fromJson<bool>(json['isEnabled']),
+      createdAtUtcMicros: serializer.fromJson<int>(json['createdAtUtcMicros']),
+      updatedAtUtcMicros: serializer.fromJson<int>(json['updatedAtUtcMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'ownerScope': serializer.toJson<String>(ownerScope),
+      'isEnabled': serializer.toJson<bool>(isEnabled),
+      'createdAtUtcMicros': serializer.toJson<int>(createdAtUtcMicros),
+      'updatedAtUtcMicros': serializer.toJson<int>(updatedAtUtcMicros),
+    };
+  }
+
+  MoneyPlanPreference copyWith({
+    String? ownerScope,
+    bool? isEnabled,
+    int? createdAtUtcMicros,
+    int? updatedAtUtcMicros,
+  }) => MoneyPlanPreference(
+    ownerScope: ownerScope ?? this.ownerScope,
+    isEnabled: isEnabled ?? this.isEnabled,
+    createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+    updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+  );
+  MoneyPlanPreference copyWithCompanion(MoneyPlanPreferencesCompanion data) {
+    return MoneyPlanPreference(
+      ownerScope: data.ownerScope.present
+          ? data.ownerScope.value
+          : this.ownerScope,
+      isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
+      createdAtUtcMicros: data.createdAtUtcMicros.present
+          ? data.createdAtUtcMicros.value
+          : this.createdAtUtcMicros,
+      updatedAtUtcMicros: data.updatedAtUtcMicros.present
+          ? data.updatedAtUtcMicros.value
+          : this.updatedAtUtcMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyPlanPreference(')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    ownerScope,
+    isEnabled,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoneyPlanPreference &&
+          other.ownerScope == this.ownerScope &&
+          other.isEnabled == this.isEnabled &&
+          other.createdAtUtcMicros == this.createdAtUtcMicros &&
+          other.updatedAtUtcMicros == this.updatedAtUtcMicros);
+}
+
+class MoneyPlanPreferencesCompanion
+    extends UpdateCompanion<MoneyPlanPreference> {
+  final Value<String> ownerScope;
+  final Value<bool> isEnabled;
+  final Value<int> createdAtUtcMicros;
+  final Value<int> updatedAtUtcMicros;
+  final Value<int> rowid;
+  const MoneyPlanPreferencesCompanion({
+    this.ownerScope = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.createdAtUtcMicros = const Value.absent(),
+    this.updatedAtUtcMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MoneyPlanPreferencesCompanion.insert({
+    required String ownerScope,
+    required bool isEnabled,
+    required int createdAtUtcMicros,
+    required int updatedAtUtcMicros,
+    this.rowid = const Value.absent(),
+  }) : ownerScope = Value(ownerScope),
+       isEnabled = Value(isEnabled),
+       createdAtUtcMicros = Value(createdAtUtcMicros),
+       updatedAtUtcMicros = Value(updatedAtUtcMicros);
+  static Insertable<MoneyPlanPreference> custom({
+    Expression<String>? ownerScope,
+    Expression<bool>? isEnabled,
+    Expression<int>? createdAtUtcMicros,
+    Expression<int>? updatedAtUtcMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (ownerScope != null) 'owner_scope': ownerScope,
+      if (isEnabled != null) 'is_enabled': isEnabled,
+      if (createdAtUtcMicros != null)
+        'created_at_utc_micros': createdAtUtcMicros,
+      if (updatedAtUtcMicros != null)
+        'updated_at_utc_micros': updatedAtUtcMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MoneyPlanPreferencesCompanion copyWith({
+    Value<String>? ownerScope,
+    Value<bool>? isEnabled,
+    Value<int>? createdAtUtcMicros,
+    Value<int>? updatedAtUtcMicros,
+    Value<int>? rowid,
+  }) {
+    return MoneyPlanPreferencesCompanion(
+      ownerScope: ownerScope ?? this.ownerScope,
+      isEnabled: isEnabled ?? this.isEnabled,
+      createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+      updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (ownerScope.present) {
+      map['owner_scope'] = Variable<String>(ownerScope.value);
+    }
+    if (isEnabled.present) {
+      map['is_enabled'] = Variable<bool>(isEnabled.value);
+    }
+    if (createdAtUtcMicros.present) {
+      map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros.value);
+    }
+    if (updatedAtUtcMicros.present) {
+      map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyPlanPreferencesCompanion(')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MoneyPlanPeriodsTable extends MoneyPlanPeriods
+    with TableInfo<$MoneyPlanPeriodsTable, MoneyPlanPeriod> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoneyPlanPeriodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerScopeMeta = const VerificationMeta(
+    'ownerScope',
+  );
+  @override
+  late final GeneratedColumn<String> ownerScope = GeneratedColumn<String>(
+    'owner_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodStartUtcMicrosMeta =
+      const VerificationMeta('periodStartUtcMicros');
+  @override
+  late final GeneratedColumn<int> periodStartUtcMicros = GeneratedColumn<int>(
+    'period_start_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodEndExclusiveUtcMicrosMeta =
+      const VerificationMeta('periodEndExclusiveUtcMicros');
+  @override
+  late final GeneratedColumn<int> periodEndExclusiveUtcMicros =
+      GeneratedColumn<int>(
+        'period_end_exclusive_utc_micros',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _calendarSystemKeyMeta = const VerificationMeta(
+    'calendarSystemKey',
+  );
+  @override
+  late final GeneratedColumn<String> calendarSystemKey =
+      GeneratedColumn<String>(
+        'calendar_system_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _calendarYearMeta = const VerificationMeta(
+    'calendarYear',
+  );
+  @override
+  late final GeneratedColumn<int> calendarYear = GeneratedColumn<int>(
+    'calendar_year',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _calendarMonthMeta = const VerificationMeta(
+    'calendarMonth',
+  );
+  @override
+  late final GeneratedColumn<int> calendarMonth = GeneratedColumn<int>(
+    'calendar_month',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _needsPercentMeta = const VerificationMeta(
+    'needsPercent',
+  );
+  @override
+  late final GeneratedColumn<int> needsPercent = GeneratedColumn<int>(
+    'needs_percent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _wantsPercentMeta = const VerificationMeta(
+    'wantsPercent',
+  );
+  @override
+  late final GeneratedColumn<int> wantsPercent = GeneratedColumn<int>(
+    'wants_percent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _savingsPercentMeta = const VerificationMeta(
+    'savingsPercent',
+  );
+  @override
+  late final GeneratedColumn<int> savingsPercent = GeneratedColumn<int>(
+    'savings_percent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtUtcMicrosMeta =
+      const VerificationMeta('createdAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> createdAtUtcMicros = GeneratedColumn<int>(
+    'created_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMicrosMeta =
+      const VerificationMeta('updatedAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMicros = GeneratedColumn<int>(
+    'updated_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerScope,
+    periodStartUtcMicros,
+    periodEndExclusiveUtcMicros,
+    calendarSystemKey,
+    calendarYear,
+    calendarMonth,
+    needsPercent,
+    wantsPercent,
+    savingsPercent,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'money_plan_periods';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MoneyPlanPeriod> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_scope')) {
+      context.handle(
+        _ownerScopeMeta,
+        ownerScope.isAcceptableOrUnknown(data['owner_scope']!, _ownerScopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerScopeMeta);
+    }
+    if (data.containsKey('period_start_utc_micros')) {
+      context.handle(
+        _periodStartUtcMicrosMeta,
+        periodStartUtcMicros.isAcceptableOrUnknown(
+          data['period_start_utc_micros']!,
+          _periodStartUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodStartUtcMicrosMeta);
+    }
+    if (data.containsKey('period_end_exclusive_utc_micros')) {
+      context.handle(
+        _periodEndExclusiveUtcMicrosMeta,
+        periodEndExclusiveUtcMicros.isAcceptableOrUnknown(
+          data['period_end_exclusive_utc_micros']!,
+          _periodEndExclusiveUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodEndExclusiveUtcMicrosMeta);
+    }
+    if (data.containsKey('calendar_system_key')) {
+      context.handle(
+        _calendarSystemKeyMeta,
+        calendarSystemKey.isAcceptableOrUnknown(
+          data['calendar_system_key']!,
+          _calendarSystemKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_calendarSystemKeyMeta);
+    }
+    if (data.containsKey('calendar_year')) {
+      context.handle(
+        _calendarYearMeta,
+        calendarYear.isAcceptableOrUnknown(
+          data['calendar_year']!,
+          _calendarYearMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_calendarYearMeta);
+    }
+    if (data.containsKey('calendar_month')) {
+      context.handle(
+        _calendarMonthMeta,
+        calendarMonth.isAcceptableOrUnknown(
+          data['calendar_month']!,
+          _calendarMonthMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_calendarMonthMeta);
+    }
+    if (data.containsKey('needs_percent')) {
+      context.handle(
+        _needsPercentMeta,
+        needsPercent.isAcceptableOrUnknown(
+          data['needs_percent']!,
+          _needsPercentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_needsPercentMeta);
+    }
+    if (data.containsKey('wants_percent')) {
+      context.handle(
+        _wantsPercentMeta,
+        wantsPercent.isAcceptableOrUnknown(
+          data['wants_percent']!,
+          _wantsPercentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_wantsPercentMeta);
+    }
+    if (data.containsKey('savings_percent')) {
+      context.handle(
+        _savingsPercentMeta,
+        savingsPercent.isAcceptableOrUnknown(
+          data['savings_percent']!,
+          _savingsPercentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_savingsPercentMeta);
+    }
+    if (data.containsKey('created_at_utc_micros')) {
+      context.handle(
+        _createdAtUtcMicrosMeta,
+        createdAtUtcMicros.isAcceptableOrUnknown(
+          data['created_at_utc_micros']!,
+          _createdAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMicrosMeta);
+    }
+    if (data.containsKey('updated_at_utc_micros')) {
+      context.handle(
+        _updatedAtUtcMicrosMeta,
+        updatedAtUtcMicros.isAcceptableOrUnknown(
+          data['updated_at_utc_micros']!,
+          _updatedAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMicrosMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MoneyPlanPeriod map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoneyPlanPeriod(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_scope'],
+      )!,
+      periodStartUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_start_utc_micros'],
+      )!,
+      periodEndExclusiveUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_end_exclusive_utc_micros'],
+      )!,
+      calendarSystemKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}calendar_system_key'],
+      )!,
+      calendarYear: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}calendar_year'],
+      )!,
+      calendarMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}calendar_month'],
+      )!,
+      needsPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}needs_percent'],
+      )!,
+      wantsPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wants_percent'],
+      )!,
+      savingsPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}savings_percent'],
+      )!,
+      createdAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_micros'],
+      )!,
+      updatedAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_micros'],
+      )!,
+    );
+  }
+
+  @override
+  $MoneyPlanPeriodsTable createAlias(String alias) {
+    return $MoneyPlanPeriodsTable(attachedDatabase, alias);
+  }
+}
+
+class MoneyPlanPeriod extends DataClass implements Insertable<MoneyPlanPeriod> {
+  final String id;
+  final String ownerScope;
+  final int periodStartUtcMicros;
+  final int periodEndExclusiveUtcMicros;
+  final String calendarSystemKey;
+  final int calendarYear;
+  final int calendarMonth;
+  final int needsPercent;
+  final int wantsPercent;
+  final int savingsPercent;
+  final int createdAtUtcMicros;
+  final int updatedAtUtcMicros;
+  const MoneyPlanPeriod({
+    required this.id,
+    required this.ownerScope,
+    required this.periodStartUtcMicros,
+    required this.periodEndExclusiveUtcMicros,
+    required this.calendarSystemKey,
+    required this.calendarYear,
+    required this.calendarMonth,
+    required this.needsPercent,
+    required this.wantsPercent,
+    required this.savingsPercent,
+    required this.createdAtUtcMicros,
+    required this.updatedAtUtcMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_scope'] = Variable<String>(ownerScope);
+    map['period_start_utc_micros'] = Variable<int>(periodStartUtcMicros);
+    map['period_end_exclusive_utc_micros'] = Variable<int>(
+      periodEndExclusiveUtcMicros,
+    );
+    map['calendar_system_key'] = Variable<String>(calendarSystemKey);
+    map['calendar_year'] = Variable<int>(calendarYear);
+    map['calendar_month'] = Variable<int>(calendarMonth);
+    map['needs_percent'] = Variable<int>(needsPercent);
+    map['wants_percent'] = Variable<int>(wantsPercent);
+    map['savings_percent'] = Variable<int>(savingsPercent);
+    map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros);
+    map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros);
+    return map;
+  }
+
+  MoneyPlanPeriodsCompanion toCompanion(bool nullToAbsent) {
+    return MoneyPlanPeriodsCompanion(
+      id: Value(id),
+      ownerScope: Value(ownerScope),
+      periodStartUtcMicros: Value(periodStartUtcMicros),
+      periodEndExclusiveUtcMicros: Value(periodEndExclusiveUtcMicros),
+      calendarSystemKey: Value(calendarSystemKey),
+      calendarYear: Value(calendarYear),
+      calendarMonth: Value(calendarMonth),
+      needsPercent: Value(needsPercent),
+      wantsPercent: Value(wantsPercent),
+      savingsPercent: Value(savingsPercent),
+      createdAtUtcMicros: Value(createdAtUtcMicros),
+      updatedAtUtcMicros: Value(updatedAtUtcMicros),
+    );
+  }
+
+  factory MoneyPlanPeriod.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoneyPlanPeriod(
+      id: serializer.fromJson<String>(json['id']),
+      ownerScope: serializer.fromJson<String>(json['ownerScope']),
+      periodStartUtcMicros: serializer.fromJson<int>(
+        json['periodStartUtcMicros'],
+      ),
+      periodEndExclusiveUtcMicros: serializer.fromJson<int>(
+        json['periodEndExclusiveUtcMicros'],
+      ),
+      calendarSystemKey: serializer.fromJson<String>(json['calendarSystemKey']),
+      calendarYear: serializer.fromJson<int>(json['calendarYear']),
+      calendarMonth: serializer.fromJson<int>(json['calendarMonth']),
+      needsPercent: serializer.fromJson<int>(json['needsPercent']),
+      wantsPercent: serializer.fromJson<int>(json['wantsPercent']),
+      savingsPercent: serializer.fromJson<int>(json['savingsPercent']),
+      createdAtUtcMicros: serializer.fromJson<int>(json['createdAtUtcMicros']),
+      updatedAtUtcMicros: serializer.fromJson<int>(json['updatedAtUtcMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ownerScope': serializer.toJson<String>(ownerScope),
+      'periodStartUtcMicros': serializer.toJson<int>(periodStartUtcMicros),
+      'periodEndExclusiveUtcMicros': serializer.toJson<int>(
+        periodEndExclusiveUtcMicros,
+      ),
+      'calendarSystemKey': serializer.toJson<String>(calendarSystemKey),
+      'calendarYear': serializer.toJson<int>(calendarYear),
+      'calendarMonth': serializer.toJson<int>(calendarMonth),
+      'needsPercent': serializer.toJson<int>(needsPercent),
+      'wantsPercent': serializer.toJson<int>(wantsPercent),
+      'savingsPercent': serializer.toJson<int>(savingsPercent),
+      'createdAtUtcMicros': serializer.toJson<int>(createdAtUtcMicros),
+      'updatedAtUtcMicros': serializer.toJson<int>(updatedAtUtcMicros),
+    };
+  }
+
+  MoneyPlanPeriod copyWith({
+    String? id,
+    String? ownerScope,
+    int? periodStartUtcMicros,
+    int? periodEndExclusiveUtcMicros,
+    String? calendarSystemKey,
+    int? calendarYear,
+    int? calendarMonth,
+    int? needsPercent,
+    int? wantsPercent,
+    int? savingsPercent,
+    int? createdAtUtcMicros,
+    int? updatedAtUtcMicros,
+  }) => MoneyPlanPeriod(
+    id: id ?? this.id,
+    ownerScope: ownerScope ?? this.ownerScope,
+    periodStartUtcMicros: periodStartUtcMicros ?? this.periodStartUtcMicros,
+    periodEndExclusiveUtcMicros:
+        periodEndExclusiveUtcMicros ?? this.periodEndExclusiveUtcMicros,
+    calendarSystemKey: calendarSystemKey ?? this.calendarSystemKey,
+    calendarYear: calendarYear ?? this.calendarYear,
+    calendarMonth: calendarMonth ?? this.calendarMonth,
+    needsPercent: needsPercent ?? this.needsPercent,
+    wantsPercent: wantsPercent ?? this.wantsPercent,
+    savingsPercent: savingsPercent ?? this.savingsPercent,
+    createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+    updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+  );
+  MoneyPlanPeriod copyWithCompanion(MoneyPlanPeriodsCompanion data) {
+    return MoneyPlanPeriod(
+      id: data.id.present ? data.id.value : this.id,
+      ownerScope: data.ownerScope.present
+          ? data.ownerScope.value
+          : this.ownerScope,
+      periodStartUtcMicros: data.periodStartUtcMicros.present
+          ? data.periodStartUtcMicros.value
+          : this.periodStartUtcMicros,
+      periodEndExclusiveUtcMicros: data.periodEndExclusiveUtcMicros.present
+          ? data.periodEndExclusiveUtcMicros.value
+          : this.periodEndExclusiveUtcMicros,
+      calendarSystemKey: data.calendarSystemKey.present
+          ? data.calendarSystemKey.value
+          : this.calendarSystemKey,
+      calendarYear: data.calendarYear.present
+          ? data.calendarYear.value
+          : this.calendarYear,
+      calendarMonth: data.calendarMonth.present
+          ? data.calendarMonth.value
+          : this.calendarMonth,
+      needsPercent: data.needsPercent.present
+          ? data.needsPercent.value
+          : this.needsPercent,
+      wantsPercent: data.wantsPercent.present
+          ? data.wantsPercent.value
+          : this.wantsPercent,
+      savingsPercent: data.savingsPercent.present
+          ? data.savingsPercent.value
+          : this.savingsPercent,
+      createdAtUtcMicros: data.createdAtUtcMicros.present
+          ? data.createdAtUtcMicros.value
+          : this.createdAtUtcMicros,
+      updatedAtUtcMicros: data.updatedAtUtcMicros.present
+          ? data.updatedAtUtcMicros.value
+          : this.updatedAtUtcMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyPlanPeriod(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('periodStartUtcMicros: $periodStartUtcMicros, ')
+          ..write('periodEndExclusiveUtcMicros: $periodEndExclusiveUtcMicros, ')
+          ..write('calendarSystemKey: $calendarSystemKey, ')
+          ..write('calendarYear: $calendarYear, ')
+          ..write('calendarMonth: $calendarMonth, ')
+          ..write('needsPercent: $needsPercent, ')
+          ..write('wantsPercent: $wantsPercent, ')
+          ..write('savingsPercent: $savingsPercent, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerScope,
+    periodStartUtcMicros,
+    periodEndExclusiveUtcMicros,
+    calendarSystemKey,
+    calendarYear,
+    calendarMonth,
+    needsPercent,
+    wantsPercent,
+    savingsPercent,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoneyPlanPeriod &&
+          other.id == this.id &&
+          other.ownerScope == this.ownerScope &&
+          other.periodStartUtcMicros == this.periodStartUtcMicros &&
+          other.periodEndExclusiveUtcMicros ==
+              this.periodEndExclusiveUtcMicros &&
+          other.calendarSystemKey == this.calendarSystemKey &&
+          other.calendarYear == this.calendarYear &&
+          other.calendarMonth == this.calendarMonth &&
+          other.needsPercent == this.needsPercent &&
+          other.wantsPercent == this.wantsPercent &&
+          other.savingsPercent == this.savingsPercent &&
+          other.createdAtUtcMicros == this.createdAtUtcMicros &&
+          other.updatedAtUtcMicros == this.updatedAtUtcMicros);
+}
+
+class MoneyPlanPeriodsCompanion extends UpdateCompanion<MoneyPlanPeriod> {
+  final Value<String> id;
+  final Value<String> ownerScope;
+  final Value<int> periodStartUtcMicros;
+  final Value<int> periodEndExclusiveUtcMicros;
+  final Value<String> calendarSystemKey;
+  final Value<int> calendarYear;
+  final Value<int> calendarMonth;
+  final Value<int> needsPercent;
+  final Value<int> wantsPercent;
+  final Value<int> savingsPercent;
+  final Value<int> createdAtUtcMicros;
+  final Value<int> updatedAtUtcMicros;
+  final Value<int> rowid;
+  const MoneyPlanPeriodsCompanion({
+    this.id = const Value.absent(),
+    this.ownerScope = const Value.absent(),
+    this.periodStartUtcMicros = const Value.absent(),
+    this.periodEndExclusiveUtcMicros = const Value.absent(),
+    this.calendarSystemKey = const Value.absent(),
+    this.calendarYear = const Value.absent(),
+    this.calendarMonth = const Value.absent(),
+    this.needsPercent = const Value.absent(),
+    this.wantsPercent = const Value.absent(),
+    this.savingsPercent = const Value.absent(),
+    this.createdAtUtcMicros = const Value.absent(),
+    this.updatedAtUtcMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MoneyPlanPeriodsCompanion.insert({
+    required String id,
+    required String ownerScope,
+    required int periodStartUtcMicros,
+    required int periodEndExclusiveUtcMicros,
+    required String calendarSystemKey,
+    required int calendarYear,
+    required int calendarMonth,
+    required int needsPercent,
+    required int wantsPercent,
+    required int savingsPercent,
+    required int createdAtUtcMicros,
+    required int updatedAtUtcMicros,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerScope = Value(ownerScope),
+       periodStartUtcMicros = Value(periodStartUtcMicros),
+       periodEndExclusiveUtcMicros = Value(periodEndExclusiveUtcMicros),
+       calendarSystemKey = Value(calendarSystemKey),
+       calendarYear = Value(calendarYear),
+       calendarMonth = Value(calendarMonth),
+       needsPercent = Value(needsPercent),
+       wantsPercent = Value(wantsPercent),
+       savingsPercent = Value(savingsPercent),
+       createdAtUtcMicros = Value(createdAtUtcMicros),
+       updatedAtUtcMicros = Value(updatedAtUtcMicros);
+  static Insertable<MoneyPlanPeriod> custom({
+    Expression<String>? id,
+    Expression<String>? ownerScope,
+    Expression<int>? periodStartUtcMicros,
+    Expression<int>? periodEndExclusiveUtcMicros,
+    Expression<String>? calendarSystemKey,
+    Expression<int>? calendarYear,
+    Expression<int>? calendarMonth,
+    Expression<int>? needsPercent,
+    Expression<int>? wantsPercent,
+    Expression<int>? savingsPercent,
+    Expression<int>? createdAtUtcMicros,
+    Expression<int>? updatedAtUtcMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerScope != null) 'owner_scope': ownerScope,
+      if (periodStartUtcMicros != null)
+        'period_start_utc_micros': periodStartUtcMicros,
+      if (periodEndExclusiveUtcMicros != null)
+        'period_end_exclusive_utc_micros': periodEndExclusiveUtcMicros,
+      if (calendarSystemKey != null) 'calendar_system_key': calendarSystemKey,
+      if (calendarYear != null) 'calendar_year': calendarYear,
+      if (calendarMonth != null) 'calendar_month': calendarMonth,
+      if (needsPercent != null) 'needs_percent': needsPercent,
+      if (wantsPercent != null) 'wants_percent': wantsPercent,
+      if (savingsPercent != null) 'savings_percent': savingsPercent,
+      if (createdAtUtcMicros != null)
+        'created_at_utc_micros': createdAtUtcMicros,
+      if (updatedAtUtcMicros != null)
+        'updated_at_utc_micros': updatedAtUtcMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MoneyPlanPeriodsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerScope,
+    Value<int>? periodStartUtcMicros,
+    Value<int>? periodEndExclusiveUtcMicros,
+    Value<String>? calendarSystemKey,
+    Value<int>? calendarYear,
+    Value<int>? calendarMonth,
+    Value<int>? needsPercent,
+    Value<int>? wantsPercent,
+    Value<int>? savingsPercent,
+    Value<int>? createdAtUtcMicros,
+    Value<int>? updatedAtUtcMicros,
+    Value<int>? rowid,
+  }) {
+    return MoneyPlanPeriodsCompanion(
+      id: id ?? this.id,
+      ownerScope: ownerScope ?? this.ownerScope,
+      periodStartUtcMicros: periodStartUtcMicros ?? this.periodStartUtcMicros,
+      periodEndExclusiveUtcMicros:
+          periodEndExclusiveUtcMicros ?? this.periodEndExclusiveUtcMicros,
+      calendarSystemKey: calendarSystemKey ?? this.calendarSystemKey,
+      calendarYear: calendarYear ?? this.calendarYear,
+      calendarMonth: calendarMonth ?? this.calendarMonth,
+      needsPercent: needsPercent ?? this.needsPercent,
+      wantsPercent: wantsPercent ?? this.wantsPercent,
+      savingsPercent: savingsPercent ?? this.savingsPercent,
+      createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+      updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerScope.present) {
+      map['owner_scope'] = Variable<String>(ownerScope.value);
+    }
+    if (periodStartUtcMicros.present) {
+      map['period_start_utc_micros'] = Variable<int>(
+        periodStartUtcMicros.value,
+      );
+    }
+    if (periodEndExclusiveUtcMicros.present) {
+      map['period_end_exclusive_utc_micros'] = Variable<int>(
+        periodEndExclusiveUtcMicros.value,
+      );
+    }
+    if (calendarSystemKey.present) {
+      map['calendar_system_key'] = Variable<String>(calendarSystemKey.value);
+    }
+    if (calendarYear.present) {
+      map['calendar_year'] = Variable<int>(calendarYear.value);
+    }
+    if (calendarMonth.present) {
+      map['calendar_month'] = Variable<int>(calendarMonth.value);
+    }
+    if (needsPercent.present) {
+      map['needs_percent'] = Variable<int>(needsPercent.value);
+    }
+    if (wantsPercent.present) {
+      map['wants_percent'] = Variable<int>(wantsPercent.value);
+    }
+    if (savingsPercent.present) {
+      map['savings_percent'] = Variable<int>(savingsPercent.value);
+    }
+    if (createdAtUtcMicros.present) {
+      map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros.value);
+    }
+    if (updatedAtUtcMicros.present) {
+      map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyPlanPeriodsCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('periodStartUtcMicros: $periodStartUtcMicros, ')
+          ..write('periodEndExclusiveUtcMicros: $periodEndExclusiveUtcMicros, ')
+          ..write('calendarSystemKey: $calendarSystemKey, ')
+          ..write('calendarYear: $calendarYear, ')
+          ..write('calendarMonth: $calendarMonth, ')
+          ..write('needsPercent: $needsPercent, ')
+          ..write('wantsPercent: $wantsPercent, ')
+          ..write('savingsPercent: $savingsPercent, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MoneyPlanCategoryMappingsTable extends MoneyPlanCategoryMappings
+    with TableInfo<$MoneyPlanCategoryMappingsTable, MoneyPlanCategoryMapping> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MoneyPlanCategoryMappingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerScopeMeta = const VerificationMeta(
+    'ownerScope',
+  );
+  @override
+  late final GeneratedColumn<String> ownerScope = GeneratedColumn<String>(
+    'owner_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodIdMeta = const VerificationMeta(
+    'periodId',
+  );
+  @override
+  late final GeneratedColumn<String> periodId = GeneratedColumn<String>(
+    'period_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES money_plan_periods (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planGroupKeyMeta = const VerificationMeta(
+    'planGroupKey',
+  );
+  @override
+  late final GeneratedColumn<String> planGroupKey = GeneratedColumn<String>(
+    'plan_group_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtUtcMicrosMeta =
+      const VerificationMeta('createdAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> createdAtUtcMicros = GeneratedColumn<int>(
+    'created_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMicrosMeta =
+      const VerificationMeta('updatedAtUtcMicros');
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMicros = GeneratedColumn<int>(
+    'updated_at_utc_micros',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerScope,
+    periodId,
+    categoryId,
+    planGroupKey,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'money_plan_category_mappings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MoneyPlanCategoryMapping> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_scope')) {
+      context.handle(
+        _ownerScopeMeta,
+        ownerScope.isAcceptableOrUnknown(data['owner_scope']!, _ownerScopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerScopeMeta);
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(
+        _periodIdMeta,
+        periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('plan_group_key')) {
+      context.handle(
+        _planGroupKeyMeta,
+        planGroupKey.isAcceptableOrUnknown(
+          data['plan_group_key']!,
+          _planGroupKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_planGroupKeyMeta);
+    }
+    if (data.containsKey('created_at_utc_micros')) {
+      context.handle(
+        _createdAtUtcMicrosMeta,
+        createdAtUtcMicros.isAcceptableOrUnknown(
+          data['created_at_utc_micros']!,
+          _createdAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMicrosMeta);
+    }
+    if (data.containsKey('updated_at_utc_micros')) {
+      context.handle(
+        _updatedAtUtcMicrosMeta,
+        updatedAtUtcMicros.isAcceptableOrUnknown(
+          data['updated_at_utc_micros']!,
+          _updatedAtUtcMicrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMicrosMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MoneyPlanCategoryMapping map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoneyPlanCategoryMapping(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_scope'],
+      )!,
+      periodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_id'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+      planGroupKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_group_key'],
+      )!,
+      createdAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_micros'],
+      )!,
+      updatedAtUtcMicros: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_micros'],
+      )!,
+    );
+  }
+
+  @override
+  $MoneyPlanCategoryMappingsTable createAlias(String alias) {
+    return $MoneyPlanCategoryMappingsTable(attachedDatabase, alias);
+  }
+}
+
+class MoneyPlanCategoryMapping extends DataClass
+    implements Insertable<MoneyPlanCategoryMapping> {
+  final String id;
+  final String ownerScope;
+  final String periodId;
+  final String categoryId;
+  final String planGroupKey;
+  final int createdAtUtcMicros;
+  final int updatedAtUtcMicros;
+  const MoneyPlanCategoryMapping({
+    required this.id,
+    required this.ownerScope,
+    required this.periodId,
+    required this.categoryId,
+    required this.planGroupKey,
+    required this.createdAtUtcMicros,
+    required this.updatedAtUtcMicros,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_scope'] = Variable<String>(ownerScope);
+    map['period_id'] = Variable<String>(periodId);
+    map['category_id'] = Variable<String>(categoryId);
+    map['plan_group_key'] = Variable<String>(planGroupKey);
+    map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros);
+    map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros);
+    return map;
+  }
+
+  MoneyPlanCategoryMappingsCompanion toCompanion(bool nullToAbsent) {
+    return MoneyPlanCategoryMappingsCompanion(
+      id: Value(id),
+      ownerScope: Value(ownerScope),
+      periodId: Value(periodId),
+      categoryId: Value(categoryId),
+      planGroupKey: Value(planGroupKey),
+      createdAtUtcMicros: Value(createdAtUtcMicros),
+      updatedAtUtcMicros: Value(updatedAtUtcMicros),
+    );
+  }
+
+  factory MoneyPlanCategoryMapping.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoneyPlanCategoryMapping(
+      id: serializer.fromJson<String>(json['id']),
+      ownerScope: serializer.fromJson<String>(json['ownerScope']),
+      periodId: serializer.fromJson<String>(json['periodId']),
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      planGroupKey: serializer.fromJson<String>(json['planGroupKey']),
+      createdAtUtcMicros: serializer.fromJson<int>(json['createdAtUtcMicros']),
+      updatedAtUtcMicros: serializer.fromJson<int>(json['updatedAtUtcMicros']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ownerScope': serializer.toJson<String>(ownerScope),
+      'periodId': serializer.toJson<String>(periodId),
+      'categoryId': serializer.toJson<String>(categoryId),
+      'planGroupKey': serializer.toJson<String>(planGroupKey),
+      'createdAtUtcMicros': serializer.toJson<int>(createdAtUtcMicros),
+      'updatedAtUtcMicros': serializer.toJson<int>(updatedAtUtcMicros),
+    };
+  }
+
+  MoneyPlanCategoryMapping copyWith({
+    String? id,
+    String? ownerScope,
+    String? periodId,
+    String? categoryId,
+    String? planGroupKey,
+    int? createdAtUtcMicros,
+    int? updatedAtUtcMicros,
+  }) => MoneyPlanCategoryMapping(
+    id: id ?? this.id,
+    ownerScope: ownerScope ?? this.ownerScope,
+    periodId: periodId ?? this.periodId,
+    categoryId: categoryId ?? this.categoryId,
+    planGroupKey: planGroupKey ?? this.planGroupKey,
+    createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+    updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+  );
+  MoneyPlanCategoryMapping copyWithCompanion(
+    MoneyPlanCategoryMappingsCompanion data,
+  ) {
+    return MoneyPlanCategoryMapping(
+      id: data.id.present ? data.id.value : this.id,
+      ownerScope: data.ownerScope.present
+          ? data.ownerScope.value
+          : this.ownerScope,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      planGroupKey: data.planGroupKey.present
+          ? data.planGroupKey.value
+          : this.planGroupKey,
+      createdAtUtcMicros: data.createdAtUtcMicros.present
+          ? data.createdAtUtcMicros.value
+          : this.createdAtUtcMicros,
+      updatedAtUtcMicros: data.updatedAtUtcMicros.present
+          ? data.updatedAtUtcMicros.value
+          : this.updatedAtUtcMicros,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyPlanCategoryMapping(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('periodId: $periodId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('planGroupKey: $planGroupKey, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerScope,
+    periodId,
+    categoryId,
+    planGroupKey,
+    createdAtUtcMicros,
+    updatedAtUtcMicros,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoneyPlanCategoryMapping &&
+          other.id == this.id &&
+          other.ownerScope == this.ownerScope &&
+          other.periodId == this.periodId &&
+          other.categoryId == this.categoryId &&
+          other.planGroupKey == this.planGroupKey &&
+          other.createdAtUtcMicros == this.createdAtUtcMicros &&
+          other.updatedAtUtcMicros == this.updatedAtUtcMicros);
+}
+
+class MoneyPlanCategoryMappingsCompanion
+    extends UpdateCompanion<MoneyPlanCategoryMapping> {
+  final Value<String> id;
+  final Value<String> ownerScope;
+  final Value<String> periodId;
+  final Value<String> categoryId;
+  final Value<String> planGroupKey;
+  final Value<int> createdAtUtcMicros;
+  final Value<int> updatedAtUtcMicros;
+  final Value<int> rowid;
+  const MoneyPlanCategoryMappingsCompanion({
+    this.id = const Value.absent(),
+    this.ownerScope = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.planGroupKey = const Value.absent(),
+    this.createdAtUtcMicros = const Value.absent(),
+    this.updatedAtUtcMicros = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MoneyPlanCategoryMappingsCompanion.insert({
+    required String id,
+    required String ownerScope,
+    required String periodId,
+    required String categoryId,
+    required String planGroupKey,
+    required int createdAtUtcMicros,
+    required int updatedAtUtcMicros,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerScope = Value(ownerScope),
+       periodId = Value(periodId),
+       categoryId = Value(categoryId),
+       planGroupKey = Value(planGroupKey),
+       createdAtUtcMicros = Value(createdAtUtcMicros),
+       updatedAtUtcMicros = Value(updatedAtUtcMicros);
+  static Insertable<MoneyPlanCategoryMapping> custom({
+    Expression<String>? id,
+    Expression<String>? ownerScope,
+    Expression<String>? periodId,
+    Expression<String>? categoryId,
+    Expression<String>? planGroupKey,
+    Expression<int>? createdAtUtcMicros,
+    Expression<int>? updatedAtUtcMicros,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerScope != null) 'owner_scope': ownerScope,
+      if (periodId != null) 'period_id': periodId,
+      if (categoryId != null) 'category_id': categoryId,
+      if (planGroupKey != null) 'plan_group_key': planGroupKey,
+      if (createdAtUtcMicros != null)
+        'created_at_utc_micros': createdAtUtcMicros,
+      if (updatedAtUtcMicros != null)
+        'updated_at_utc_micros': updatedAtUtcMicros,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MoneyPlanCategoryMappingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerScope,
+    Value<String>? periodId,
+    Value<String>? categoryId,
+    Value<String>? planGroupKey,
+    Value<int>? createdAtUtcMicros,
+    Value<int>? updatedAtUtcMicros,
+    Value<int>? rowid,
+  }) {
+    return MoneyPlanCategoryMappingsCompanion(
+      id: id ?? this.id,
+      ownerScope: ownerScope ?? this.ownerScope,
+      periodId: periodId ?? this.periodId,
+      categoryId: categoryId ?? this.categoryId,
+      planGroupKey: planGroupKey ?? this.planGroupKey,
+      createdAtUtcMicros: createdAtUtcMicros ?? this.createdAtUtcMicros,
+      updatedAtUtcMicros: updatedAtUtcMicros ?? this.updatedAtUtcMicros,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerScope.present) {
+      map['owner_scope'] = Variable<String>(ownerScope.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<String>(periodId.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (planGroupKey.present) {
+      map['plan_group_key'] = Variable<String>(planGroupKey.value);
+    }
+    if (createdAtUtcMicros.present) {
+      map['created_at_utc_micros'] = Variable<int>(createdAtUtcMicros.value);
+    }
+    if (updatedAtUtcMicros.present) {
+      map['updated_at_utc_micros'] = Variable<int>(updatedAtUtcMicros.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneyPlanCategoryMappingsCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerScope: $ownerScope, ')
+          ..write('periodId: $periodId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('planGroupKey: $planGroupKey, ')
+          ..write('createdAtUtcMicros: $createdAtUtcMicros, ')
+          ..write('updatedAtUtcMicros: $updatedAtUtcMicros, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4564,6 +6172,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RecurringTransactionRulesTable(this);
   late final $RecurringTransactionOccurrencesTable
   recurringTransactionOccurrences = $RecurringTransactionOccurrencesTable(this);
+  late final $MoneyPlanPreferencesTable moneyPlanPreferences =
+      $MoneyPlanPreferencesTable(this);
+  late final $MoneyPlanPeriodsTable moneyPlanPeriods = $MoneyPlanPeriodsTable(
+    this,
+  );
+  late final $MoneyPlanCategoryMappingsTable moneyPlanCategoryMappings =
+      $MoneyPlanCategoryMappingsTable(this);
   late final Index customCategoriesOwnerTypeName = Index(
     'custom_categories_owner_type_name',
     'CREATE UNIQUE INDEX custom_categories_owner_type_name ON custom_categories (owner_scope, type_key, normalized_name)',
@@ -4571,6 +6186,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index storedTransfersOwnerDate = Index(
     'stored_transfers_owner_date',
     'CREATE INDEX stored_transfers_owner_date ON stored_transfers (owner_scope, occurred_at_utc_micros)',
+  );
+  late final Index moneyPlanPeriodsOwnerIdentity = Index(
+    'money_plan_periods_owner_identity',
+    'CREATE UNIQUE INDEX money_plan_periods_owner_identity ON money_plan_periods (owner_scope, calendar_system_key, calendar_year, calendar_month)',
+  );
+  late final Index moneyPlanMappingsPeriodCategory = Index(
+    'money_plan_mappings_period_category',
+    'CREATE UNIQUE INDEX money_plan_mappings_period_category ON money_plan_category_mappings (period_id, category_id)',
+  );
+  late final Index moneyPlanMappingsOwnerPeriod = Index(
+    'money_plan_mappings_owner_period',
+    'CREATE INDEX money_plan_mappings_owner_period ON money_plan_category_mappings (owner_scope, period_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -4583,9 +6210,27 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     storedTransfers,
     recurringTransactionRules,
     recurringTransactionOccurrences,
+    moneyPlanPreferences,
+    moneyPlanPeriods,
+    moneyPlanCategoryMappings,
     customCategoriesOwnerTypeName,
     storedTransfersOwnerDate,
+    moneyPlanPeriodsOwnerIdentity,
+    moneyPlanMappingsPeriodCategory,
+    moneyPlanMappingsOwnerPeriod,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'money_plan_periods',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('money_plan_category_mappings', kind: UpdateKind.delete),
+      ],
+    ),
+  ]);
 }
 
 typedef $$StoredTransactionsTableCreateCompanionBuilder =
@@ -6777,6 +8422,1083 @@ typedef $$RecurringTransactionOccurrencesTableProcessedTableManager =
       RecurringTransactionOccurrence,
       PrefetchHooks Function()
     >;
+typedef $$MoneyPlanPreferencesTableCreateCompanionBuilder =
+    MoneyPlanPreferencesCompanion Function({
+      required String ownerScope,
+      required bool isEnabled,
+      required int createdAtUtcMicros,
+      required int updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+typedef $$MoneyPlanPreferencesTableUpdateCompanionBuilder =
+    MoneyPlanPreferencesCompanion Function({
+      Value<String> ownerScope,
+      Value<bool> isEnabled,
+      Value<int> createdAtUtcMicros,
+      Value<int> updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+
+class $$MoneyPlanPreferencesTableFilterComposer
+    extends Composer<_$AppDatabase, $MoneyPlanPreferencesTable> {
+  $$MoneyPlanPreferencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MoneyPlanPreferencesTableOrderingComposer
+    extends Composer<_$AppDatabase, $MoneyPlanPreferencesTable> {
+  $$MoneyPlanPreferencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MoneyPlanPreferencesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MoneyPlanPreferencesTable> {
+  $$MoneyPlanPreferencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isEnabled =>
+      $composableBuilder(column: $table.isEnabled, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => column,
+  );
+}
+
+class $$MoneyPlanPreferencesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MoneyPlanPreferencesTable,
+          MoneyPlanPreference,
+          $$MoneyPlanPreferencesTableFilterComposer,
+          $$MoneyPlanPreferencesTableOrderingComposer,
+          $$MoneyPlanPreferencesTableAnnotationComposer,
+          $$MoneyPlanPreferencesTableCreateCompanionBuilder,
+          $$MoneyPlanPreferencesTableUpdateCompanionBuilder,
+          (
+            MoneyPlanPreference,
+            BaseReferences<
+              _$AppDatabase,
+              $MoneyPlanPreferencesTable,
+              MoneyPlanPreference
+            >,
+          ),
+          MoneyPlanPreference,
+          PrefetchHooks Function()
+        > {
+  $$MoneyPlanPreferencesTableTableManager(
+    _$AppDatabase db,
+    $MoneyPlanPreferencesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoneyPlanPreferencesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MoneyPlanPreferencesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$MoneyPlanPreferencesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> ownerScope = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<int> createdAtUtcMicros = const Value.absent(),
+                Value<int> updatedAtUtcMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoneyPlanPreferencesCompanion(
+                ownerScope: ownerScope,
+                isEnabled: isEnabled,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String ownerScope,
+                required bool isEnabled,
+                required int createdAtUtcMicros,
+                required int updatedAtUtcMicros,
+                Value<int> rowid = const Value.absent(),
+              }) => MoneyPlanPreferencesCompanion.insert(
+                ownerScope: ownerScope,
+                isEnabled: isEnabled,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MoneyPlanPreferencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MoneyPlanPreferencesTable,
+      MoneyPlanPreference,
+      $$MoneyPlanPreferencesTableFilterComposer,
+      $$MoneyPlanPreferencesTableOrderingComposer,
+      $$MoneyPlanPreferencesTableAnnotationComposer,
+      $$MoneyPlanPreferencesTableCreateCompanionBuilder,
+      $$MoneyPlanPreferencesTableUpdateCompanionBuilder,
+      (
+        MoneyPlanPreference,
+        BaseReferences<
+          _$AppDatabase,
+          $MoneyPlanPreferencesTable,
+          MoneyPlanPreference
+        >,
+      ),
+      MoneyPlanPreference,
+      PrefetchHooks Function()
+    >;
+typedef $$MoneyPlanPeriodsTableCreateCompanionBuilder =
+    MoneyPlanPeriodsCompanion Function({
+      required String id,
+      required String ownerScope,
+      required int periodStartUtcMicros,
+      required int periodEndExclusiveUtcMicros,
+      required String calendarSystemKey,
+      required int calendarYear,
+      required int calendarMonth,
+      required int needsPercent,
+      required int wantsPercent,
+      required int savingsPercent,
+      required int createdAtUtcMicros,
+      required int updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+typedef $$MoneyPlanPeriodsTableUpdateCompanionBuilder =
+    MoneyPlanPeriodsCompanion Function({
+      Value<String> id,
+      Value<String> ownerScope,
+      Value<int> periodStartUtcMicros,
+      Value<int> periodEndExclusiveUtcMicros,
+      Value<String> calendarSystemKey,
+      Value<int> calendarYear,
+      Value<int> calendarMonth,
+      Value<int> needsPercent,
+      Value<int> wantsPercent,
+      Value<int> savingsPercent,
+      Value<int> createdAtUtcMicros,
+      Value<int> updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+
+final class $$MoneyPlanPeriodsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $MoneyPlanPeriodsTable, MoneyPlanPeriod> {
+  $$MoneyPlanPeriodsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $MoneyPlanCategoryMappingsTable,
+    List<MoneyPlanCategoryMapping>
+  >
+  _moneyPlanCategoryMappingsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.moneyPlanCategoryMappings,
+        aliasName: $_aliasNameGenerator(
+          db.moneyPlanPeriods.id,
+          db.moneyPlanCategoryMappings.periodId,
+        ),
+      );
+
+  $$MoneyPlanCategoryMappingsTableProcessedTableManager
+  get moneyPlanCategoryMappingsRefs {
+    final manager = $$MoneyPlanCategoryMappingsTableTableManager(
+      $_db,
+      $_db.moneyPlanCategoryMappings,
+    ).filter((f) => f.periodId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _moneyPlanCategoryMappingsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$MoneyPlanPeriodsTableFilterComposer
+    extends Composer<_$AppDatabase, $MoneyPlanPeriodsTable> {
+  $$MoneyPlanPeriodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodStartUtcMicros => $composableBuilder(
+    column: $table.periodStartUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodEndExclusiveUtcMicros => $composableBuilder(
+    column: $table.periodEndExclusiveUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get calendarSystemKey => $composableBuilder(
+    column: $table.calendarSystemKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get calendarYear => $composableBuilder(
+    column: $table.calendarYear,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get calendarMonth => $composableBuilder(
+    column: $table.calendarMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get needsPercent => $composableBuilder(
+    column: $table.needsPercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wantsPercent => $composableBuilder(
+    column: $table.wantsPercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get savingsPercent => $composableBuilder(
+    column: $table.savingsPercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> moneyPlanCategoryMappingsRefs(
+    Expression<bool> Function($$MoneyPlanCategoryMappingsTableFilterComposer f)
+    f,
+  ) {
+    final $$MoneyPlanCategoryMappingsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.moneyPlanCategoryMappings,
+          getReferencedColumn: (t) => t.periodId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$MoneyPlanCategoryMappingsTableFilterComposer(
+                $db: $db,
+                $table: $db.moneyPlanCategoryMappings,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$MoneyPlanPeriodsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MoneyPlanPeriodsTable> {
+  $$MoneyPlanPeriodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodStartUtcMicros => $composableBuilder(
+    column: $table.periodStartUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodEndExclusiveUtcMicros => $composableBuilder(
+    column: $table.periodEndExclusiveUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get calendarSystemKey => $composableBuilder(
+    column: $table.calendarSystemKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get calendarYear => $composableBuilder(
+    column: $table.calendarYear,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get calendarMonth => $composableBuilder(
+    column: $table.calendarMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get needsPercent => $composableBuilder(
+    column: $table.needsPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wantsPercent => $composableBuilder(
+    column: $table.wantsPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get savingsPercent => $composableBuilder(
+    column: $table.savingsPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MoneyPlanPeriodsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MoneyPlanPeriodsTable> {
+  $$MoneyPlanPeriodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get periodStartUtcMicros => $composableBuilder(
+    column: $table.periodStartUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get periodEndExclusiveUtcMicros => $composableBuilder(
+    column: $table.periodEndExclusiveUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get calendarSystemKey => $composableBuilder(
+    column: $table.calendarSystemKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get calendarYear => $composableBuilder(
+    column: $table.calendarYear,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get calendarMonth => $composableBuilder(
+    column: $table.calendarMonth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get needsPercent => $composableBuilder(
+    column: $table.needsPercent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wantsPercent => $composableBuilder(
+    column: $table.wantsPercent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get savingsPercent => $composableBuilder(
+    column: $table.savingsPercent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  Expression<T> moneyPlanCategoryMappingsRefs<T extends Object>(
+    Expression<T> Function($$MoneyPlanCategoryMappingsTableAnnotationComposer a)
+    f,
+  ) {
+    final $$MoneyPlanCategoryMappingsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.moneyPlanCategoryMappings,
+          getReferencedColumn: (t) => t.periodId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$MoneyPlanCategoryMappingsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.moneyPlanCategoryMappings,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$MoneyPlanPeriodsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MoneyPlanPeriodsTable,
+          MoneyPlanPeriod,
+          $$MoneyPlanPeriodsTableFilterComposer,
+          $$MoneyPlanPeriodsTableOrderingComposer,
+          $$MoneyPlanPeriodsTableAnnotationComposer,
+          $$MoneyPlanPeriodsTableCreateCompanionBuilder,
+          $$MoneyPlanPeriodsTableUpdateCompanionBuilder,
+          (MoneyPlanPeriod, $$MoneyPlanPeriodsTableReferences),
+          MoneyPlanPeriod,
+          PrefetchHooks Function({bool moneyPlanCategoryMappingsRefs})
+        > {
+  $$MoneyPlanPeriodsTableTableManager(
+    _$AppDatabase db,
+    $MoneyPlanPeriodsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoneyPlanPeriodsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MoneyPlanPeriodsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MoneyPlanPeriodsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerScope = const Value.absent(),
+                Value<int> periodStartUtcMicros = const Value.absent(),
+                Value<int> periodEndExclusiveUtcMicros = const Value.absent(),
+                Value<String> calendarSystemKey = const Value.absent(),
+                Value<int> calendarYear = const Value.absent(),
+                Value<int> calendarMonth = const Value.absent(),
+                Value<int> needsPercent = const Value.absent(),
+                Value<int> wantsPercent = const Value.absent(),
+                Value<int> savingsPercent = const Value.absent(),
+                Value<int> createdAtUtcMicros = const Value.absent(),
+                Value<int> updatedAtUtcMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoneyPlanPeriodsCompanion(
+                id: id,
+                ownerScope: ownerScope,
+                periodStartUtcMicros: periodStartUtcMicros,
+                periodEndExclusiveUtcMicros: periodEndExclusiveUtcMicros,
+                calendarSystemKey: calendarSystemKey,
+                calendarYear: calendarYear,
+                calendarMonth: calendarMonth,
+                needsPercent: needsPercent,
+                wantsPercent: wantsPercent,
+                savingsPercent: savingsPercent,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerScope,
+                required int periodStartUtcMicros,
+                required int periodEndExclusiveUtcMicros,
+                required String calendarSystemKey,
+                required int calendarYear,
+                required int calendarMonth,
+                required int needsPercent,
+                required int wantsPercent,
+                required int savingsPercent,
+                required int createdAtUtcMicros,
+                required int updatedAtUtcMicros,
+                Value<int> rowid = const Value.absent(),
+              }) => MoneyPlanPeriodsCompanion.insert(
+                id: id,
+                ownerScope: ownerScope,
+                periodStartUtcMicros: periodStartUtcMicros,
+                periodEndExclusiveUtcMicros: periodEndExclusiveUtcMicros,
+                calendarSystemKey: calendarSystemKey,
+                calendarYear: calendarYear,
+                calendarMonth: calendarMonth,
+                needsPercent: needsPercent,
+                wantsPercent: wantsPercent,
+                savingsPercent: savingsPercent,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MoneyPlanPeriodsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({moneyPlanCategoryMappingsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (moneyPlanCategoryMappingsRefs) db.moneyPlanCategoryMappings,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (moneyPlanCategoryMappingsRefs)
+                    await $_getPrefetchedData<
+                      MoneyPlanPeriod,
+                      $MoneyPlanPeriodsTable,
+                      MoneyPlanCategoryMapping
+                    >(
+                      currentTable: table,
+                      referencedTable: $$MoneyPlanPeriodsTableReferences
+                          ._moneyPlanCategoryMappingsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$MoneyPlanPeriodsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).moneyPlanCategoryMappingsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.periodId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$MoneyPlanPeriodsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MoneyPlanPeriodsTable,
+      MoneyPlanPeriod,
+      $$MoneyPlanPeriodsTableFilterComposer,
+      $$MoneyPlanPeriodsTableOrderingComposer,
+      $$MoneyPlanPeriodsTableAnnotationComposer,
+      $$MoneyPlanPeriodsTableCreateCompanionBuilder,
+      $$MoneyPlanPeriodsTableUpdateCompanionBuilder,
+      (MoneyPlanPeriod, $$MoneyPlanPeriodsTableReferences),
+      MoneyPlanPeriod,
+      PrefetchHooks Function({bool moneyPlanCategoryMappingsRefs})
+    >;
+typedef $$MoneyPlanCategoryMappingsTableCreateCompanionBuilder =
+    MoneyPlanCategoryMappingsCompanion Function({
+      required String id,
+      required String ownerScope,
+      required String periodId,
+      required String categoryId,
+      required String planGroupKey,
+      required int createdAtUtcMicros,
+      required int updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+typedef $$MoneyPlanCategoryMappingsTableUpdateCompanionBuilder =
+    MoneyPlanCategoryMappingsCompanion Function({
+      Value<String> id,
+      Value<String> ownerScope,
+      Value<String> periodId,
+      Value<String> categoryId,
+      Value<String> planGroupKey,
+      Value<int> createdAtUtcMicros,
+      Value<int> updatedAtUtcMicros,
+      Value<int> rowid,
+    });
+
+final class $$MoneyPlanCategoryMappingsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $MoneyPlanCategoryMappingsTable,
+          MoneyPlanCategoryMapping
+        > {
+  $$MoneyPlanCategoryMappingsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $MoneyPlanPeriodsTable _periodIdTable(_$AppDatabase db) =>
+      db.moneyPlanPeriods.createAlias(
+        $_aliasNameGenerator(
+          db.moneyPlanCategoryMappings.periodId,
+          db.moneyPlanPeriods.id,
+        ),
+      );
+
+  $$MoneyPlanPeriodsTableProcessedTableManager get periodId {
+    final $_column = $_itemColumn<String>('period_id')!;
+
+    final manager = $$MoneyPlanPeriodsTableTableManager(
+      $_db,
+      $_db.moneyPlanPeriods,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_periodIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$MoneyPlanCategoryMappingsTableFilterComposer
+    extends Composer<_$AppDatabase, $MoneyPlanCategoryMappingsTable> {
+  $$MoneyPlanCategoryMappingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planGroupKey => $composableBuilder(
+    column: $table.planGroupKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MoneyPlanPeriodsTableFilterComposer get periodId {
+    final $$MoneyPlanPeriodsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.moneyPlanPeriods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoneyPlanPeriodsTableFilterComposer(
+            $db: $db,
+            $table: $db.moneyPlanPeriods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MoneyPlanCategoryMappingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MoneyPlanCategoryMappingsTable> {
+  $$MoneyPlanCategoryMappingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planGroupKey => $composableBuilder(
+    column: $table.planGroupKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MoneyPlanPeriodsTableOrderingComposer get periodId {
+    final $$MoneyPlanPeriodsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.moneyPlanPeriods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoneyPlanPeriodsTableOrderingComposer(
+            $db: $db,
+            $table: $db.moneyPlanPeriods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MoneyPlanCategoryMappingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MoneyPlanCategoryMappingsTable> {
+  $$MoneyPlanCategoryMappingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerScope => $composableBuilder(
+    column: $table.ownerScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get planGroupKey => $composableBuilder(
+    column: $table.planGroupKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtUtcMicros => $composableBuilder(
+    column: $table.createdAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtcMicros => $composableBuilder(
+    column: $table.updatedAtUtcMicros,
+    builder: (column) => column,
+  );
+
+  $$MoneyPlanPeriodsTableAnnotationComposer get periodId {
+    final $$MoneyPlanPeriodsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.moneyPlanPeriods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MoneyPlanPeriodsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.moneyPlanPeriods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MoneyPlanCategoryMappingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MoneyPlanCategoryMappingsTable,
+          MoneyPlanCategoryMapping,
+          $$MoneyPlanCategoryMappingsTableFilterComposer,
+          $$MoneyPlanCategoryMappingsTableOrderingComposer,
+          $$MoneyPlanCategoryMappingsTableAnnotationComposer,
+          $$MoneyPlanCategoryMappingsTableCreateCompanionBuilder,
+          $$MoneyPlanCategoryMappingsTableUpdateCompanionBuilder,
+          (
+            MoneyPlanCategoryMapping,
+            $$MoneyPlanCategoryMappingsTableReferences,
+          ),
+          MoneyPlanCategoryMapping,
+          PrefetchHooks Function({bool periodId})
+        > {
+  $$MoneyPlanCategoryMappingsTableTableManager(
+    _$AppDatabase db,
+    $MoneyPlanCategoryMappingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MoneyPlanCategoryMappingsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$MoneyPlanCategoryMappingsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$MoneyPlanCategoryMappingsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerScope = const Value.absent(),
+                Value<String> periodId = const Value.absent(),
+                Value<String> categoryId = const Value.absent(),
+                Value<String> planGroupKey = const Value.absent(),
+                Value<int> createdAtUtcMicros = const Value.absent(),
+                Value<int> updatedAtUtcMicros = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MoneyPlanCategoryMappingsCompanion(
+                id: id,
+                ownerScope: ownerScope,
+                periodId: periodId,
+                categoryId: categoryId,
+                planGroupKey: planGroupKey,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerScope,
+                required String periodId,
+                required String categoryId,
+                required String planGroupKey,
+                required int createdAtUtcMicros,
+                required int updatedAtUtcMicros,
+                Value<int> rowid = const Value.absent(),
+              }) => MoneyPlanCategoryMappingsCompanion.insert(
+                id: id,
+                ownerScope: ownerScope,
+                periodId: periodId,
+                categoryId: categoryId,
+                planGroupKey: planGroupKey,
+                createdAtUtcMicros: createdAtUtcMicros,
+                updatedAtUtcMicros: updatedAtUtcMicros,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MoneyPlanCategoryMappingsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({periodId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (periodId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.periodId,
+                                referencedTable:
+                                    $$MoneyPlanCategoryMappingsTableReferences
+                                        ._periodIdTable(db),
+                                referencedColumn:
+                                    $$MoneyPlanCategoryMappingsTableReferences
+                                        ._periodIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$MoneyPlanCategoryMappingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MoneyPlanCategoryMappingsTable,
+      MoneyPlanCategoryMapping,
+      $$MoneyPlanCategoryMappingsTableFilterComposer,
+      $$MoneyPlanCategoryMappingsTableOrderingComposer,
+      $$MoneyPlanCategoryMappingsTableAnnotationComposer,
+      $$MoneyPlanCategoryMappingsTableCreateCompanionBuilder,
+      $$MoneyPlanCategoryMappingsTableUpdateCompanionBuilder,
+      (MoneyPlanCategoryMapping, $$MoneyPlanCategoryMappingsTableReferences),
+      MoneyPlanCategoryMapping,
+      PrefetchHooks Function({bool periodId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6799,5 +9521,14 @@ class $AppDatabaseManager {
       $$RecurringTransactionOccurrencesTableTableManager(
         _db,
         _db.recurringTransactionOccurrences,
+      );
+  $$MoneyPlanPreferencesTableTableManager get moneyPlanPreferences =>
+      $$MoneyPlanPreferencesTableTableManager(_db, _db.moneyPlanPreferences);
+  $$MoneyPlanPeriodsTableTableManager get moneyPlanPeriods =>
+      $$MoneyPlanPeriodsTableTableManager(_db, _db.moneyPlanPeriods);
+  $$MoneyPlanCategoryMappingsTableTableManager get moneyPlanCategoryMappings =>
+      $$MoneyPlanCategoryMappingsTableTableManager(
+        _db,
+        _db.moneyPlanCategoryMappings,
       );
 }

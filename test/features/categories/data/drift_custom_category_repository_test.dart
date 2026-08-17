@@ -1,10 +1,18 @@
+import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/database/app_database.dart'
-    hide CustomCategory;
+    hide
+        CustomCategory,
+        MoneyPlanCategoryMapping,
+        MoneyPlanPeriod,
+        MoneyPlanPreference;
 import 'package:budgeting_app/features/categories/data/repositories/drift_custom_category_repository.dart';
 import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
 import 'package:budgeting_app/features/categories/domain/repositories/custom_category_repository.dart';
 import 'package:budgeting_app/features/categories/domain/services/category_catalog.dart';
 import 'package:budgeting_app/features/categories/domain/services/category_icon_keys.dart';
+import 'package:budgeting_app/features/money_plan/data/repositories/drift_money_plan_repository.dart';
+import 'package:budgeting_app/features/money_plan/domain/entities/money_plan.dart';
 import 'package:budgeting_app/features/transactions/data/repositories/drift_transaction_repository.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/money.dart';
@@ -156,6 +164,39 @@ void main() {
     await repository.archive(created.id);
     await repository.deleteUnused(created.id);
     expect(await repository.getById(created.id), isNull);
+  });
+
+  test('deleting an unused category cleans its Money Plan mappings', () async {
+    final CustomCategory created = await repository.create(
+      type: TransactionType.expense,
+      name: 'Occasional costs',
+      iconKey: 'other',
+    );
+    final planRepository = DriftMoneyPlanRepository(
+      database,
+      ownerScope: 'owner-a',
+      now: () => DateTime.utc(2026, 8, 17, 12),
+      createId: () => 'money-plan-test-id',
+    );
+    final period = BikramSambatCalendarService().periodFor(
+      calendarSystem: AppCalendarSystem.gregorianAd,
+      year: 2026,
+      month: 8,
+    );
+    final MoneyPlanPeriod plan = await planRepository.createOrUpdateCurrentPlan(
+      period: period,
+      ratios: MoneyPlanRatios.defaultPlan,
+      categoryGroups: <String, MoneyPlanGroup>{
+        created.id: MoneyPlanGroup.wants,
+      },
+    );
+    expect(await planRepository.getMappings(plan.id), hasLength(1));
+
+    await repository.archive(created.id);
+    await repository.deleteUnused(created.id);
+
+    expect(await repository.getById(created.id), isNull);
+    expect(await planRepository.getMappings(plan.id), isEmpty);
   });
 
   test(

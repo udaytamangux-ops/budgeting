@@ -3,6 +3,8 @@ import 'package:budgeting_app/features/categories/domain/entities/custom_categor
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/repositories/financial_data_portability_repository.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/data_portability_exception.dart';
+import 'package:budgeting_app/features/money_plan/data/database/money_plan_database_mapper.dart';
+import 'package:budgeting_app/features/money_plan/domain/entities/money_plan.dart';
 import 'package:budgeting_app/features/recurring/data/database/recurring_database_mapper.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart'
     as domain;
@@ -55,6 +57,24 @@ final class DriftFinancialDataPortabilityRepository
               .get();
       final List<db.CustomCategory> customCategoryRows = await _database
           .getCustomCategoriesForOwner(ownerScope);
+      final db.MoneyPlanPreference? moneyPlanPreferenceRow =
+          await (_database.select(_database.moneyPlanPreferences)..where(
+                (db.MoneyPlanPreferences table) =>
+                    table.ownerScope.equals(ownerScope),
+              ))
+              .getSingleOrNull();
+      final List<db.MoneyPlanPeriod> moneyPlanPeriodRows =
+          await (_database.select(_database.moneyPlanPeriods)..where(
+                (db.MoneyPlanPeriods table) =>
+                    table.ownerScope.equals(ownerScope),
+              ))
+              .get();
+      final List<db.MoneyPlanCategoryMapping> moneyPlanMappingRows =
+          await (_database.select(_database.moneyPlanCategoryMappings)..where(
+                (db.MoneyPlanCategoryMappings table) =>
+                    table.ownerScope.equals(ownerScope),
+              ))
+              .get();
 
       final List<FinancialTransaction> transactions =
           transactionRows
@@ -93,6 +113,16 @@ final class DriftFinancialDataPortabilityRepository
       final List<CustomCategory> customCategories =
           customCategoryRows.map(_customCategoryFromRow).toList(growable: false)
             ..sort((a, b) => a.id.compareTo(b.id));
+      final List<MoneyPlanPeriod> moneyPlanPeriods =
+          moneyPlanPeriodRows
+              .map(MoneyPlanDatabaseMapper.periodFromRow)
+              .toList(growable: false)
+            ..sort((a, b) => a.id.compareTo(b.id));
+      final List<MoneyPlanCategoryMapping> moneyPlanMappings =
+          moneyPlanMappingRows
+              .map(MoneyPlanDatabaseMapper.mappingFromRow)
+              .toList(growable: false)
+            ..sort((a, b) => a.id.compareTo(b.id));
       return FinancialDataSnapshot(
         transactions: List<FinancialTransaction>.unmodifiable(transactions),
         recurringRules: List<domain.RecurringTransactionRule>.unmodifiable(
@@ -104,6 +134,13 @@ final class DriftFinancialDataPortabilityRepository
             ),
         transfers: List<FinancialTransfer>.unmodifiable(transfers),
         customCategories: List<CustomCategory>.unmodifiable(customCategories),
+        moneyPlanPreference: moneyPlanPreferenceRow == null
+            ? null
+            : MoneyPlanDatabaseMapper.preferenceFromRow(moneyPlanPreferenceRow),
+        moneyPlanPeriods: List<MoneyPlanPeriod>.unmodifiable(moneyPlanPeriods),
+        moneyPlanCategoryMappings: List<MoneyPlanCategoryMapping>.unmodifiable(
+          moneyPlanMappings,
+        ),
       );
     } catch (error) {
       throw DataPortabilityException(
@@ -121,6 +158,21 @@ final class DriftFinancialDataPortabilityRepository
       await _database.transaction(() async {
         final _RestoreIds ids = await _resolveIds(snapshot);
 
+        await (_database.delete(_database.moneyPlanCategoryMappings)..where(
+              (db.MoneyPlanCategoryMappings table) =>
+                  table.ownerScope.equals(ownerScope),
+            ))
+            .go();
+        await (_database.delete(_database.moneyPlanPeriods)..where(
+              (db.MoneyPlanPeriods table) =>
+                  table.ownerScope.equals(ownerScope),
+            ))
+            .go();
+        await (_database.delete(_database.moneyPlanPreferences)..where(
+              (db.MoneyPlanPreferences table) =>
+                  table.ownerScope.equals(ownerScope),
+            ))
+            .go();
         await (_database.delete(_database.recurringTransactionOccurrences)
               ..where(
                 (db.RecurringTransactionOccurrences table) =>
@@ -233,6 +285,55 @@ final class DriftFinancialDataPortabilityRepository
                 ),
               );
         }
+        final MoneyPlanPreference? preference = snapshot.moneyPlanPreference;
+        if (preference != null) {
+          await _database
+              .into(_database.moneyPlanPreferences)
+              .insert(
+                MoneyPlanDatabaseMapper.preferenceToCompanion(
+                  preference,
+                  ownerScope: ownerScope,
+                ),
+              );
+        }
+        for (final MoneyPlanPeriod period in snapshot.moneyPlanPeriods) {
+          final MoneyPlanPeriod restored = MoneyPlanPeriod(
+            id: ids.moneyPlanPeriods[period.id]!,
+            period: period.period,
+            ratios: period.ratios,
+            createdAt: period.createdAt,
+            updatedAt: period.updatedAt,
+          );
+          await _database
+              .into(_database.moneyPlanPeriods)
+              .insert(
+                MoneyPlanDatabaseMapper.periodToCompanion(
+                  restored,
+                  ownerScope: ownerScope,
+                ),
+              );
+        }
+        for (final MoneyPlanCategoryMapping mapping
+            in snapshot.moneyPlanCategoryMappings) {
+          final MoneyPlanCategoryMapping restored = MoneyPlanCategoryMapping(
+            id: ids.moneyPlanMappings[mapping.id]!,
+            periodId: ids.moneyPlanPeriods[mapping.periodId]!,
+            categoryId: mapping.categoryId.startsWith('custom:')
+                ? ids.categories[mapping.categoryId]!
+                : mapping.categoryId,
+            group: mapping.group,
+            createdAt: mapping.createdAt,
+            updatedAt: mapping.updatedAt,
+          );
+          await _database
+              .into(_database.moneyPlanCategoryMappings)
+              .insert(
+                MoneyPlanDatabaseMapper.mappingToCompanion(
+                  restored,
+                  ownerScope: ownerScope,
+                ),
+              );
+        }
       });
     } catch (error) {
       throw DataPortabilityException(
@@ -245,6 +346,28 @@ final class DriftFinancialDataPortabilityRepository
 
   Future<_RestoreIds> _resolveIds(FinancialDataSnapshot snapshot) async {
     final Set<String> used = <String>{};
+    used.addAll(
+      await (_database.selectOnly(_database.moneyPlanPeriods)
+            ..addColumns(<Expression<Object>>[_database.moneyPlanPeriods.id])
+            ..where(
+              _database.moneyPlanPeriods.ownerScope.equals(ownerScope).not(),
+            ))
+          .map((row) => row.read(_database.moneyPlanPeriods.id)!)
+          .get(),
+    );
+    used.addAll(
+      await (_database.selectOnly(_database.moneyPlanCategoryMappings)
+            ..addColumns(<Expression<Object>>[
+              _database.moneyPlanCategoryMappings.id,
+            ])
+            ..where(
+              _database.moneyPlanCategoryMappings.ownerScope
+                  .equals(ownerScope)
+                  .not(),
+            ))
+          .map((row) => row.read(_database.moneyPlanCategoryMappings.id)!)
+          .get(),
+    );
     used.addAll(
       await (_database.selectOnly(_database.storedTransfers)
             ..addColumns(<Expression<Object>>[_database.storedTransfers.id])
@@ -319,12 +442,22 @@ final class DriftFinancialDataPortabilityRepository
       snapshot.customCategories.map((value) => value.id),
       used,
     );
+    final Map<String, String> moneyPlanPeriodIds = _allocate(
+      snapshot.moneyPlanPeriods.map((value) => value.id),
+      used,
+    );
+    final Map<String, String> moneyPlanMappingIds = _allocate(
+      snapshot.moneyPlanCategoryMappings.map((value) => value.id),
+      used,
+    );
     return _RestoreIds(
       transactions: transactionIds,
       rules: ruleIds,
       occurrences: occurrenceIds,
       transfers: transferIds,
       categories: categoryIds,
+      moneyPlanPeriods: moneyPlanPeriodIds,
+      moneyPlanMappings: moneyPlanMappingIds,
     );
   }
 
@@ -470,6 +603,8 @@ final class _RestoreIds {
     required this.occurrences,
     required this.transfers,
     required this.categories,
+    required this.moneyPlanPeriods,
+    required this.moneyPlanMappings,
   });
 
   final Map<String, String> transactions;
@@ -477,4 +612,6 @@ final class _RestoreIds {
   final Map<String, String> occurrences;
   final Map<String, String> transfers;
   final Map<String, String> categories;
+  final Map<String, String> moneyPlanPeriods;
+  final Map<String, String> moneyPlanMappings;
 }

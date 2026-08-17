@@ -14,6 +14,7 @@ import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
+import 'generated/schema_v7.dart' as v7;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -316,7 +317,7 @@ void main() {
           const StoredPreference(key: 'theme_mode', value: 'dark'),
         ],
       );
-      expect(upgraded.schemaVersion, 6);
+      expect(upgraded.schemaVersion, 7);
     },
   );
 
@@ -365,6 +366,83 @@ void main() {
             ],
           );
           expect(await newDb.select(newDb.customCategories).get(), isEmpty);
+        },
+      );
+    },
+  );
+
+  test(
+    'migration from v6 to v7 preserves Phase 12 data and invents no plan',
+    () async {
+      const v6.StoredTransactionsData transaction = v6.StoredTransactionsData(
+        id: 'existing-v6-transaction',
+        typeKey: 'expense',
+        amountMinorUnits: 125000,
+        currencyCode: 'NPR',
+        categoryKey: 'custom:existing',
+        paymentMethodKey: 'cash',
+        occurredAtUtcMicros: 1785824100000000,
+        merchant: 'Existing merchant',
+        note: null,
+        createdAtUtcMicros: 1785824100000000,
+        updatedAtUtcMicros: 1785824100000000,
+        ownerScope: 'guest',
+      );
+      const v6.CustomCategoriesData category = v6.CustomCategoriesData(
+        id: 'custom:existing',
+        ownerScope: 'guest',
+        typeKey: 'expense',
+        name: 'Existing category',
+        normalizedName: 'existing category',
+        iconKey: 'other',
+        isArchived: 1,
+        createdAtUtcMicros: 1785824100000000,
+        updatedAtUtcMicros: 1785824100000000,
+      );
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 6,
+        newVersion: 7,
+        createOld: v6.DatabaseAtV6.new,
+        createNew: v7.DatabaseAtV7.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch.insert(oldDb.storedTransactions, transaction);
+          batch.insert(oldDb.customCategories, category);
+          batch.insert(
+            oldDb.storedPreferences,
+            const v6.StoredPreferencesData(
+              key: 'onboarding_completed',
+              value: 'true',
+            ),
+          );
+        },
+        validateItems: (newDb) async {
+          final transactions = await newDb
+              .select(newDb.storedTransactions)
+              .get();
+          expect(transactions, hasLength(1));
+          expect(transactions.single.id, transaction.id);
+          expect(transactions.single.amountMinorUnits, 125000);
+          final categories = await newDb.select(newDb.customCategories).get();
+          expect(categories, hasLength(1));
+          expect(categories.single.id, category.id);
+          expect(categories.single.isArchived, 1);
+          expect(
+            await newDb.select(newDb.storedPreferences).get(),
+            <v7.StoredPreferencesData>[
+              const v7.StoredPreferencesData(
+                key: 'onboarding_completed',
+                value: 'true',
+              ),
+            ],
+          );
+          expect(await newDb.select(newDb.moneyPlanPreferences).get(), isEmpty);
+          expect(await newDb.select(newDb.moneyPlanPeriods).get(), isEmpty);
+          expect(
+            await newDb.select(newDb.moneyPlanCategoryMappings).get(),
+            isEmpty,
+          );
         },
       );
     },

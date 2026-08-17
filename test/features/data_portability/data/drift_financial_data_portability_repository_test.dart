@@ -1,10 +1,14 @@
 import 'dart:convert';
 
 import 'package:budgeting_app/core/calendar/data/bikram_sambat_calendar_service.dart';
+import 'package:budgeting_app/core/calendar/domain/app_calendar_system.dart';
 import 'package:budgeting_app/core/data/owner_scope.dart';
 import 'package:budgeting_app/core/database/app_database.dart'
     hide
         CustomCategory,
+        MoneyPlanCategoryMapping,
+        MoneyPlanPeriod,
+        MoneyPlanPreference,
         RecurringTransactionOccurrence,
         RecurringTransactionRule;
 import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
@@ -12,6 +16,8 @@ import 'package:budgeting_app/features/data_portability/data/repositories/drift_
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_codec.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/data_portability_exception.dart';
+import 'package:budgeting_app/features/money_plan/data/database/money_plan_database_mapper.dart';
+import 'package:budgeting_app/features/money_plan/domain/entities/money_plan.dart';
 import 'package:budgeting_app/features/recurring/data/database/recurring_database_mapper.dart';
 import 'package:budgeting_app/features/recurring/data/repositories/drift_recurring_transaction_repository.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_enums.dart';
@@ -178,6 +184,43 @@ void main() {
     );
   });
 
+  test(
+    'Money Plan periods and custom mappings remap portably by owner',
+    () async {
+      final FinancialDataSnapshot snapshot = _snapshot(
+        custom: true,
+        moneyPlan: true,
+      );
+      await _insertSnapshot(database, snapshot, 'user:a');
+      final DriftFinancialDataPortabilityRepository ownerB =
+          DriftFinancialDataPortabilityRepository(
+            database,
+            ownerScope: 'user:b',
+          );
+
+      await ownerB.replaceCurrentOwnerSnapshot(snapshot);
+
+      final FinancialDataSnapshot restored = await ownerB
+          .readCurrentOwnerSnapshot();
+      expect(restored.moneyPlanPreference?.isEnabled, isTrue);
+      expect(restored.moneyPlanPeriods.single.id, 'plan-aug-restored-1');
+      expect(
+        restored.moneyPlanCategoryMappings.single.periodId,
+        restored.moneyPlanPeriods.single.id,
+      );
+      expect(
+        restored.moneyPlanCategoryMappings.single.categoryId,
+        restored.customCategories.single.id,
+      );
+      final FinancialDataSnapshot ownerA =
+          await DriftFinancialDataPortabilityRepository(
+            database,
+            ownerScope: 'user:a',
+          ).readCurrentOwnerSnapshot();
+      expect(ownerA.moneyPlanPeriods.single.id, 'plan-aug');
+    },
+  );
+
   test('midway insert failure rolls back the exact original state', () async {
     final DriftFinancialDataPortabilityRepository repository =
         DriftFinancialDataPortabilityRepository(
@@ -248,7 +291,11 @@ void main() {
   });
 }
 
-FinancialDataSnapshot _snapshot({String prefix = '', bool custom = false}) {
+FinancialDataSnapshot _snapshot({
+  String prefix = '',
+  bool custom = false,
+  bool moneyPlan = false,
+}) {
   final String p = prefix.isEmpty ? '' : '$prefix-';
   final String categoryId = custom
       ? 'custom:${p.isEmpty ? 'fitness' : '${p}fitness'}'
@@ -280,6 +327,11 @@ FinancialDataSnapshot _snapshot({String prefix = '', bool custom = false}) {
         handledAt: fixedNow,
         createdAt: fixedNow,
       );
+  final period = BikramSambatCalendarService().periodFor(
+    calendarSystem: AppCalendarSystem.gregorianAd,
+    year: 2026,
+    month: 8,
+  );
   return FinancialDataSnapshot(
     customCategories: custom
         ? <CustomCategory>[
@@ -298,6 +350,36 @@ FinancialDataSnapshot _snapshot({String prefix = '', bool custom = false}) {
     transactions: <FinancialTransaction>[transaction],
     recurringRules: <RecurringTransactionRule>[rule],
     recurringOccurrences: <RecurringTransactionOccurrence>[occurrence],
+    moneyPlanPreference: moneyPlan
+        ? MoneyPlanPreference(
+            isEnabled: true,
+            createdAt: fixedNow,
+            updatedAt: fixedNow,
+          )
+        : null,
+    moneyPlanPeriods: moneyPlan
+        ? <MoneyPlanPeriod>[
+            MoneyPlanPeriod(
+              id: '${p}plan-aug',
+              period: period,
+              ratios: MoneyPlanRatios.defaultPlan,
+              createdAt: fixedNow,
+              updatedAt: fixedNow,
+            ),
+          ]
+        : const <MoneyPlanPeriod>[],
+    moneyPlanCategoryMappings: moneyPlan
+        ? <MoneyPlanCategoryMapping>[
+            MoneyPlanCategoryMapping(
+              id: '${p}map-category',
+              periodId: '${p}plan-aug',
+              categoryId: custom ? categoryId : 'food',
+              group: MoneyPlanGroup.needs,
+              createdAt: fixedNow,
+              updatedAt: fixedNow,
+            ),
+          ]
+        : const <MoneyPlanCategoryMapping>[],
   );
 }
 
@@ -344,6 +426,34 @@ Future<void> _insertSnapshot(
         .insert(
           RecurringDatabaseMapper.occurrenceToCompanion(
             occurrence,
+            ownerScope: owner,
+          ),
+        );
+  }
+  if (snapshot.moneyPlanPreference case final MoneyPlanPreference preference) {
+    await database
+        .into(database.moneyPlanPreferences)
+        .insert(
+          MoneyPlanDatabaseMapper.preferenceToCompanion(
+            preference,
+            ownerScope: owner,
+          ),
+        );
+  }
+  for (final MoneyPlanPeriod period in snapshot.moneyPlanPeriods) {
+    await database
+        .into(database.moneyPlanPeriods)
+        .insert(
+          MoneyPlanDatabaseMapper.periodToCompanion(period, ownerScope: owner),
+        );
+  }
+  for (final MoneyPlanCategoryMapping mapping
+      in snapshot.moneyPlanCategoryMappings) {
+    await database
+        .into(database.moneyPlanCategoryMappings)
+        .insert(
+          MoneyPlanDatabaseMapper.mappingToCompanion(
+            mapping,
             ownerScope: owner,
           ),
         );

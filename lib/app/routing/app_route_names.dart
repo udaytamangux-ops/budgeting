@@ -16,6 +16,12 @@ abstract final class AppRouteNames {
   static const String monthlyReport = 'monthly-report';
   static const String monthlyVisualReport = 'monthly-visual-report';
   static const String monthlyComparison = 'monthly-comparison';
+  static const String moneyPlan = 'money-plan';
+  static const String moneyPlanSetup = 'money-plan-setup';
+  static const String moneyPlanSetupCategories = 'money-plan-setup-categories';
+  static const String moneyPlanEdit = 'money-plan-edit';
+  static const String moneyPlanEditCategories = 'money-plan-edit-categories';
+  static const String moneyPlanCategories = 'money-plan-categories';
   static const String categoryTransactionDetails =
       'category-transaction-details';
   static const String profile = 'profile';

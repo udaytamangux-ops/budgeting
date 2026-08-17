@@ -7,6 +7,7 @@ import 'package:budgeting_app/features/categories/domain/entities/custom_categor
 import 'package:budgeting_app/features/data_portability/domain/entities/financial_data_snapshot.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_codec.dart';
 import 'package:budgeting_app/features/data_portability/domain/services/backup_exceptions.dart';
+import 'package:budgeting_app/features/money_plan/domain/entities/money_plan.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_enums.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
@@ -23,7 +24,7 @@ void main() {
     RecurrenceService(BikramSambatCalendarService()),
   );
 
-  test('v3 backup round-trips full financial state exactly', () {
+  test('v4 backup round-trips full financial state exactly', () {
     final PortableBackup original = _backup();
     final Uint8List firstEncoding = codec.encode(original);
     final PortableBackup restored = codec.decode(firstEncoding);
@@ -49,12 +50,12 @@ void main() {
     );
 
     final Map<String, Object?> json = jsonDecode(utf8.decode(firstEncoding));
-    expect(json['backupFormatVersion'], 3);
+    expect(json['backupFormatVersion'], 4);
     expect(json.toString(), isNot(contains('ownerScope')));
     expect(json.toString(), isNot(contains('theme_mode')));
   });
 
-  test('empty financial state is a valid deterministic v3 backup', () {
+  test('empty financial state is a valid deterministic v4 backup', () {
     final PortableBackup backup = PortableBackup(
       createdAtUtc: DateTime.utc(2026, 8, 8, 12),
       sourceDatabaseSchemaVersion: 3,
@@ -68,6 +69,57 @@ void main() {
     expect(decoded.snapshot.transactions, isEmpty);
     expect(decoded.snapshot.recurringRules, isEmpty);
     expect(decoded.snapshot.recurringOccurrences, isEmpty);
+  });
+
+  test('v4 round-trips Money Plan preference, period and mappings', () {
+    final DateTime created = DateTime.utc(2026, 8, 8, 12);
+    final period = BikramSambatCalendarService().periodFor(
+      calendarSystem: AppCalendarSystem.gregorianAd,
+      year: 2026,
+      month: 8,
+    );
+    final PortableBackup backup = PortableBackup(
+      createdAtUtc: created,
+      sourceDatabaseSchemaVersion: 7,
+      snapshot: FinancialDataSnapshot(
+        transactions: const <FinancialTransaction>[],
+        recurringRules: const <RecurringTransactionRule>[],
+        recurringOccurrences: const <RecurringTransactionOccurrence>[],
+        moneyPlanPreference: MoneyPlanPreference(
+          isEnabled: true,
+          createdAt: created,
+          updatedAt: created,
+        ),
+        moneyPlanPeriods: <MoneyPlanPeriod>[
+          MoneyPlanPeriod(
+            id: 'plan-august',
+            period: period,
+            ratios: MoneyPlanRatios.defaultPlan,
+            createdAt: created,
+            updatedAt: created,
+          ),
+        ],
+        moneyPlanCategoryMappings: <MoneyPlanCategoryMapping>[
+          MoneyPlanCategoryMapping(
+            id: 'map-food',
+            periodId: 'plan-august',
+            categoryId: 'food',
+            group: MoneyPlanGroup.needs,
+            createdAt: created,
+            updatedAt: created,
+          ),
+        ],
+      ),
+    );
+
+    final PortableBackup restored = codec.decode(codec.encode(backup));
+    expect(restored.snapshot.moneyPlanPreference?.isEnabled, isTrue);
+    expect(restored.snapshot.moneyPlanPeriods.single.period, period);
+    expect(restored.snapshot.moneyPlanPeriods.single.ratios.needsPercent, 50);
+    expect(
+      restored.snapshot.moneyPlanCategoryMappings.single.group,
+      MoneyPlanGroup.needs,
+    );
   });
 
   test('v3 supports all categories, payment methods and recurrence states', () {
@@ -186,6 +238,7 @@ void main() {
     final Map<String, Object?> legacy = _json(codec);
     legacy['backupFormatVersion'] = 1;
     _records(legacy).remove('transfers');
+    _removeMoneyPlan(legacy);
 
     final PortableBackup restored = codec.decode(
       Uint8List.fromList(utf8.encode(jsonEncode(legacy))),
@@ -199,6 +252,7 @@ void main() {
     final Map<String, Object?> legacy = _json(codec);
     legacy['backupFormatVersion'] = 2;
     _records(legacy).remove('customCategories');
+    _removeMoneyPlan(legacy);
 
     final PortableBackup restored = codec.decode(
       Uint8List.fromList(utf8.encode(jsonEncode(legacy))),
@@ -208,7 +262,7 @@ void main() {
     expect(restored.snapshot.customCategories, isEmpty);
   });
 
-  test('v3 round-trips custom category identity and references', () {
+  test('v4 round-trips custom category identity and references', () {
     final DateTime created = DateTime.utc(2026, 8, 8, 12);
     const String categoryId = 'custom:fitness';
     final TransactionCategory reference = TransactionCategory.custom(
@@ -257,6 +311,18 @@ void main() {
     expect(utf8.decode(codec.encode(backup)), isNot(contains('ownerScope')));
   });
 
+  test('v3 remains restorable and does not invent Money Plan data', () {
+    final Map<String, Object?> legacy = _json(codec);
+    legacy['backupFormatVersion'] = 3;
+    _removeMoneyPlan(legacy);
+    final PortableBackup restored = codec.decode(
+      Uint8List.fromList(utf8.encode(jsonEncode(legacy))),
+    );
+    expect(restored.snapshot.moneyPlanPreference, isNull);
+    expect(restored.snapshot.moneyPlanPeriods, isEmpty);
+    expect(restored.snapshot.moneyPlanCategoryMappings, isEmpty);
+  });
+
   test('v3 rejects missing custom references and category collisions', () {
     final Map<String, Object?> missingReference = _json(codec);
     _transactions(missingReference).single['category'] = 'custom:missing';
@@ -300,7 +366,7 @@ void main() {
         throwsA(isA<BackupValidationException>()),
       );
       final Map<String, Object?> unsupported = _json(codec);
-      unsupported['backupFormatVersion'] = 4;
+      unsupported['backupFormatVersion'] = 5;
       expect(
         () => _decode(codec, unsupported),
         throwsA(
@@ -310,6 +376,39 @@ void main() {
             BackupValidationIssue.unsupportedVersion,
           ),
         ),
+      );
+    });
+
+    test('invalid Money Plan structures are rejected', () {
+      final Map<String, Object?> invalidRatio = _moneyPlanJson(codec);
+      _moneyPlanPeriods(invalidRatio).single['needsPercent'] = 51;
+      expect(
+        () => _decode(codec, invalidRatio),
+        throwsA(isA<BackupValidationException>()),
+      );
+
+      final Map<String, Object?> duplicatePeriod = _moneyPlanJson(codec);
+      _moneyPlanPeriods(duplicatePeriod).add(
+        Map<String, Object?>.from(_moneyPlanPeriods(duplicatePeriod).single),
+      );
+      expect(
+        () => _decode(codec, duplicatePeriod),
+        throwsA(isA<BackupValidationException>()),
+      );
+
+      final Map<String, Object?> invalidGroup = _moneyPlanJson(codec);
+      _moneyPlanMappings(invalidGroup).single['group'] = 'savings';
+      expect(
+        () => _decode(codec, invalidGroup),
+        throwsA(isA<BackupValidationException>()),
+      );
+
+      final Map<String, Object?> danglingCategory = _moneyPlanJson(codec);
+      _moneyPlanMappings(danglingCategory).single['categoryId'] =
+          'custom:missing';
+      expect(
+        () => _decode(codec, danglingCategory),
+        throwsA(isA<BackupValidationException>()),
       );
     });
 
@@ -528,11 +627,69 @@ PortableBackup _backup() {
 Map<String, Object?> _json(BackupCodec codec) =>
     jsonDecode(utf8.decode(codec.encode(_backup()))) as Map<String, Object?>;
 
+Map<String, Object?> _moneyPlanJson(BackupCodec codec) {
+  final DateTime created = DateTime.utc(2026, 8, 8, 12);
+  final period = BikramSambatCalendarService().periodFor(
+    calendarSystem: AppCalendarSystem.gregorianAd,
+    year: 2026,
+    month: 8,
+  );
+  final PortableBackup backup = PortableBackup(
+    createdAtUtc: created,
+    sourceDatabaseSchemaVersion: 7,
+    snapshot: FinancialDataSnapshot(
+      transactions: const <FinancialTransaction>[],
+      recurringRules: const <RecurringTransactionRule>[],
+      recurringOccurrences: const <RecurringTransactionOccurrence>[],
+      moneyPlanPreference: MoneyPlanPreference(
+        isEnabled: true,
+        createdAt: created,
+        updatedAt: created,
+      ),
+      moneyPlanPeriods: <MoneyPlanPeriod>[
+        MoneyPlanPeriod(
+          id: 'plan-august',
+          period: period,
+          ratios: MoneyPlanRatios.defaultPlan,
+          createdAt: created,
+          updatedAt: created,
+        ),
+      ],
+      moneyPlanCategoryMappings: <MoneyPlanCategoryMapping>[
+        MoneyPlanCategoryMapping(
+          id: 'map-food',
+          periodId: 'plan-august',
+          categoryId: 'food',
+          group: MoneyPlanGroup.needs,
+          createdAt: created,
+          updatedAt: created,
+        ),
+      ],
+    ),
+  );
+  return jsonDecode(utf8.decode(codec.encode(backup))) as Map<String, Object?>;
+}
+
 void _decode(BackupCodec codec, Map<String, Object?> value) =>
     codec.decode(Uint8List.fromList(utf8.encode(jsonEncode(value))));
 
 Map<String, Object?> _records(Map<String, Object?> value) =>
     value['records']! as Map<String, Object?>;
+
+void _removeMoneyPlan(Map<String, Object?> value) {
+  _records(value)
+    ..remove('moneyPlanPreference')
+    ..remove('moneyPlanPeriods')
+    ..remove('moneyPlanCategoryMappings');
+}
+
+List<Map<String, Object?>> _moneyPlanPeriods(Map<String, Object?> value) =>
+    (_records(value)['moneyPlanPeriods']! as List<Object?>)
+        .cast<Map<String, Object?>>();
+
+List<Map<String, Object?>> _moneyPlanMappings(Map<String, Object?> value) =>
+    (_records(value)['moneyPlanCategoryMappings']! as List<Object?>)
+        .cast<Map<String, Object?>>();
 
 List<Map<String, Object?>> _transactions(Map<String, Object?> value) =>
     (_records(value)['transactions']! as List<Object?>)

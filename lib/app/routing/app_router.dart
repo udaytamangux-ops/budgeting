@@ -11,6 +11,8 @@ import 'package:budgeting_app/features/access/presentation/screens/access_choice
 import 'package:budgeting_app/features/access/presentation/screens/account_unavailable_screen.dart';
 import 'package:budgeting_app/features/categories/presentation/screens/categories_screen.dart';
 import 'package:budgeting_app/features/home/presentation/screens/home_screen.dart';
+import 'package:budgeting_app/features/money_plan/presentation/screens/money_plan_screen.dart';
+import 'package:budgeting_app/features/money_plan/presentation/screens/money_plan_setup_screen.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/screens/month_comparison_screen.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/screens/monthly_report_screen.dart';
 import 'package:budgeting_app/features/monthly_reports/presentation/screens/visual_report_screen.dart';
@@ -305,6 +307,52 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                 name: AppRouteNames.budgets,
                 builder: (_, _) => const SummaryScreen(),
                 routes: <RouteBase>[
+                  GoRoute(
+                    path: 'money-plan',
+                    name: AppRouteNames.moneyPlan,
+                    builder: (_, _) => const MoneyPlanScreen(),
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'setup',
+                        name: AppRouteNames.moneyPlanSetup,
+                        builder: (_, _) =>
+                            const MoneyPlanSplitScreen(isEditing: false),
+                        routes: <RouteBase>[
+                          GoRoute(
+                            path: 'categories',
+                            name: AppRouteNames.moneyPlanSetupCategories,
+                            builder: (_, _) =>
+                                const MoneyPlanCategoryMappingScreen(
+                                  isEditing: false,
+                                ),
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'edit',
+                        name: AppRouteNames.moneyPlanEdit,
+                        builder: (_, _) =>
+                            const MoneyPlanSplitScreen(isEditing: true),
+                        routes: <RouteBase>[
+                          GoRoute(
+                            path: 'categories',
+                            name: AppRouteNames.moneyPlanEditCategories,
+                            builder: (_, _) =>
+                                const MoneyPlanCategoryMappingScreen(
+                                  isEditing: true,
+                                ),
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'categories',
+                        name: AppRouteNames.moneyPlanCategories,
+                        builder: (_, _) => const MoneyPlanCategoryMappingScreen(
+                          isEditing: true,
+                        ),
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'monthly-report',
                     name: AppRouteNames.monthlyReport,

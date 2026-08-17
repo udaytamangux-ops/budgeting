@@ -140,6 +140,67 @@ class RecurringTransactionOccurrences extends Table {
   ];
 }
 
+class MoneyPlanPreferences extends Table {
+  TextColumn get ownerScope => text()();
+  BoolColumn get isEnabled => boolean()();
+  IntColumn get createdAtUtcMicros => integer()();
+  IntColumn get updatedAtUtcMicros => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{ownerScope};
+}
+
+@TableIndex(
+  name: 'money_plan_periods_owner_identity',
+  columns: <Symbol>{
+    #ownerScope,
+    #calendarSystemKey,
+    #calendarYear,
+    #calendarMonth,
+  },
+  unique: true,
+)
+class MoneyPlanPeriods extends Table {
+  TextColumn get id => text()();
+  TextColumn get ownerScope => text()();
+  IntColumn get periodStartUtcMicros => integer()();
+  IntColumn get periodEndExclusiveUtcMicros => integer()();
+  TextColumn get calendarSystemKey => text()();
+  IntColumn get calendarYear => integer()();
+  IntColumn get calendarMonth => integer()();
+  IntColumn get needsPercent => integer()();
+  IntColumn get wantsPercent => integer()();
+  IntColumn get savingsPercent => integer()();
+  IntColumn get createdAtUtcMicros => integer()();
+  IntColumn get updatedAtUtcMicros => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
+@TableIndex(
+  name: 'money_plan_mappings_period_category',
+  columns: <Symbol>{#periodId, #categoryId},
+  unique: true,
+)
+@TableIndex(
+  name: 'money_plan_mappings_owner_period',
+  columns: <Symbol>{#ownerScope, #periodId},
+)
+class MoneyPlanCategoryMappings extends Table {
+  TextColumn get id => text()();
+  TextColumn get ownerScope => text()();
+  TextColumn get periodId =>
+      text().references(MoneyPlanPeriods, #id, onDelete: KeyAction.cascade)();
+  TextColumn get categoryId => text()();
+  TextColumn get planGroupKey => text()();
+  IntColumn get createdAtUtcMicros => integer()();
+  IntColumn get updatedAtUtcMicros => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 @DriftDatabase(
   tables: <Type>[
     StoredTransactions,
@@ -148,6 +209,9 @@ class RecurringTransactionOccurrences extends Table {
     StoredTransfers,
     RecurringTransactionRules,
     RecurringTransactionOccurrences,
+    MoneyPlanPreferences,
+    MoneyPlanPeriods,
+    MoneyPlanCategoryMappings,
   ],
 )
 final class AppDatabase extends _$AppDatabase {
@@ -162,7 +226,7 @@ final class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -203,6 +267,14 @@ final class AppDatabase extends _$AppDatabase {
       from5To6: (Migrator migrator, Schema6 schema) async {
         await migrator.createTable(schema.customCategories);
         await migrator.createIndex(schema.customCategoriesOwnerTypeName);
+      },
+      from6To7: (Migrator migrator, Schema7 schema) async {
+        await migrator.createTable(schema.moneyPlanPreferences);
+        await migrator.createTable(schema.moneyPlanPeriods);
+        await migrator.createIndex(schema.moneyPlanPeriodsOwnerIdentity);
+        await migrator.createTable(schema.moneyPlanCategoryMappings);
+        await migrator.createIndex(schema.moneyPlanMappingsPeriodCategory);
+        await migrator.createIndex(schema.moneyPlanMappingsOwnerPeriod);
       },
     ),
   );
@@ -338,12 +410,21 @@ final class AppDatabase extends _$AppDatabase {
   Future<int> deleteCustomCategory(
     String categoryId, {
     required String ownerScope,
-  }) {
-    return (delete(customCategories)..where(
-          (CustomCategories table) =>
-              table.id.equals(categoryId) & table.ownerScope.equals(ownerScope),
-        ))
-        .go();
+  }) async {
+    return transaction(() async {
+      await (delete(moneyPlanCategoryMappings)..where(
+            (MoneyPlanCategoryMappings table) =>
+                table.categoryId.equals(categoryId) &
+                table.ownerScope.equals(ownerScope),
+          ))
+          .go();
+      return (delete(customCategories)..where(
+            (CustomCategories table) =>
+                table.id.equals(categoryId) &
+                table.ownerScope.equals(ownerScope),
+          ))
+          .go();
+    });
   }
 
   Future<bool> hasAnyFinancialData() async {

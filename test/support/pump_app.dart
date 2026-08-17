@@ -8,6 +8,9 @@ import 'package:budgeting_app/features/access/presentation/controllers/access_pr
 import 'package:budgeting_app/features/categories/data/repositories/in_memory_custom_category_repository.dart';
 import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
 import 'package:budgeting_app/features/categories/presentation/controllers/category_providers.dart';
+import 'package:budgeting_app/features/money_plan/data/repositories/in_memory_money_plan_repository.dart';
+import 'package:budgeting_app/features/money_plan/domain/repositories/money_plan_repository.dart';
+import 'package:budgeting_app/features/money_plan/presentation/controllers/money_plan_providers.dart';
 import 'package:budgeting_app/features/onboarding/data/repositories/in_memory_onboarding_preference_repository.dart';
 import 'package:budgeting_app/features/onboarding/presentation/controllers/onboarding_providers.dart';
 import 'package:budgeting_app/features/recurring/data/repositories/in_memory_recurring_transaction_repository.dart';
@@ -56,6 +59,7 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
       const <RecurringTransactionRule>[],
   List<RecurringTransactionOccurrence> seedRecurringOccurrences =
       const <RecurringTransactionOccurrence>[],
+  MoneyPlanRepository? moneyPlanRepository,
 }) async {
   assert(
     seedTransactions == null || !useMockTransactions,
@@ -107,6 +111,12 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
       : null;
   final RecurringTransactionRepository resolvedRecurringRepository =
       recurringRepository ?? ownedRecurringRepository!;
+  final InMemoryMoneyPlanRepository? ownedMoneyPlanRepository =
+      moneyPlanRepository == null
+      ? InMemoryMoneyPlanRepository(now: () => fixedNow)
+      : null;
+  final MoneyPlanRepository resolvedMoneyPlanRepository =
+      moneyPlanRepository ?? ownedMoneyPlanRepository!;
   if (accessRepository == null) {
     addTearDown(resolvedAccessRepository.dispose);
   }
@@ -124,6 +134,9 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
   }
   if (ownedRecurringRepository != null) {
     addTearDown(ownedRecurringRepository.dispose);
+  }
+  if (ownedMoneyPlanRepository != null) {
+    addTearDown(ownedMoneyPlanRepository.dispose);
   }
   final List<Override> overrides = <Override>[
     appClockProvider.overrideWithValue(() => fixedNow),
@@ -147,6 +160,7 @@ Future<InMemoryTransactionRepository> pumpBudgetingApp(
     recurringTransactionRepositoryProvider.overrideWithValue(
       resolvedRecurringRepository,
     ),
+    moneyPlanRepositoryProvider.overrideWithValue(resolvedMoneyPlanRepository),
   ];
   if (transactionStream != null) {
     overrides.add(

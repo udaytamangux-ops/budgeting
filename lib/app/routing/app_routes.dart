@@ -25,6 +25,12 @@ abstract final class AppRoutes {
   static const String monthlyReport = '/app/budgets/monthly-report';
   static const String monthlyVisualReport = '$monthlyReport/visual';
   static const String monthlyComparison = '$monthlyReport/comparison';
+  static const String moneyPlan = '$summary/money-plan';
+  static const String moneyPlanSetup = '$moneyPlan/setup';
+  static const String moneyPlanSetupCategories = '$moneyPlan/setup/categories';
+  static const String moneyPlanEdit = '$moneyPlan/edit';
+  static const String moneyPlanEditCategories = '$moneyPlan/edit/categories';
+  static const String moneyPlanCategories = '$moneyPlan/categories';
 
   static String categoryDetails(CategoryDetailsRouteData data) {
     return '${_categoryDetailsPath(data)}${_categoryQuery(data)}';

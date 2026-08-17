@@ -15,6 +15,7 @@ import 'package:budgeting_app/core/formatting/currency_formatter.dart';
 import 'package:budgeting_app/core/formatting/formatting_providers.dart';
 import 'package:budgeting_app/core/widgets/app_error_state.dart';
 import 'package:budgeting_app/core/widgets/app_loading_indicator.dart';
+import 'package:budgeting_app/features/money_plan/presentation/widgets/money_plan_summary_entry.dart';
 import 'package:budgeting_app/features/settings/presentation/controllers/calendar_preference_providers.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_category_activity.dart';
 import 'package:budgeting_app/features/summary/domain/entities/monthly_transaction_summary.dart';
@@ -139,6 +140,8 @@ final class _SummaryScreenState extends ConsumerState<SummaryScreen> {
                         );
                       },
                     ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    const MoneyPlanSummaryEntry(),
                     const SizedBox(height: AppSpacing.xl),
                     Semantics(
                       button: true,

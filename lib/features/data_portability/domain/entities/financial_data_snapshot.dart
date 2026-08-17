@@ -1,4 +1,5 @@
 import 'package:budgeting_app/features/categories/domain/entities/custom_category.dart';
+import 'package:budgeting_app/features/money_plan/domain/entities/money_plan.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_occurrence.dart';
 import 'package:budgeting_app/features/recurring/domain/entities/recurring_transaction_rule.dart';
 import 'package:budgeting_app/features/transactions/domain/entities/financial_transaction.dart';
@@ -11,6 +12,9 @@ final class FinancialDataSnapshot {
     required this.recurringOccurrences,
     this.customCategories = const <CustomCategory>[],
     this.transfers = const <FinancialTransfer>[],
+    this.moneyPlanPreference,
+    this.moneyPlanPeriods = const <MoneyPlanPeriod>[],
+    this.moneyPlanCategoryMappings = const <MoneyPlanCategoryMapping>[],
   });
 
   final List<FinancialTransaction> transactions;
@@ -18,6 +22,9 @@ final class FinancialDataSnapshot {
   final List<RecurringTransactionOccurrence> recurringOccurrences;
   final List<FinancialTransfer> transfers;
   final List<CustomCategory> customCategories;
+  final MoneyPlanPreference? moneyPlanPreference;
+  final List<MoneyPlanPeriod> moneyPlanPeriods;
+  final List<MoneyPlanCategoryMapping> moneyPlanCategoryMappings;
 }
 
 final class PortableBackup {
